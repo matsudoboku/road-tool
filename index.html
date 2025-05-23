@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- manifest.json を参照 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007acc">
+
+<!-- iOS対応（Safari用） -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Service Worker登録用スクリプト（body最後でもOK） -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("service-worker.js");
+  });
+}
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=yes">
+  <title>道路ツール</title>
+  <style>
+    html, body {
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      font-size: 18px;
+      font-family: sans-serif;
+      width: 100vw;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    /* 上部工事プルダウンバー */
+    .project-bar {
+      width: 100vw;
+      background: #e3f2fd;
+      border-bottom: 2px solid #007acc;
+      padding: 8px 8px 8px 8px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .project-bar label {
+      font-size: 1em;
+      color: #007acc;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    .project-bar select, .project-bar button {
+      font-size: 1em;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    .project-bar .delete-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      font-weight: bold;
+      padding: 7px 15px;
+      font-size: 1em;
+      margin-left: 8px;
+    }
+    /* タブメニュー */
+    .tabbar {
+      width: 100vw;
+      display: flex;
+      background: #164361;
+      border-bottom: 2px solid #007acc;
+      box-sizing: border-box;
+      z-index: 90;
+    }
+    .tabbar button {
+      flex: 1;
+      padding: 14px 0;
+      border: none;
+      background: #164361;
+      color: #fff;
+      font-size: 1.07em;
+      cursor: pointer;
+      border-bottom: 4px solid transparent;
+      transition: border-bottom .2s, background .15s;
+      font-weight: normal;
+    }
+    .tabbar button.active {
+      background: #007acc;
+      color: #fff;
+      border-bottom: 4px solid #ffdc57;
+      font-weight: bold;
+    }
+
+    /* メイン */
+    .main-content {
+      width: 100vw;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    .container {
+      display: none;
+      width: 100vw;
+      box-sizing: border-box;
+      margin: 0 auto;
+      padding: 10px 0 40px 0;
+    }
+    .container.active { display: block; }
+
+    /* 入力欄 */
+    input, select, textarea {
+      font-size: 1.05em;
+      padding: 8px 10px;
+      border-radius: 5px;
+      border: 1px solid #bbb;
+      margin: 2px 0;
+      box-sizing: border-box;
+    }
+    /* テーブル全体・セル余白調整 */
+    table {
+      border-collapse: collapse;
+      margin: 12px 0 0 0;
+      background: #fff;
+      width: 100vw;
+      max-width: 100vw;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 7px 4px;
+      font-size: 1em;
+      text-align: center;
+      min-width: 56px;
+    }
+    th {
+      background: #e3f2fd;
+      font-weight: bold;
+      font-size: 1.04em;
+    }
+    /* 測量入力欄の大きさを均等に */
+    .survey-table input[type="text"],
+    .survey-table input[type="number"] {
+      width: 90%;
+      min-width: 55px;
+      max-width: 160px;
+      font-size: 1.06em;
+      padding: 7px 6px;
+    }
+
+    /* ボタン */
+    .buttons {
+      margin-top: 14px;
+      display: flex;
+      gap: 12px;
+    }
+    .buttons button, .danger-btn, .warn-btn {
+      font-size: 1em;
+      border-radius: 7px;
+      font-weight: bold;
+      padding: 10px 19px;
+      border: none;
+      cursor: pointer;
+      background: #007acc;
+      color: #fff;
+      transition: background .15s;
+    }
+    .danger-btn { background: #e53935; }
+    .warn-btn   { background: #ffc107; color: #333;}
+    .delete-btn { background: #e53935; color:white;}
+
+    /* ログ・メモ用 */
+    .record { background: #fff; padding: 8px 2px; margin: 10px 0; border: 1px solid #ccc; font-size: 0.97em;}
+    #log h3 { margin-bottom: 3px; border-bottom: 1px solid #2196f3; }
+    #log div.section { background: #fff; border: 1px solid #ccc; margin: 8px 0; padding: 6px;}
+    .工事選択欄 { margin-bottom: 12px; }
+    textarea { width: 97vw; min-height: 80px; }
+
+    /* レスポンシブ（スマホ専用） */
+    @media (max-width: 800px) {
+      html, body { font-size: 18px; }
+      .main-content, .container, table { width: 100vw !important; max-width: 100vw !important; }
+      .survey-table input[type="text"],
+      .survey-table input[type="number"] {
+        font-size: 1.09em;
+        padding: 12px 9px;
+        width: 98%;
+        min-width: 46vw;
+        max-width: 99vw;
+      }
+      th, td { font-size: 1em; padding: 6px 2px; }
+      .buttons button { width: 40vw; min-width: 110px; }
+      .project-bar { flex-direction: column; align-items: stretch; gap: 5px; }
+    }
+    #longTable input[readonly] {
+    background: #e0e0e0 !important;
+    color: #555;
+  }
+
+  #crossTable {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 99vw !important;
+    max-width: 99vw !important;
+  }
+
+  #crossTable th, #crossTable td {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  #crossTable input[type="text"], #crossTable input[type="number"] {
+    width: 98%;
+    min-width: 45px;
+    max-width: 160px;
+    font-size: 1.08em;
+    padding: 10px 4px;
+    margin: 0;
+  }
+    @media (max-width: 800px) {
+    #longTable input[type="text"],
+    #longTable input[type="number"] {
+      width: 98% !important;
+      min-width: 30px !important;
+      max-width: 99vw !important;
+      font-size: 1.06em;
+      padding: 10px 4px;
+      margin: 0;
+    }
+    #longTable {
+      width: 99vw !important;
+      max-width: 99vw !important;
+    }
+    #longTable th, #longTable td {
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+      font-size: 1em;
+    }
+  }
+ /* 縦断測量テーブル用 入力欄を横に広げる・縦は狭く */
+#longTable input[type="text"],
+#longTable input[type="number"] {
+  width: 99%;
+  min-width: 110px;   /* お好みで大きくもできます */
+  max-width: 350px;   /* 必要なら増やしてください */
+  font-size: 1.13em;
+  padding: 4px 8px;   /* ←ここを「4px」など小さくすると縦の幅が狭くなります */
+  box-sizing: border-box;
+  height: 2em;        /* 高さを強制する場合はここも調整（なければ消してもOK） */
+}
+
+/* スマホ用 */
+@media (max-width: 800px) {
+  #longTable input[type="text"],
+  #longTable input[type="number"] {
+    width: 98vw;
+    min-width: 80vw;
+    max-width: 98vw;
+    font-size: 1.13em;
+    padding: 4px 8px; /* 縦方向狭め */
+    height: 2.2em;    /* 必要な場合だけ指定（なければ消してもOK） */
+  }
+}
+
+  </style>
+</head>
+<body>
+  <!-- 工事プルダウン上部バー -->
+  <div class="project-bar">
+    <label>作業中の工事：</label>
+    <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
+    <button class="delete-btn" onclick="deleteProject()">この工事を削除</button>
+  </div>
+  <!-- タブメニュー -->
+  <div class="tabbar">
+    <button class="tab active" onclick="switchTab('project')">工事設定</button>
+    <button class="tab" onclick="switchTab('cross')">横断測量</button>
+    <button class="tab" onclick="switchTab('long')">縦断測量</button>
+    <button class="tab" onclick="switchTab('curve')">道路曲線計算</button>
+    <button class="tab" onclick="switchTab('memo')">メモ</button>
+    <button class="tab" onclick="switchTab('log')">記録</button>
+  </div>
+  <!-- メイン -->
+  <div class="main-content">
+    <!-- 工事設定 -->
+    <div id="project" class="container active">
+      <h2>工事情報の登録・切替</h2>
+      <div style="margin-bottom:14px;">
+        <label>工事名：<input type="text" id="projectName" style="font-size:1.04em;padding:8px;min-width:160px;"></label>
+        <button class="buttons" onclick="addProject()">追加</button>
+      </div>
+      <div id="prjList"></div>
+    </div>
+    <!-- 横断測量 -->
+    <div id="cross" class="container">
+      <label>測点：</label><input type="text" id="point" style="font-size:1.03em;min-width:64px;">
+      <label>方向：</label>
+      <select id="direction" style="font-size:1.03em;min-width:64px;">
+        <option value="左">左</option>
+        <option value="右">右</option>
+      </select>
+      <table id="crossTable" class="survey-table">
+        <thead>
+          <tr>
+            <th>横(m)</th>
+            <th>縦(m)</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="buttons">
+        <button onclick="registerCross()">登録</button>
+        <button onclick="clearCross()">クリア</button>
+      </div>
+    </div>
+    <!-- 縦断測量 -->
+    <div id="long" class="container">
+      <table id="longTable" class="survey-table">
+        <thead>
+          <tr>
+            <th>測点</th>
+            <th>単距</th>
+            <th>追距</th>
+            <th>BS</th>
+            <th>FS</th>
+            <th>⊿</th>
+            <th>GH</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="buttons">
+        <button onclick="addLongRow()">行を追加</button>
+        <button onclick="registerLong()">登録</button>
+        <button onclick="clearLong()">クリア</button>
+      </div>
+    </div>
+    <!-- 道路曲線計算 -->
+    <div id="curve" class="container">
+      <label>IP No</label><br>
+      <input type="text" id="ipno" placeholder="例: IP-001"><br>
+      <label>IA（例: 331900）</label><br>
+      <input type="number" id="ia"><br>
+      <label>R（半径）</label><br>
+      <input type="number" id="r"><br>
+      <div class="buttons">
+        <button onclick="calculateCurve()">計算する</button>
+        <button onclick="registerCurve()">登録</button>
+      </div>
+      <div id="curveResult" class="record"></div>
+    </div>
+    <!-- メモ -->
+    <div id="memo" class="container">
+      <h2>現場メモ</h2>
+      <textarea id="memoText" placeholder="ここに現場や工事のメモを記入できます"></textarea>
+      <div class="buttons">
+        <button onclick="saveMemo()">保存</button>
+      </div>
+      <div id="memoSaved" class="record"></div>
+    </div>
+    <!-- 記録タブ -->
+    <div id="log" class="container">
+      <div class="工事選択欄">
+        <label>工事を選択：
+          <select id="logProjectSel" onchange="updateLogTab()"></select>
+        </label>
+        <button class="danger-btn" onclick="clearAllProjects()">全工事＆記録一括削除</button>
+      </div>
+      <h2>記録（カテゴリ別）</h2>
+      <div style="margin:8px 0;">
+        <button class="warn-btn" onclick="clearCategory('cross')">横断測量 記録削除</button>
+        <button class="warn-btn" onclick="clearCategory('long')">縦断測量 記録削除</button>
+        <button class="warn-btn" onclick="clearCategory('curve')">道路曲線計算 記録削除</button>
+        <button class="warn-btn" onclick="clearCategory('memo')">メモ削除</button>
+      </div>
+      <div id="logCross"></div>
+      <div id="logLong"></div>
+      <div id="logCurve"></div>
+      <div id="logMemo"></div>
+    </div>
+  </div>
+<script>
+let projects = JSON.parse(localStorage.getItem("projects3") || "[]");
+let activeProject = localStorage.getItem("activeProject3") || (projects[0]?.id || null);
+function projectKey(p) { return p.name; }
+function keyOfActive() {
+  const p = projects.find(x=>x.id===activeProject);
+  return p ? projectKey(p) : "";
+}
+function sidebarSwitchProject() {
+  activeProject = document.getElementById("sidebarProjectSel").value;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  updateLogTab();
+}
+function switchTab(tabId) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".container").forEach(c => c.classList.remove("active"));
+  document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add("active");
+  document.getElementById(tabId).classList.add("active");
+  if(tabId === "log") updateLogTab();
+  if(tabId === "memo") loadMemo();
+}
+function addProject() {
+  const name = document.getElementById('projectName').value.trim();
+  if(!name) return alert("工事名を入力してください");
+  if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
+  const id = Date.now().toString();
+  projects.push({id, name});
+  localStorage.setItem("projects3", JSON.stringify(projects));
+  activeProject = id;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  alert("工事を追加・切替しました");
+}
+function renderProjectSelects() {
+  const sbs = document.getElementById("sidebarProjectSel");
+  const lgs = document.getElementById("logProjectSel");
+  sbs.innerHTML = lgs.innerHTML = "";
+  projects.forEach(p => {
+    const sel = `<option value="${p.id}" ${p.id===activeProject?"selected":""}>${p.name}</option>`;
+    sbs.innerHTML += sel; lgs.innerHTML += sel;
+  });
+  let txt = "";
+  projects.forEach((p,i) => {
+    txt += `・${i+1}（${p.name}）<br>`;
+  });
+  document.getElementById("prjList").innerHTML = txt;
+}
+// 横断測量
+function initializeCrossTable() {
+  const tbody = document.querySelector("#crossTable tbody");
+  tbody.innerHTML = "";
+  for (let i = 0; i < 10; i++) {
+    const row = tbody.insertRow();
+    row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+    row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+    row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
+  }
+}
+function registerCross() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const point = document.getElementById("point").value.trim();
+  const dir = document.getElementById("direction").value;
+  if (!point) return alert("測点を入力してください");
+  const rows = document.querySelectorAll("#crossTable tbody tr");
+  let rowData = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const values = Array.from(inputs).map(input => input.value.trim());
+    if (values.some(v => v)) rowData.push(values);
+  });
+  let allLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  const k = keyOfActive();
+  if(!allLogs[k]) allLogs[k]=[];
+  allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
+  localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
+  initializeCrossTable();
+  document.getElementById("point").value = "";
+  updateLogTab();
+}
+function clearCross() {
+  if (confirm("すべての入力内容を削除します。よろしいですか？")) {
+    document.getElementById("point").value = "";
+    initializeCrossTable();
+  }
+}
+// 縦断測量
+function addLongRow() {
+  const tbody = document.querySelector("#longTable tbody");
+  const row = tbody.insertRow();
+  row.insertCell().innerHTML = `<input type="text" class="wide-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input" readonly tabindex="-1">`;
+  row.insertCell().innerHTML = `<input type="number" class="wide-input" readonly tabindex="-1">`;
+  const inputs = row.querySelectorAll("input");
+  inputs[1].addEventListener("input", () => calculateLong());
+  inputs[3].addEventListener("input", () => {
+    if(inputs[3].value !== ""){
+      inputs[4].value = "";
+      inputs[4].setAttribute("readonly", true);
+    }else{
+      inputs[4].removeAttribute("readonly");
+    }
+    calculateLong();
+  });
+  inputs[4].addEventListener("input", () => {
+    if(inputs[4].value !== ""){
+      inputs[3].value = "";
+      inputs[3].setAttribute("readonly", true);
+    }else{
+      inputs[3].removeAttribute("readonly");
+    }
+    calculateLong();
+  });
+}
+function calculateLong() {
+  const rows = document.querySelectorAll("#longTable tbody tr");
+  let prevGH = null, prevDelta = null, prevTsui = 0;
+  rows.forEach((row, i) => {
+    const cells = row.querySelectorAll("input");
+    const tankyo = parseFloat(cells[1].value) || 0;
+    let tsui = (i === 0) ? tankyo : (prevTsui + tankyo);
+    cells[2].value = tankyo === 0 ? "" : tsui;
+    prevTsui = tsui;
+    const bs = parseFloat(cells[3].value);
+    const fs = parseFloat(cells[4].value);
+    if (cells[3].value !== "") {
+      cells[4].value = "";
+      cells[4].setAttribute("readonly", true);
+    } else {
+      cells[4].removeAttribute("readonly");
+    }
+    if (cells[4].value !== "") {
+      cells[3].value = "";
+      cells[3].setAttribute("readonly", true);
+    } else {
+      cells[3].removeAttribute("readonly");
+    }
+    if (i === 0) {
+      if (!cells[6].value) {
+        let gh = prompt("初期GHを入力してください", "");
+        if (gh === null || gh.trim() === "" || isNaN(parseFloat(gh))) return;
+        cells[6].value = parseFloat(gh).toFixed(2);
+      }
+      prevGH = parseFloat(cells[6].value);
+      let delta = prevGH;
+      if (!isNaN(bs)) { delta = prevGH + bs; }
+      cells[5].value = delta.toFixed(2);
+      prevDelta = delta;
+    } else {
+      let prevRow = rows[i-1];
+      let prevGHfromRow = parseFloat(prevRow.querySelectorAll("input")[6].value);
+      let delta = prevDelta;
+      if (!isNaN(bs) && !isNaN(prevGHfromRow)) {
+        delta = prevGHfromRow + bs;
+      }
+      cells[5].value = delta !== null ? delta.toFixed(2) : "";
+      if (!isNaN(fs) && delta !== null) {
+        let gh = delta - fs;
+        cells[6].value = gh.toFixed(2);
+        prevGH = gh; prevDelta = delta;
+      } else {
+        cells[6].value = "";
+        prevGH = delta; prevDelta = delta;
+      }
+    }
+  });
+}
+function registerLong() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const rows = document.querySelectorAll("#longTable tbody tr");
+  let allLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  let tableRows = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const point = inputs[0].value;
+    const tankyo = inputs[1].value;
+    const tsuikyo = inputs[2].value;
+    const bs = inputs[3].value;
+    const fs = inputs[4].value;
+    const delta = inputs[5].value;
+    const gh = inputs[6].value;
+    if (point || tankyo || tsuikyo || bs || fs || delta || gh) {
+      tableRows.push({ point, tankyo, tsuikyo, bs, fs, delta, gh });
+    }
+  });
+  if (tableRows.length > 0) {
+    const k = keyOfActive();
+    if(!allLogs[k]) allLogs[k]=[];
+    allLogs[k].push({ tableRows, time: new Date().toLocaleString() });
+    localStorage.setItem("longLogs3", JSON.stringify(allLogs));
+  }
+  updateLogTab();
+  clearLongTable();
+}
+function clearLongTable() {
+  document.querySelector("#longTable tbody").innerHTML = "";
+  for (let i = 0; i < 10; i++) addLongRow();
+}
+function clearLong() {
+  if (confirm("縦断測量のすべてのデータを削除します。よろしいですか？")) {
+    clearLongTable();
+  }
+}
+// 道路曲線計算
+let curveResultObj = null;
+function dmsToDecimal(dms) {
+  const deg = Math.floor(dms / 10000);
+  const min = Math.floor((dms % 10000) / 100);
+  const sec = dms % 100;
+  return deg + min / 60 + sec / 3600;
+}
+function decimalToDMS(deg) {
+  const d = Math.floor(deg);
+  const mFloat = (deg - d) * 60;
+  const m = Math.floor(mFloat);
+  let s = Math.round((mFloat - m) * 60);
+  let mm = m, dd = d;
+  if (s === 60) { s = 0; mm += 1; }
+  if (mm === 60) { mm = 0; dd += 1; }
+  return `${dd}°${mm}′${s}″`;
+}
+function calculateCurve() {
+  const ipNo = document.getElementById("ipno").value;
+  const iaInput = document.getElementById("ia").value;
+  const r = parseFloat(document.getElementById("r").value);
+  if (!iaInput || !r || isNaN(r)) {
+    document.getElementById("curveResult").innerHTML = "入力値を確認してください";
+    curveResultObj = null;
+    return;
+  }
+  const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
+  const tl = r * Math.tan((iaDecimal * Math.PI / 180) / 2);
+  const sl = r * (1 / Math.cos((iaDecimal * Math.PI / 180) / 2) - 1);
+  const cl = r * (iaDecimal * Math.PI / 180);
+  const clHalf = cl / 2;
+  const mcDMS = decimalToDMS((180 - iaDecimal) / 2);
+  const iaStr = decimalToDMS(iaDecimal);
+  curveResultObj = {
+    ipNo, ia: iaDecimal, iaStr, r, tl: tl.toFixed(2), sl: sl.toFixed(2),
+    cl: cl.toFixed(2), cl2: clHalf.toFixed(2), mc: mcDMS, time: new Date().toLocaleString()
+  };
+  document.getElementById("curveResult").innerHTML = `
+    <strong>IP No:</strong> ${ipNo ? ipNo : ""}<br>
+    <strong>IA:</strong> ${iaStr}, <strong>R:</strong> ${r}<br>
+    TL: ${tl.toFixed(2)} m, SL: ${sl.toFixed(2)} m, CL: ${cl.toFixed(2)} m, CL/2: ${clHalf.toFixed(2)} m, MC: ${mcDMS}
+  `;
+}
+function registerCurve() {
+  if (!curveResultObj) return alert("まず「計算する」を押してください");
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  let allLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  const k = keyOfActive();
+  if(!allLogs[k]) allLogs[k]=[];
+  allLogs[k].push(curveResultObj);
+  localStorage.setItem("curveLogs3", JSON.stringify(allLogs));
+  curveResultObj = null;
+  document.getElementById("curveResult").innerHTML = "登録しました。";
+  updateLogTab();
+}
+function saveMemo() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const memo = document.getElementById("memoText").value.trim();
+  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  const k = keyOfActive();
+  allMemos[k] = memo;
+  localStorage.setItem("memoLogs3", JSON.stringify(allMemos));
+  document.getElementById("memoSaved").textContent = "保存しました";
+  updateLogTab();
+}
+function loadMemo() {
+  if(!activeProject) { document.getElementById("memoText").value = ""; return; }
+  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  const k = keyOfActive();
+  document.getElementById("memoText").value = allMemos[k] || "";
+  document.getElementById("memoSaved").textContent = "";
+}
+function updateLogTab() {
+  const prjId = document.getElementById("logProjectSel").value;
+  const p = projects.find(x=>x.id===prjId);
+  const k = p ? projectKey(p) : "";
+  // 横断
+  const crossLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  let logsArr = crossLogs[k] || [];
+  let htmlCross = `<h3>横断測量</h3><hr>`;
+  logsArr.forEach(log => {
+    htmlCross += `<div class="section"><b>【測点${log.point} - ${log.dir}】</b><br>`;
+    htmlCross += `<table><tr><th>横(m)</th><th>縦(m)</th><th>備考</th></tr>`;
+    log.rowData.forEach(r => {
+      htmlCross += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`;
+    });
+    htmlCross += `</table></div>`;
+  });
+  document.getElementById("logCross").innerHTML = htmlCross;
+  // 縦断
+  const longLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  let lArr = longLogs[k] || [];
+  let htmlLong = `<h3>縦断測量</h3><hr>`;
+  lArr.forEach(log => {
+    htmlLong += `<div class="section"><table><tr>
+      <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
+      </tr>`;
+    log.tableRows.forEach(row => {
+      htmlLong += `<tr>
+        <td>${row.point}</td>
+        <td>${row.tankyo}</td>
+        <td>${row.tsuikyo}</td>
+        <td>${row.bs}</td>
+        <td>${row.fs}</td>
+        <td>${row.delta}</td>
+        <td>${row.gh}</td>
+      </tr>`;
+    });
+    htmlLong += `</table></div>`;
+  });
+  document.getElementById("logLong").innerHTML = htmlLong;
+  // 曲線
+  const curveLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  let cArr = curveLogs[k] || [];
+  let htmlCurve = `<h3>道路曲線計算</h3><hr>`;
+  cArr.forEach(log => {
+    htmlCurve += `<div class="section">
+      IP No: ${log.ipNo || ""}, IA: ${log.iaStr || ""}, R: ${log.r || ""}<br>
+      TL: ${log.tl || ""} m, SL: ${log.sl || ""} m, CL: ${log.cl || ""} m, CL/2: ${log.cl2 || ""} m, MC: ${log.mc || ""}
+    </div>`;
+  });
+  document.getElementById("logCurve").innerHTML = htmlCurve;
+  // メモ
+  const allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  let memo = allMemos[k] || "";
+  document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
+}
+// 工事ごと削除
+function deleteProject() {
+  if(!activeProject) return;
+  const p = projects.find(x=>x.id===activeProject);
+  if(!p) return;
+  if(!confirm("この工事（"+p.name+"）と記録を完全削除します。よろしいですか？")) return;
+  projects = projects.filter(x=>x.id !== activeProject);
+  localStorage.setItem("projects3", JSON.stringify(projects));
+  const k = projectKey(p);
+  ["crossLogs3", "longLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
+    let all = JSON.parse(localStorage.getItem(key) || "{}");
+    if(all[k]) delete all[k];
+    localStorage.setItem(key, JSON.stringify(all));
+  });
+  activeProject = projects[0]?.id || null;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  updateLogTab();
+}
+function clearAllProjects() {
+  if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
+  localStorage.removeItem("projects3");
+  localStorage.removeItem("activeProject3");
+  ["crossLogs3", "longLogs3", "curveLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
+  projects = [];
+  activeProject = null;
+  renderProjectSelects();
+  updateLogTab();
+}
+function clearCategory(cat) {
+  const prjId = document.getElementById("logProjectSel").value;
+  const p = projects.find(x=>x.id===prjId);
+  if(!p) return;
+  const k = projectKey(p);
+  let keyMap = {cross: "crossLogs3", long: "longLogs3", curve: "curveLogs3", memo: "memoLogs3"};
+  if(!keyMap[cat]) return;
+  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
+  let all = JSON.parse(localStorage.getItem(keyMap[cat]) || "{}");
+  if(all[k]) delete all[k];
+  localStorage.setItem(keyMap[cat], JSON.stringify(all));
+  updateLogTab();
+}
+window.onload = () => {
+  renderProjectSelects();
+  initializeCrossTable();
+  clearLongTable();
+  updateLogTab();
+};
+</script>
+</body>
+</html>
