@@ -290,6 +290,13 @@
   }
   .survey-table table { min-width: 550px; }
 }
+    /* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
+input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[readonly] {
+  background: #eee !important;
+  color: #666 !important;
+  cursor: not-allowed;
+}
+
   </style>
 </head>
 <body>
