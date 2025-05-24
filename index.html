@@ -270,6 +270,7 @@
     <button class="tab" onclick="switchTab('pavement')">舗装計算</button>
     <button class="tab" onclick="switchTab('curve')">道路曲線計算</button>
     <button class="tab" onclick="switchTab('memo')">メモ</button>
+    <button class="tab" onclick="switchTab('drawing')">図形</button>
     <button class="tab" onclick="switchTab('log')">記録</button>
   </div>
   <div class="main-content">
@@ -379,6 +380,22 @@
         <button onclick="saveMemo()">保存</button>
       </div>
       <div id="memoSaved" class="record"></div>
+    </div>
+    <!-- 簡易図形タブの本体を追加 -->
+    <div id="drawing" class="container">
+      <h2>簡易図形メモ</h2>
+      <div style="margin-bottom:12px;">
+        <button onclick="setDrawMode('line')">線</button>
+        <button onclick="setDrawMode('text')">テキスト</button>
+        <button onclick="setDrawMode('number')">数字</button>
+        <button onclick="clearCanvas()">クリア</button>
+        <span id="drawModeLabel"></span>
+      </div>
+      <canvas id="drawingCanvas" width="340" height="340" style="border:1px solid #aaa; background:#fff; touch-action:none; width:97vw;max-width:380px;"></canvas>
+      <div style="margin:8px 0;">
+        <button onclick="saveDrawing()">記録</button>
+      </div>
+      <div id="drawingLog"></div>
     </div>
     <!-- 記録タブ -->
     <div id="log" class="container">
@@ -828,6 +845,149 @@ window.onload = () => {
   clearLongTable();
   clearPavementTable();
   updateLogTab();
+};
+// --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
+let drawMode = "line";
+let drawing = false;
+let startX, startY;
+let canvas, ctx;
+let savedDrawings = JSON.parse(localStorage.getItem("drawingLogs3") || "{}");
+
+function setDrawMode(mode) {
+  drawMode = mode;
+  document.getElementById("drawModeLabel").textContent = `モード: ${mode === 'line' ? '線' : mode === 'text' ? 'テキスト' : '数字'}`;
+}
+
+function getCanvasCtx() {
+  if (!canvas) {
+    canvas = document.getElementById("drawingCanvas");
+    ctx = canvas.getContext("2d");
+  }
+}
+function clearCanvas() {
+  getCanvasCtx();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+function saveDrawing() {
+  getCanvasCtx();
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const k = keyOfActive();
+  // PNG形式で保存
+  let img = canvas.toDataURL("image/png");
+  if(!savedDrawings[k]) savedDrawings[k]=[];
+  savedDrawings[k].push({img, time: new Date().toLocaleString()});
+  localStorage.setItem("drawingLogs3", JSON.stringify(savedDrawings));
+  showDrawingLog();
+  clearCanvas();
+  alert("記録しました");
+}
+function showDrawingLog() {
+  if(!activeProject) return;
+  const k = keyOfActive();
+  let arr = savedDrawings[k] || [];
+  let html = `<h3>図形記録</h3>`;
+  arr.forEach(obj => {
+    html += `<div style="margin-bottom:8px;"><img src="${obj.img}" style="width:120px;border:1px solid #999;"><br><small>${obj.time}</small></div>`;
+  });
+  document.getElementById("drawingLog").innerHTML = html;
+}
+
+// --- キャンバス描画イベント処理 ---
+function setupDrawingCanvas() {
+  getCanvasCtx();
+  let rect = canvas.getBoundingClientRect();
+  function xy(e) {
+    if(e.touches){ // タッチ端末
+      let t = e.touches[0] || e.changedTouches[0];
+      return {x: t.clientX - rect.left, y: t.clientY - rect.top};
+    }else{
+      return {x: e.offsetX, y: e.offsetY};
+    }
+  }
+  // 線
+  canvas.onmousedown = function(e){
+    if(drawMode==="line"){
+      drawing = true;
+      let pos = xy(e);
+      startX = pos.x; startY = pos.y;
+    }
+  };
+  canvas.onmousemove = function(e){
+    if(drawMode==="line" && drawing){
+      let pos = xy(e);
+      clearCanvas();
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+    }
+  };
+  canvas.onmouseup = function(e){
+    if(drawMode==="line" && drawing){
+      let pos = xy(e);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+      drawing = false;
+    }
+  };
+  // タッチイベント
+  canvas.ontouchstart = function(e){
+    if(drawMode==="line"){
+      drawing = true;
+      let pos = xy(e);
+      startX = pos.x; startY = pos.y;
+    }
+  };
+  canvas.ontouchmove = function(e){
+    if(drawMode==="line" && drawing){
+      let pos = xy(e);
+      clearCanvas();
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+    }
+    e.preventDefault();
+  };
+  canvas.ontouchend = function(e){
+    if(drawMode==="line" && drawing){
+      let pos = xy(e);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+      drawing = false;
+    }
+    e.preventDefault();
+  };
+  // テキスト＆数字
+  canvas.onclick = function(e){
+    if(drawMode==="text" || drawMode==="number"){
+      let txt = prompt("入力してください（最大8文字）");
+      if(!txt) return;
+      txt = txt.substring(0,8);
+      let pos = xy(e);
+      ctx.font = "20px sans-serif";
+      ctx.fillStyle="#ca6b00";
+      ctx.fillText(txt, pos.x, pos.y);
+    }
+  };
+}
+// 図形タブを開いた時だけキャンバス初期化＆記録表示
+const _oldSwitchTab = switchTab;
+switchTab = function(tabId){
+  _oldSwitchTab(tabId);
+  if(tabId==="drawing"){
+    setDrawMode("line");
+    setupDrawingCanvas();
+    showDrawingLog();
+  }
 };
 </script>
 </body>
