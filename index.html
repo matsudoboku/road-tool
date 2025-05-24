@@ -90,6 +90,7 @@
     .tabbar::-webkit-scrollbar {
       display: none;
     }
+
     .main-content {
       width: 100vw;
       padding: 0;
@@ -104,6 +105,7 @@
       padding: 10px 0 40px 0;
     }
     .container.active { display: block; }
+
     input, select, textarea {
       font-size: 1.05em;
       padding: 8px 10px;
@@ -260,10 +262,12 @@
   width: 100%;
   table-layout: fixed;
 }
+
 .survey-table th, .survey-table td {
   min-width: 80px;
   padding: 6px 2px;
 }
+
 /* テーブルセル内input・selectは100%でセルにピッタリ */
 .survey-table input[type="text"],
 .survey-table input[type="number"],
@@ -276,6 +280,7 @@
   padding: 7px 3px;
   margin: 0;
 }
+
 /* テーブル外フォームのinputは従来通り */
 @media (max-width: 800px) {
   .survey-table th, .survey-table td {
@@ -285,15 +290,13 @@
   }
   .survey-table table { min-width: 550px; }
 }
-/* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
+    /* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
 input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[readonly] {
   background: #eee !important;
   color: #666 !important;
   cursor: not-allowed;
 }
-/* ★図形キャンバスの横スクロール対応 */
-#drawCanvas { touch-action: none; max-width: 98vw; background: #fff; display: block; margin: 0 auto; }
-#drawImages img { margin: 8px 0; border:1px solid #888; max-width: 95vw; display:block; }
+
   </style>
 </head>
 <body>
@@ -309,10 +312,8 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     <button class="tab" onclick="switchTab('curve')">道路曲線計算</button>
     <button class="tab" onclick="switchTab('memo')">メモ</button>
     <button class="tab" onclick="switchTab('log')">記録</button>
-    <button class="tab" onclick="switchTab('drawing')">図形</button>
   </div>
   <div class="main-content">
-    <!-- ここまで既存のタブ -->
     <!-- 工事設定 -->
     <div id="project" class="container active">
       <h2>工事情報の登録・切替</h2>
@@ -442,19 +443,6 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
       <div id="logCurve"></div>
       <div id="logMemo"></div>
     </div>
-    <!-- 図形タブ -->
-    <div id="drawing" class="container">
-      <h2>簡易図形メモ</h2>
-      <canvas id="drawCanvas" width="360" height="360" style="border:1px solid #666; touch-action:none;"></canvas>
-      <div style="margin-top:8px;">
-        <button onclick="setDrawMode('line')">線</button>
-        <button onclick="setDrawMode('text')">テキスト</button>
-        <button onclick="saveDrawing()">保存</button>
-        <button onclick="clearCanvas()">クリア</button>
-      </div>
-      <div id="drawMessage" style="margin-top:4px;font-size:0.97em;color:#007acc;"></div>
-      <div id="drawImages"></div>
-    </div>
   </div>
 <script>
 let projects = JSON.parse(localStorage.getItem("projects3") || "[]");
@@ -464,95 +452,424 @@ function keyOfActive() {
   const p = projects.find(x=>x.id===activeProject);
   return p ? projectKey(p) : "";
 }
-// ・・・（ここに既存の各種関数たち。省略せず貼り付けてOK）・・・
-/* ★既存の関数群はそのまま（省略） */
-
-// ========== ▼▼▼ ここから図形タブ用の追加 ▼▼▼ ==========
-let drawMode = "line";
-let drawing = false, lastX = 0, lastY = 0;
-let drawRecords = JSON.parse(localStorage.getItem("drawRecords3") || "[]");
-
-// モード切替
-function setDrawMode(mode){
-  drawMode = mode;
-  document.getElementById('drawMessage').textContent =
-    mode==="text" ? "キャンバス内をタップしてテキスト入力" : "線モード";
+function sidebarSwitchProject() {
+  activeProject = document.getElementById("sidebarProjectSel").value;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  updateLogTab();
 }
-
-// 描画初期化＆イベント
-function setupDrawingCanvas(){
-  const canvas = document.getElementById("drawCanvas");
-  if(!canvas) return;
-  const ctx = canvas.getContext("2d");
-  // 線モード
-  canvas.addEventListener("pointerdown", function(e){
-    if(drawMode==="line"){
-      drawing = true;
-      [lastX, lastY] = [e.offsetX, e.offsetY];
-    }
+function switchTab(tabId) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".container").forEach(c => c.classList.remove("active"));
+  document.querySelector(.tab[onclick*="${tabId}"]).classList.add("active");
+  document.getElementById(tabId).classList.add("active");
+  if(tabId === "log") updateLogTab();
+  if(tabId === "memo") loadMemo();
+}
+function addCrossRow() {
+  const tbody = document.querySelector("#crossTable tbody");
+  const row = tbody.insertRow();
+  row.insertCell().innerHTML = <input type="number" class="mid-input">;
+  row.insertCell().innerHTML = <input type="number" class="mid-input">;
+  row.insertCell().innerHTML = <input type="text" class="remark-input">;
+}
+function initializeCrossTable() {
+  const tbody = document.querySelector("#crossTable tbody");
+  tbody.innerHTML = "";
+  for (let i = 0; i < 10; i++) {
+    addCrossRow();
+  }
+}
+function registerCross() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const point = document.getElementById("point").value.trim();
+  const dir = document.getElementById("direction").value;
+  if (!point) return alert("測点を入力してください");
+  const rows = document.querySelectorAll("#crossTable tbody tr");
+  let rowData = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const values = Array.from(inputs).map(input => input.value.trim());
+    if (values.some(v => v)) rowData.push(values);
   });
-  canvas.addEventListener("pointermove", function(e){
-    if(drawMode==="line" && drawing){
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(e.offsetX, e.offsetY);
-      ctx.strokeStyle = "#007acc";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      [lastX, lastY] = [e.offsetX, e.offsetY];
+  let allLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  const k = keyOfActive();
+  if(!allLogs[k]) allLogs[k]=[];
+  allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
+  localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
+  initializeCrossTable();
+  document.getElementById("point").value = "";
+  updateLogTab();
+}
+function clearCross() {
+  if (confirm("すべての入力内容を削除します。よろしいですか？")) {
+    document.getElementById("point").value = "";
+    initializeCrossTable();
+  }
+}
+function addLongRow() {
+  const tbody = document.querySelector("#longTable tbody");
+  const row = tbody.insertRow();
+  row.insertCell().innerHTML = <input type="text" class="wide-input">;
+  row.insertCell().innerHTML = <input type="number" class="mid-input">;
+  row.insertCell().innerHTML = <input type="number" class="mid-input" readonly tabindex="-1">;
+  row.insertCell().innerHTML = <input type="number" class="narrow-input">;
+  row.insertCell().innerHTML = <input type="number" class="narrow-input">;
+  row.insertCell().innerHTML = <input type="number" class="narrow-input" readonly tabindex="-1">;
+  row.insertCell().innerHTML = <input type="number" class="wide-input" readonly tabindex="-1">;
+  const inputs = row.querySelectorAll("input");
+  inputs[1].addEventListener("input", () => calculateLong());
+  inputs[3].addEventListener("input", () => {
+    if(inputs[3].value !== ""){
+      inputs[4].value = "";
+      inputs[4].setAttribute("readonly", true);
+    }else{
+      inputs[4].removeAttribute("readonly");
     }
+    calculateLong();
   });
-  canvas.addEventListener("pointerup", ()=> drawing = false);
-  canvas.addEventListener("pointerleave", ()=> drawing = false);
-  // テキストモード
-  canvas.addEventListener("pointerdown", function(e){
-    if(drawMode==="text"){
-      let text = prompt("入力するテキスト・数字を入れてください","");
-      if(text){
-        ctx.fillStyle = "#333";
-        ctx.font = "bold 18px sans-serif";
-        ctx.fillText(text, e.offsetX, e.offsetY);
+  inputs[4].addEventListener("input", () => {
+    if(inputs[4].value !== ""){
+      inputs[3].value = "";
+      inputs[3].setAttribute("readonly", true);
+    }else{
+      inputs[3].removeAttribute("readonly");
+    }
+    calculateLong();
+  });
+}
+function calculateLong() {
+  const rows = document.querySelectorAll("#longTable tbody tr");
+  let prevGH = null, prevDelta = null, prevTsui = 0;
+  rows.forEach((row, i) => {
+    const cells = row.querySelectorAll("input");
+    const tankyo = parseFloat(cells[1].value) || 0;
+    let tsui = (i === 0) ? tankyo : (prevTsui + tankyo);
+    cells[2].value = tankyo === 0 ? "" : tsui;
+    prevTsui = tsui;
+    const bs = parseFloat(cells[3].value);
+    const fs = parseFloat(cells[4].value);
+    if (cells[3].value !== "") {
+      cells[4].value = "";
+      cells[4].setAttribute("readonly", true);
+    } else {
+      cells[4].removeAttribute("readonly");
+    }
+    if (cells[4].value !== "") {
+      cells[3].value = "";
+      cells[3].setAttribute("readonly", true);
+    } else {
+      cells[3].removeAttribute("readonly");
+    }
+    if (i === 0) {
+      if (!cells[6].value) {
+        let gh = prompt("初期GHを入力してください", "");
+        if (gh === null || gh.trim() === "" || isNaN(parseFloat(gh))) return;
+        cells[6].value = parseFloat(gh).toFixed(2);
+      }
+      prevGH = parseFloat(cells[6].value);
+      let delta = prevGH;
+      if (!isNaN(bs)) { delta = prevGH + bs; }
+      cells[5].value = delta.toFixed(2);
+      prevDelta = delta;
+    } else {
+      let prevRow = rows[i-1];
+      let prevGHfromRow = parseFloat(prevRow.querySelectorAll("input")[6].value);
+      let delta = prevDelta;
+      if (!isNaN(bs) && !isNaN(prevGHfromRow)) {
+        delta = prevGHfromRow + bs;
+      }
+      cells[5].value = delta !== null ? delta.toFixed(2) : "";
+      if (!isNaN(fs) && delta !== null) {
+        let gh = delta - fs;
+        cells[6].value = gh.toFixed(2);
+        prevGH = gh; prevDelta = delta;
+      } else {
+        cells[6].value = "";
+        prevGH = delta; prevDelta = delta;
       }
     }
   });
 }
-
-// 保存・表示・クリア
-function saveDrawing(){
-  const canvas = document.getElementById("drawCanvas");
-  const img = canvas.toDataURL();
-  drawRecords.push({time:new Date().toLocaleString(), img});
-  localStorage.setItem("drawRecords3", JSON.stringify(drawRecords));
-  document.getElementById('drawMessage').textContent = "保存しました";
-  renderDrawImages();
-}
-function clearCanvas(){
-  const canvas = document.getElementById("drawCanvas");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-}
-function renderDrawImages(){
-  let html = "<h3>保存履歴</h3>";
-  drawRecords.slice().reverse().forEach(rec=>{
-    html += `<div><img src="${rec.img}"><div style="font-size:0.9em;color:#555;">${rec.time}</div></div>`;
+function registerLong() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const rows = document.querySelectorAll("#longTable tbody tr");
+  let allLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  let tableRows = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll("input");
+    const point = inputs[0].value;
+    const tankyo = inputs[1].value;
+    const tsuikyo = inputs[2].value;
+    const bs = inputs[3].value;
+    const fs = inputs[4].value;
+    const delta = inputs[5].value;
+    const gh = inputs[6].value;
+    if (point || tankyo || tsuikyo || bs || fs || delta || gh) {
+      tableRows.push({ point, tankyo, tsuikyo, bs, fs, delta, gh });
+    }
   });
-  document.getElementById("drawImages").innerHTML = html;
+  if (tableRows.length > 0) {
+    const k = keyOfActive();
+    if(!allLogs[k]) allLogs[k]=[];
+    allLogs[k].push({ tableRows, time: new Date().toLocaleString() });
+    localStorage.setItem("longLogs3", JSON.stringify(allLogs));
+  }
+  updateLogTab();
+  clearLongTable();
 }
-// ========== ▲▲▲ ここまで図形タブ用の追加 ▲▲▲ ==========
-
+function clearLongTable() {
+  document.querySelector("#longTable tbody").innerHTML = "";
+  for (let i = 0; i < 10; i++) addLongRow();
+}
+function clearLong() {
+  if (confirm("縦断測量のすべてのデータを削除します。よろしいですか？")) {
+    clearLongTable();
+  }
+}
+function addPavementRow() {
+  const tbody = document.querySelector('#pavementTable tbody');
+  const row = tbody.insertRow();
+  const typeCell = row.insertCell();
+  typeCell.innerHTML = 
+    <select onchange="updatePavementTable()">
+      <option value="アスファルト">アスファルト</option>
+      <option value="コンクリート">コンクリート</option>
+    </select>
+  ;
+  row.insertCell().innerHTML = <input type="text" oninput="updatePavementTable()">;
+  row.insertCell().innerHTML = <input type="number" oninput="updatePavementTable()">;
+  row.insertCell().innerHTML = <input type="number" oninput="updatePavementTable()">;
+  for(let i=0;i<3;i++){
+    row.insertCell().innerHTML = <input type="number" readonly tabindex="-1">;
+  }
+  updatePavementTable();
+}
+function updatePavementTable() {
+  const rows = document.querySelectorAll('#pavementTable tbody tr');
+  let prevTsuikyo = 0, prevHani = 0, areaTotal = 0;
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input');
+    const hani = parseFloat(inputs[1].value) || 0;
+    const tankyo = parseFloat(inputs[2].value) || 0;
+    let tsuikyo = (i===0) ? tankyo : (prevTsuikyo + tankyo);
+    inputs[3].value = tankyo ? tsuikyo : '';
+    prevTsuikyo = tsuikyo;
+    let avgHani = (i===0) ? hani : ((hani + prevHani) / 2);
+    inputs[4].value = hani ? avgHani.toFixed(2) : '';
+    prevHani = hani;
+    let area = (tankyo && avgHani) ? (tankyo * avgHani) : '';
+    inputs[5].value = area ? area.toFixed(2) : '';
+    areaTotal += parseFloat(inputs[5].value) || 0;
+  });
+  document.getElementById('areaTotalCell').textContent = areaTotal.toFixed(2);
+}
+function clearPavementTable() {
+  document.querySelector('#pavementTable tbody').innerHTML = '';
+  for(let i=0;i<10;i++) addPavementRow();
+  updatePavementTable();
+}
+function clearPavement() {
+  if (confirm("舗装計算のすべてのデータを削除します。よろしいですか？")) {
+    clearPavementTable();
+  }
+}
+function registerPavement() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const rows = document.querySelectorAll("#pavementTable tbody tr");
+  let pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
+  let tableRows = [];
+  rows.forEach(row => {
+    const select = row.querySelector('select');
+    const inputs = row.querySelectorAll('input');
+    const type = select.value;
+    const point = inputs[0].value;
+    const hani = inputs[1].value;
+    const tankyo = inputs[2].value;
+    const tsuikyo = inputs[3].value;
+    const avgHani = inputs[4].value;
+    const area = inputs[5].value;
+    if(type || point || tankyo || hani || tsuikyo || avgHani || area){
+      tableRows.push({type, point, hani, tankyo, tsuikyo, avgHani, area});
+    }
+  });
+  let areaTotal = document.getElementById('areaTotalCell').textContent;
+  if (tableRows.length > 0) {
+    const k = keyOfActive();
+    if(!pavementLogs[k]) pavementLogs[k]=[];
+    pavementLogs[k].push({ tableRows, areaTotal, time: new Date().toLocaleString() });
+    localStorage.setItem("pavementLogs3", JSON.stringify(pavementLogs));
+  }
+  updateLogTab();
+  clearPavementTable();
+}
+function updateLogTab() {
+  const prjId = document.getElementById("logProjectSel").value;
+  const p = projects.find(x=>x.id===prjId);
+  const k = p ? projectKey(p) : "";
+  const crossLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  let logsArr = crossLogs[k] || [];
+  let htmlCross = <h3>横断測量</h3><hr>;
+  logsArr.forEach(log => {
+    htmlCross += <div class="section"><b>【測点${log.point} - ${log.dir}】</b><br>;
+    htmlCross += <table><tr><th>横(m)</th><th>縦(m)</th><th>備考</th></tr>;
+    log.rowData.forEach(r => {
+      htmlCross += <tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>;
+    });
+    htmlCross += </table></div>;
+  });
+  document.getElementById("logCross").innerHTML = htmlCross;
+  const longLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  let lArr = longLogs[k] || [];
+  let htmlLong = <h3>縦断測量</h3><hr>;
+  lArr.forEach(log => {
+    htmlLong += <div class="section"><table><tr>
+      <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
+      </tr>;
+    log.tableRows.forEach(row => {
+      htmlLong += <tr>
+        <td>${row.point}</td>
+        <td>${row.tankyo}</td>
+        <td>${row.tsuikyo}</td>
+        <td>${row.bs}</td>
+        <td>${row.fs}</td>
+        <td>${row.delta}</td>
+        <td>${row.gh}</td>
+      </tr>;
+    });
+    htmlLong += </table></div>;
+  });
+  document.getElementById("logLong").innerHTML = htmlLong;
+  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
+  let pArr = pavementLogs[k] || [];
+  let htmlPave = <h3>舗装計算</h3><hr>;
+  pArr.forEach(log => {
+    htmlPave += <div class="section"><table><tr>
+      <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
+      </tr>;
+    log.tableRows.forEach(row => {
+      htmlPave += <tr>
+        <td>${row.type}</td>
+        <td>${row.point}</td>
+        <td>${row.hani}</td>
+        <td>${row.tankyo}</td>
+        <td>${row.tsuikyo}</td>
+        <td>${row.avgHani}</td>
+        <td>${row.area}</td>
+      </tr>;
+    });
+    htmlPave += <tr>
+        <td colspan="6" style="text-align:right;">合計</td>
+        <td>${log.areaTotal}</td>
+      </tr>;
+    htmlPave += </table>日時:${log.time}</div>;
+  });
+  document.getElementById("logPavement").innerHTML = htmlPave;
+  const curveLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  let cArr = curveLogs[k] || [];
+  let htmlCurve = <h3>道路曲線計算</h3><hr>;
+  cArr.forEach(log => {
+    htmlCurve += <div class="section">
+      IP No: ${log.ipNo || ""}, IA: ${log.iaStr || ""}, R: ${log.r || ""}<br>
+      TL: ${log.tl || ""} m, SL: ${log.sl || ""} m, CL: ${log.cl || ""} m, CL/2: ${log.cl2 || ""} m, MC: ${log.mc || ""}
+    </div>;
+  });
+  document.getElementById("logCurve").innerHTML = htmlCurve;
+  const allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  let memo = allMemos[k] || "";
+  document.getElementById("logMemo").innerHTML = <h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>;
+}
+function clearCategory(cat) {
+  const prjId = document.getElementById("logProjectSel").value;
+  const p = projects.find(x=>x.id===prjId);
+  if(!p) return;
+  const k = projectKey(p);
+  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3"};
+  if(!keyMap[cat]) return;
+  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
+  let all = JSON.parse(localStorage.getItem(keyMap[cat]) || "{}");
+  if(all[k]) delete all[k];
+  localStorage.setItem(keyMap[cat], JSON.stringify(all));
+  updateLogTab();
+}
+function addProject() {
+  const name = document.getElementById('projectName').value.trim();
+  if(!name) return alert("工事名を入力してください");
+  if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
+  const id = Date.now().toString();
+  projects.push({id, name});
+  localStorage.setItem("projects3", JSON.stringify(projects));
+  activeProject = id;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  alert("工事を追加・切替しました");
+}
+function renderProjectSelects() {
+  const sbs = document.getElementById("sidebarProjectSel");
+  const lgs = document.getElementById("logProjectSel");
+  sbs.innerHTML = lgs.innerHTML = "";
+  projects.forEach(p => {
+    const sel = <option value="${p.id}" ${p.id===activeProject?"selected":""}>${p.name}</option>;
+    sbs.innerHTML += sel; lgs.innerHTML += sel;
+  });
+  let txt = "";
+  projects.forEach((p,i) => {
+    txt += ・${i+1}（${p.name}）<br>;
+  });
+  document.getElementById("prjList").innerHTML = txt;
+}
+function deleteProject() {
+  if(!activeProject) return;
+  const p = projects.find(x=>x.id===activeProject);
+  if(!p) return;
+  if(!confirm("この工事（"+p.name+"）と記録を完全削除します。よろしいですか？")) return;
+  projects = projects.filter(x=>x.id !== activeProject);
+  localStorage.setItem("projects3", JSON.stringify(projects));
+  const k = projectKey(p);
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
+    let all = JSON.parse(localStorage.getItem(key) || "{}");
+    if(all[k]) delete all[k];
+    localStorage.setItem(key, JSON.stringify(all));
+  });
+  activeProject = projects[0]?.id || null;
+  localStorage.setItem("activeProject3", activeProject);
+  renderProjectSelects();
+  updateLogTab();
+}
+function clearAllProjects() {
+  if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
+  localStorage.removeItem("projects3");
+  localStorage.removeItem("activeProject3");
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
+  projects = [];
+  activeProject = null;
+  renderProjectSelects();
+  updateLogTab();
+}
+function saveMemo() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const memo = document.getElementById("memoText").value.trim();
+  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  const k = keyOfActive();
+  allMemos[k] = memo;
+  localStorage.setItem("memoLogs3", JSON.stringify(allMemos));
+  document.getElementById("memoSaved").textContent = "保存しました";
+  updateLogTab();
+}
+function loadMemo() {
+  if(!activeProject) { document.getElementById("memoText").value = ""; return; }
+  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  const k = keyOfActive();
+  document.getElementById("memoText").value = allMemos[k] || "";
+  document.getElementById("memoSaved").textContent = "";
+}
 window.onload = () => {
   renderProjectSelects();
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
   updateLogTab();
-  setupDrawingCanvas();      // ←★図形タブのcanvas初期化
-  renderDrawImages();        // ←★履歴の初期描画
 };
-</script>
-</body>
-</html>
-
 </script>
 </body>
 </html>
