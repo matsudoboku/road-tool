@@ -989,6 +989,68 @@ switchTab = function(tabId){
     showDrawingLog();
   }
 };
+let curveResultObj = null; // グローバル変数
+
+function dmsToDecimal(dms) {
+  const deg = Math.floor(dms / 10000);
+  const min = Math.floor((dms % 10000) / 100);
+  const sec = dms % 100;
+  return deg + min / 60 + sec / 3600;
+}
+function decimalToDMS(deg) {
+  const d = Math.floor(deg);
+  const mFloat = (deg - d) * 60;
+  const m = Math.floor(mFloat);
+  let s = Math.round((mFloat - m) * 60);
+  let mm = m, dd = d;
+  if (s === 60) { s = 0; mm += 1; }
+  if (mm === 60) { mm = 0; dd += 1; }
+  return `${dd}°${mm}′${s}″`;
+}
+
+function calculateCurve() {
+  const ipNo = document.getElementById("ipno").value;
+  const iaInput = document.getElementById("ia").value;
+  const r = parseFloat(document.getElementById("r").value);
+  if (!iaInput || !r || isNaN(r)) {
+    document.getElementById("curveResult").innerHTML = "入力値を確認してください";
+    return;
+  }
+
+  // GAS式と同じ
+  const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
+  const iaRadHalf = (iaDecimal * Math.PI / 180) / 2;
+
+  const tl = r * Math.tan(iaRadHalf);                                      // 接線長 TL
+  const sl = r * (1 / Math.cos(iaRadHalf) - 1);                            // SL（GAS式。弦長ではない）
+  const cl = r * (iaDecimal * Math.PI / 180);                              // 曲線長 CL
+  const clHalf = cl / 2;
+  const mcDMS = decimalToDMS((180 - iaDecimal) / 2);                       // MC（角度で返す）
+
+  const iaStr = decimalToDMS(iaDecimal);
+
+  // 結果表示
+  document.getElementById("curveResult").innerHTML = `
+    <strong>IP No:</strong> ${ipNo ? ipNo : ""}<br>
+    <strong>IA:</strong> ${iaStr}, <strong>R:</strong> ${r}<br>
+    TL: ${tl.toFixed(3)} m, SL: ${sl.toFixed(3)} m, CL: ${cl.toFixed(3)} m, CL/2: ${clHalf.toFixed(3)} m, MC: ${mcDMS}
+  `;
+}
+function registerCurve() {
+  if (!curveResultObj) { alert("まず「計算する」を押してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
+  let allLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  const k = keyOfActive();
+  if (!allLogs[k]) allLogs[k] = [];
+  allLogs[k].push({...curveResultObj, time: new Date().toLocaleString()});
+  localStorage.setItem("curveLogs3", JSON.stringify(allLogs));
+  curveResultObj = null;
+  document.getElementById('curveResult').innerHTML = "登録しました。";
+  document.getElementById('ipno').value = "";
+  document.getElementById('ia').value = "";
+  document.getElementById('r').value = "";
+  updateLogTab();
+}
 </script>
 </body>
 </html>
