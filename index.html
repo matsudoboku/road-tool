@@ -16,8 +16,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=yes">
   <title>道路ツール</title>
-  <style>
-    html, body {
+  html, body {
   background: #f5f5f5;
   margin: 0;
   padding: 0;
@@ -26,12 +25,7 @@
   width: 100vw;
   min-height: 100vh;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
-
-.container { display: none; }
-.container.active { display: block; }
-
 .project-bar {
   width: 100vw;
   background: #e3f2fd;
@@ -45,7 +39,6 @@
   top: 0;
   z-index: 100;
 }
-
 .project-bar label {
   font-size: 1em;
   color: #007acc;
@@ -57,7 +50,6 @@
   padding: 5px 10px;
   border-radius: 5px;
 }
-
 .tabbar {
   display: flex;
   overflow-x: auto;
@@ -68,52 +60,49 @@
   border-bottom: 2px solid #007acc;
   box-sizing: border-box;
   z-index: 90;
-  box-shadow: 0 2px 8px #0001;
-  padding-bottom: 0;
-  gap: 0;
-  scrollbar-width: none;
+  padding-bottom: 4px;
+  gap: 6px;
 }
-.tabbar::-webkit-scrollbar { display: none; }
-
 .tabbar button {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 92px;
-  font-size: 1em;
-  padding: 13px 0;
+  white-space: nowrap;
+  font-size: 1.02em;
+  padding: 11px 19px;
   border: none;
   background: #164361;
   color: #fff;
   border-bottom: 4px solid transparent;
   transition: border-bottom .2s, background .15s;
   font-weight: normal;
-  box-shadow: none;
-  margin: 0;
-  border-radius: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 0;
 }
 .tabbar button.active {
   background: #007acc;
   color: #fff;
   border-bottom: 4px solid #ffdc57;
   font-weight: bold;
-  z-index: 2;
+}
+.tabbar::-webkit-scrollbar {
+  display: none;
 }
 
 .main-content {
   width: 100vw;
-  max-width: 100vw;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 .container {
+  display: none;
   width: 100vw;
-  max-width: 100vw;
   box-sizing: border-box;
   margin: 0 auto;
   padding: 10px 0 40px 0;
-  overflow-x: hidden;
 }
+.container.active { display: block; }
 
 input, select, textarea {
   font-size: 1.05em;
@@ -123,21 +112,6 @@ input, select, textarea {
   margin: 2px 0;
   box-sizing: border-box;
 }
-textarea {
-  width: 95vw;
-  min-height: 80px;
-  max-width: 99vw;
-}
-.form-inline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  width: 100%;
-  margin: 0 auto 14px auto;
-  flex-wrap: wrap;
-}
-
 table {
   border-collapse: collapse;
   margin: 12px 0 0 0;
@@ -145,7 +119,6 @@ table {
   width: 100vw;
   max-width: 100vw;
   table-layout: fixed;
-  overflow-x: auto;
 }
 th, td {
   border: 1px solid #ccc;
@@ -159,86 +132,96 @@ th {
   font-weight: bold;
   font-size: 1.04em;
 }
-.survey-table input[type="text"],
-.survey-table input[type="number"],
-.survey-table select {
-  width: 97%;
-  min-width: 40px;
-  max-width: 140px;
-  font-size: 1.06em;
-  padding: 7px 6px;
-  box-sizing: border-box;
-  margin: 0;
-}
-.buttons {
-  margin-top: 14px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.buttons button, .danger-btn, .warn-btn {
-  font-size: 1em;
-  border-radius: 7px;
-  font-weight: bold;
-  padding: 10px 19px;
-  border: none;
-  cursor: pointer;
-  background: #007acc;
-  color: #fff;
-  transition: background .15s;
-}
-.danger-btn { background: #e53935; }
-.warn-btn   { background: #ffc107; color: #333;}
-.delete-btn { background: #e53935; color:white;}
-.add-btn {
-  background: #007acc;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 7px;
-  padding: 10px 32px;
-  border: none;
-  margin: 0 10px;
-  font-size: 1em;
-  text-align: center;
-  display: inline-block;
-}
-.record { background: #fff; padding: 8px 2px; margin: 10px 0; border: 1px solid #ccc; font-size: 0.97em;}
-#log h3 { margin-bottom: 3px; border-bottom: 1px solid #2196f3; }
-#log div.section { background: #fff; border: 1px solid #ccc; margin: 8px 0; padding: 6px;}
-.工事選択欄 { margin-bottom: 12px; }
-#logPavement { margin-top: 16px; }
 
+/* 共通：テーブルのインプット幅調整 */
+.survey-table input[type="text"],
+.survey-table input[type="number"] {
+  width: 96%;
+  min-width: 50px;
+  max-width: 160px;
+  font-size: 1.07em;
+  padding: 7px 4px;
+  box-sizing: border-box;
+}
+
+/* 横断測量テーブルだけ特に狭く */
+#crossTable input[type="text"],
+#crossTable input[type="number"] {
+  width: 98%;
+  min-width: 46px;
+  max-width: 90px;
+  font-size: 1.08em;
+  padding: 7px 3px;
+}
+
+/* 縦断測量テーブル（幅広め） */
+#longTable input[type="text"],
+#longTable input[type="number"] {
+  width: 98%;
+  min-width: 60px;
+  max-width: 120px;
+  font-size: 1.1em;
+  padding: 5px 4px;
+  box-sizing: border-box;
+}
+
+/* 舗装計算テーブル */
+#pavementTable input[type="text"],
+#pavementTable input[type="number"],
+#pavementTable select {
+  width: 98%;
+  min-width: 46px;
+  max-width: 120px;
+  font-size: 1.07em;
+  padding: 5px 4px;
+  box-sizing: border-box;
+}
+
+/* レスポンシブ */
+@media (max-width: 800px) {
+  html, body { font-size: 17px; }
+  .main-content, .container, table { width: 100vw !important; max-width: 100vw !important; }
+  th, td { font-size: 0.98em; padding: 5px 2px; }
+  .buttons button { width: 44vw; min-width: 110px; }
+  .project-bar { flex-direction: column; align-items: stretch; gap: 5px; }
+  .tabbar { font-size: 0.98em; }
+  .tabbar button { font-size: 0.96em; min-width: 84px; padding: 11px 7px; }
+  .form-inline { flex-direction: column; align-items: stretch; }
+  /* 入力欄サイズを小さめ */
+  .survey-table input[type="text"],
+  .survey-table input[type="number"] {
+    width: 98vw;
+    min-width: 36vw;
+    max-width: 98vw;
+    font-size: 1.08em;
+    padding: 7px 4px;
+  }
+  #longTable input[type="text"],
+  #longTable input[type="number"] {
+    width: 94vw;
+    min-width: 34vw;
+    max-width: 99vw;
+    font-size: 1.09em;
+    padding: 5px 4px;
+  }
+  #pavementTable input[type="text"],
+  #pavementTable input[type="number"],
+  #pavementTable select {
+    width: 94vw;
+    min-width: 33vw;
+    max-width: 99vw;
+    font-size: 1.08em;
+    padding: 5px 4px;
+  }
+}
+
+/* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
 input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[readonly] {
   background: #eee !important;
   color: #666 !important;
   cursor: not-allowed;
 }
 
-@media (max-width: 800px) {
-  html, body { font-size: 17px; }
-  .main-content, .container, table { width: 100vw !important; max-width: 100vw !important; overflow-x: auto;}
-  .survey-table input[type="text"],
-  .survey-table input[type="number"],
-  .survey-table select {
-    font-size: 1.02em;
-    padding: 8px 3px;
-    width: 98vw;
-    min-width: 36vw;
-    max-width: 99vw;
-  }
-  th, td { font-size: 0.97em; padding: 6px 2px; }
-  .buttons button { width: auto; min-width: 80px; }
-  .project-bar { flex-direction: column; align-items: stretch; gap: 5px; }
-  .tabbar { font-size: 0.95em; }
-  .tabbar button { font-size: 0.93em; min-width: 60px; }
-  .form-inline { flex-direction: column; align-items: stretch; }
-  textarea { width: 96vw; }
-}
-
-/* 横スクロール・右側の余白を消す */
-html, body, .main-content, .container {
-  overflow-x: hidden !important;
-}
   </style>
 </head>
 <body>
