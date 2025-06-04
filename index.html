@@ -222,31 +222,6 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   color: #666 !important;
   cursor: not-allowed;
 }
-@media (max-width: 800px) {
-  /* --- 横断・縦断・舗装 全テーブルに効かせる --- */
-  .survey-table input[type="text"],
-  .survey-table input[type="number"],
-  .survey-table select {
-    width: 95vw !important;
-    min-width: 45vw !important;
-    max-width: 98vw !important;
-    font-size: 1.07em !important;
-    padding: 10px 5px !important;
-    box-sizing: border-box;
-    height: 2.2em;
-  }
-  /* --- テーブルレイアウト --- */
-  table, .survey-table {
-    table-layout: fixed !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-  }
-  th, td {
-    padding: 6px 2px !important;
-    font-size: 1em !important;
-    min-width: unset !important;
-  }
-}
 
   </style>
 </head>
@@ -1031,8 +1006,6 @@ function calculateCurve() {
     TL: ${tl.toFixed(3)} m, SL: ${sl.toFixed(3)} m, CL: ${cl.toFixed(3)} m, CL/2: ${clHalf.toFixed(3)} m, MC: ${mcDMS}
   `;
 }
-
-
 function registerCurve() {
   if (!curveResultObj) { alert("まず「計算する」を押してください"); return; }
   if (!activeProject) { alert("工事を選択してください"); return; }
