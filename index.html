@@ -156,6 +156,14 @@ th {
   box-sizing: border-box;
 }
 
+/* 入力幅の調整用クラス */
+.wide-input,
+.mid-input,
+.narrow-input,
+.remark-input {
+  width: 96%;
+  box-sizing: border-box;
+}
 /* レスポンシブ */
 @media (max-width: 800px) {
   html, body { font-size: 17px; }
@@ -180,7 +188,7 @@ th {
   #longTable input[type="text"],␊
   #longTable input[type="number"] {␊
     width: 98%;
-    min-width: 20vw;␊
+    min-width: 60px;␊
     max-width: 98%;
     font-size: 1.09em;␊
     padding: 5px 4px;␊
@@ -189,7 +197,7 @@ th {
   #pavementTable input[type="number"],␊
   #pavementTable select {␊
     width: 98%;
-    min-width: 20vw;␊
+    min-width: 60px;␊
     max-width: 98%;
     font-size: 1.08em;␊
     padding: 5px 4px;␊
@@ -212,7 +220,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 .survey-table input[type="text"],
 .survey-table input[type="number"],
 .survey-table select {
-  width: 100%;
+  width: 96%;
   margin: 0;
   border: none;
   border-radius: 0;
@@ -221,7 +229,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 }
 #crossTable input[type="text"],
 #crossTable input[type="number"] {
-  width: 100%;
+  width: 96%;
 }
 
 /* スマホで値が切れないようテーブル幅を最小化しつつ横スクロールを許可 */
@@ -231,7 +239,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     .survey-table input[type="text"],
   .survey-table input[type="number"],
   .survey-table select {
-    width: 100%;
+  width: 96%;
   }
 }
   </style>
