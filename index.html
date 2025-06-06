@@ -147,12 +147,13 @@ th {
 }
 /* 共通：テーブルのインプット幅調整 */
 .survey-table input[type="text"],
-.survey-table input[type="number"] {
-  width: 96%;
-  min-width: 50px;
-  max-width: 160px;
-  font-size: 1.07em;
-  padding: 7px 4px;
+.survey-table input[type="number"],
+.survey-table select {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: 6px 4px;
   box-sizing: border-box;
 }
 
@@ -176,15 +177,6 @@ th {
   .form-inline { flex-direction: column; align-items: stretch; }
   .cross-head { flex-direction: column; align-items: flex-start; }
   .cross-head #point { width: 96%; max-width: 160px; }
-  /* 入力欄サイズを小さめ */
-  .survey-table input[type="text"],␊
-  .survey-table input[type="number"] {␊
-    width: 96%;
-    min-width: 30vw;␊
-    max-width: 96%;
-    font-size: 1.08em;␊
-    padding: 7px 4px;␊
-  }␊
   #longTable input[type="text"],␊
   #longTable input[type="number"] {␊
     width: 98%;
@@ -236,11 +228,10 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #crossTable { min-width: 360px; }
 #longTable  { min-width: 600px; }
 @media (max-width: 800px) {
-    .survey-table input[type="text"],
-  .survey-table input[type="number"],
-  .survey-table select {
-  width: 96%;
-  }
+#crossTable input[type="text"],
+#crossTable input[type="number"] {
+  width: 100%;
+　}
 }
   </style>
 </head>
