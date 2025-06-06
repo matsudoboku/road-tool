@@ -125,21 +125,21 @@ input, select, textarea {
   margin: 2px 0;
   box-sizing: border-box;
 }
-table {␊
-  border-collapse: collapse;␊
-  margin: 12px 0 0 0;␊
-  background: #fff;␊
+table {
+  border-collapse: collapse;
+  margin: 12px 0 0 0;
+  background: #fff;
   width: 100%;
   max-width: 100%;
-  table-layout: fixed;␊
-}␊
-th, td {␊
+  table-layout: fixed;
+}
+th, td {
   border: 1px solid #ddd;
   padding: 4px;
-  font-size: 1em;␊
-  text-align: center;␊
-  min-width: 56px;␊
-}␊
+  font-size: 1em;
+  text-align: center;
+  min-width: 56px;
+}
 th {
   background: #e3f2fd;
   font-weight: bold;
@@ -175,23 +175,23 @@ th {
   .tabbar { font-size: 0.98em; }
   .tabbar button { font-size: 0.96em; min-width: 84px; padding: 11px 7px; }
   .form-inline { flex-direction: column; align-items: stretch; }
-  #longTable input[type="text"],␊
-  #longTable input[type="number"] {␊
+  #longTable input[type="text"],
+  #longTable input[type="number"] {
     width: 98%;
-    min-width: 60px;␊
+    min-width: 60px;
     max-width: 98%;
-    font-size: 1.09em;␊
-    padding: 5px 4px;␊
-  }␊
-  #pavementTable input[type="text"],␊
-  #pavementTable input[type="number"],␊
-  #pavementTable select {␊
+    font-size: 1.09em;
+    padding: 5px 4px;
+  }
+  #pavementTable input[type="text"],
+  #pavementTable input[type="number"],
+  #pavementTable select {
     width: 98%;
-    min-width: 60px;␊
+    min-width: 60px;
     max-width: 98%;
-    font-size: 1.08em;␊
-    padding: 5px 4px;␊
-  }␊
+    font-size: 1.08em;
+    padding: 5px 4px;
+  }
 }
 
 /* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
@@ -238,7 +238,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     <label>作業中の工事：</label>
     <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
   </div>
-  <div class="tabbar">␊
+  <div class="tabbar">
     <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
     <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
     <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
@@ -247,7 +247,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
     <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
     <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
-  </div>␊
+  </div>
   <div class="main-content">
     <!-- 工事設定 -->
     <div id="project" class="container active">
@@ -400,7 +400,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   </div>
 <script>
 let projects = JSON.parse(localStorage.getItem("projects3") || "[]");
-let activeProject = localStorage.getItem("activeProject3") || (projects[0]?.id || null);
+let activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
 function projectKey(p) { return p.name; }
 function keyOfActive() {
   const p = projects.find(x=>x.id===activeProject);
@@ -412,14 +412,14 @@ function sidebarSwitchProject() {
   renderProjectSelects();
   updateLogTab();
 }
-function switchTab(tabId) {␊
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));␊
-  document.querySelectorAll(".container").forEach(c => c.classList.remove("active"));␊
+function switchTab(tabId) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".container").forEach(c => c.classList.remove("active"));
   document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add("active");
-  document.getElementById(tabId).classList.add("active");␊
-  if(tabId === "log") updateLogTab();␊
-  if(tabId === "memo") loadMemo();␊
-}␊
+  document.getElementById(tabId).classList.add("active");
+  if(tabId === "log") updateLogTab();
+  if(tabId === "memo") loadMemo();
+}
 function addCrossRow() {
   const tbody = document.querySelector("#crossTable tbody");
   const row = tbody.insertRow();
@@ -797,7 +797,7 @@ function deleteProject() {
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
   });
-  activeProject = projects[0]?.id || null;
+  activeProject = projects[0] ? projects[0].id : null;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
   updateLogTab();
@@ -998,15 +998,13 @@ function decimalToDMS(deg) {
   return `${dd}°${mm}′${s}″`;
 }
 
-function calculateCurve() {␊
-  const ipNo = document.getElementById("ipno").value;␊
-  const iaInput = document.getElementById("ia").value;␊
-  const r = parseFloat(document.getElementById("r").value);␊
-  if (!iaInput || !r || isNaN(r)) {␊
-    document.getElementById("curveResult").innerHTML = "入力値を確認してください";␊
-    return;␊
-  }
-
+function calculateCurve() {
+  const ipNo = document.getElementById("ipno").value;
+  const iaInput = document.getElementById("ia").value;
+  const r = parseFloat(document.getElementById("r").value);
+  if (!iaInput || !r || isNaN(r)) {
+    document.getElementById("curveResult").innerHTML = "入力値を確認してください";
+    return;
   // GAS式と同じ
   const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
   const iaRadHalf = (iaDecimal * Math.PI / 180) / 2;
