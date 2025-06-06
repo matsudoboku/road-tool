@@ -1011,6 +1011,7 @@ function calculateCurve() {
   if (!iaInput || !r || isNaN(r)) {
     document.getElementById("curveResult").innerHTML = "入力値を確認してください";
     return;
+  }
   // GAS式と同じ
   const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
   const iaRadHalf = (iaDecimal * Math.PI / 180) / 2;
