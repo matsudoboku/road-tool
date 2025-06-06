@@ -102,6 +102,7 @@
   box-sizing: border-box;
   margin: 0 auto;
   padding: 10px 0 40px 0;
+  overflow-x: auto;
 }
 .container.active { display: block; }
 
@@ -214,6 +215,10 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #pavementTable select {
   width: 100%;
 }
+
+/* スマホで値が切れないようテーブル幅を最小化しつつ横スクロールを許可 */
+#crossTable { min-width: 360px; }
+#longTable  { min-width: 600px; }
 @media (max-width: 800px) {
   .survey-table input[type="text"],
   .survey-table input[type="number"],
