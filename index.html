@@ -207,12 +207,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   box-sizing: border-box;
 }
 #crossTable input[type="text"],
-#crossTable input[type="number"],
-#longTable input[type="text"],
-#longTable input[type="number"],
-#pavementTable input[type="text"],
-#pavementTable input[type="number"],
-#pavementTable select {
+#crossTable input[type="number"] {
   width: 100%;
 }
 
@@ -220,14 +215,9 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #crossTable { min-width: 360px; }
 #longTable  { min-width: 600px; }
 @media (max-width: 800px) {
-  .survey-table input[type="text"],
+    .survey-table input[type="text"],
   .survey-table input[type="number"],
-  .survey-table select,
-  #longTable input[type="text"],
-  #longTable input[type="number"],
-  #pavementTable input[type="text"],
-  #pavementTable input[type="number"],
-  #pavementTable select {
+  .survey-table select {
     width: 100%;
   }
 }
