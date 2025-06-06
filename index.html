@@ -117,13 +117,13 @@ table {
   border-collapse: collapse;
   margin: 12px 0 0 0;
   background: #fff;
-  width: 100vw;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   table-layout: fixed;
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 7px 4px;
+  border: 1px solid #ddd;
+  padding: 4px;
   font-size: 1em;
   text-align: center;
   min-width: 56px;
@@ -222,21 +222,6 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   color: #666 !important;
   cursor: not-allowed;
 }
-   table {
-    border-collapse: collapse;
-    width: 100%;
-    table-layout: fixed;      /* 列幅を固定して入力欄がはみ出さないようにする */
-  }
-  th, td {
-    border: 1px solid #ddd;
-    padding: 4px;
-  }
-  input[type="text"],
-  input[type="number"],
-  select {
-    width: 100%;              /* 各セル内で100%の幅を使う */
-    box-sizing: border-box;   /* パディングを含めても幅が変わらない */
-  }   
   </style>
 </head>
 <body>
