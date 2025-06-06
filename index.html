@@ -106,6 +106,17 @@
 }
 .container.active { display: block; }
 
+/* 横断測量の入力欄を1行にまとめる */
+.cross-head {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+.cross-head #point {
+  width: 68px;
+}
+
 input, select, textarea {
   font-size: 1.05em;
   padding: 8px 10px;
@@ -155,6 +166,8 @@ th {
   .tabbar { font-size: 0.98em; }
   .tabbar button { font-size: 0.96em; min-width: 84px; padding: 11px 7px; }
   .form-inline { flex-direction: column; align-items: stretch; }
+  .cross-head { flex-direction: column; align-items: flex-start; }
+  .cross-head #point { width: 96%; max-width: 160px; }
   /* 入力欄サイズを小さめ */
   .survey-table input[type="text"],␊
   .survey-table input[type="number"] {␊
@@ -251,12 +264,15 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     </div>
     <!-- 横断測量 -->
     <div id="cross" class="container">
-      <label>測点：</label><input type="text" id="point" style="font-size:1.03em;min-width:64px;">
-      <label>方向：</label>
-      <select id="direction" style="font-size:1.03em;min-width:64px;">
+      <div class="cross-head">
+        <label>測点：</label>
+        <input type="text" id="point" style="font-size:1.03em;">
+        <label>方向：</label>
+        <select id="direction" style="font-size:1.03em;">
         <option value="左">左</option>
         <option value="右">右</option>
-      </select>
+        </select>
+      </div>
       <table id="crossTable" class="survey-table">
         <thead>
           <tr>
