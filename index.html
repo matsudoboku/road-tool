@@ -1019,6 +1019,17 @@ function calculateCurve() {␊
 
   const iaStr = decimalToDMS(iaDecimal);
 
+  curveResultObj = {
+    ipNo: ipNo ? ipNo : "",
+    iaStr,
+    r,
+    tl: tl.toFixed(3),
+    sl: sl.toFixed(3),
+    cl: cl.toFixed(3),
+    cl2: clHalf.toFixed(3),
+    mc: mcDMS
+  };
+
   // オブジェクト作成
   curveResultObj = {
     ipNo: ipNo || "",
