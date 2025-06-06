@@ -222,6 +222,21 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   color: #666 !important;
   cursor: not-allowed;
 }
+   table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;      /* 列幅を固定して入力欄がはみ出さないようにする */
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 4px;
+  }
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;              /* 各セル内で100%の幅を使う */
+    box-sizing: border-box;   /* パディングを含めても幅が変わらない */
+  }   
   </style>
 </head>
 <body>
