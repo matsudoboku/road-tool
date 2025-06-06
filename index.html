@@ -669,7 +669,7 @@ function updateLogTab() {
   let htmlCross = `<h3>横断測量</h3><hr>`;
   logsArr.forEach(log => {
     htmlCross += `<div class="section"><b>【測点${log.point} - ${log.dir}】</b><br>`;
-    htmlCross += `<table><tr><th>横(m)</th><th>縦(m)</th><th>備考</th></tr>`;
+    htmlCross += `<table class="survey-table"><tr><th>横(m)</th><th>縦(m)</th><th>備考</th></tr>`;
     log.rowData.forEach(r => {
       htmlCross += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`;
     });
@@ -680,7 +680,7 @@ function updateLogTab() {
   let lArr = longLogs[k] || [];
   let htmlLong = `<h3>縦断測量</h3><hr>`;
   lArr.forEach(log => {
-    htmlLong += `<div class="section"><table><tr>
+    htmlLong += `<div class="section"><table class="survey-table"><tr>
       <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
       </tr>`;
     log.tableRows.forEach(row => {
@@ -701,7 +701,7 @@ function updateLogTab() {
   let pArr = pavementLogs[k] || [];
   let htmlPave = `<h3>舗装計算</h3><hr>`;
   pArr.forEach(log => {
-    htmlPave += `<div class="section"><table><tr>
+    htmlPave += `<div class="section"><table class="survey-table"><tr>
       <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
       </tr>`;
     log.tableRows.forEach(row => {
