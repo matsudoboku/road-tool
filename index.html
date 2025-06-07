@@ -7,6 +7,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script>
+function safeParseJSON(raw, fallback){
+  try{
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){
+    console.error("Failed to parse JSON", e, raw);
+    return fallback;
+  }
+}
+
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function() {
         navigator.serviceWorker.register("service-worker.js");
@@ -403,7 +412,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     </div>
   </div>
 <script>
-let projects = JSON.parse(localStorage.getItem("projects3") || "[]");
+let projects = safeParseJSON(localStorage.getItem("projects3"), []);
 let activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
 function projectKey(p) { return p.name; }
 function keyOfActive() {
@@ -455,7 +464,7 @@ function registerCross() {
     const values = Array.from(inputs).map(input => input.value.trim());
     if (values.some(v => v)) rowData.push(values);
   });
-  let allLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  let allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const k = keyOfActive();
   if(!allLogs[k]) allLogs[k]=[];
   allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
@@ -557,7 +566,7 @@ function calculateLong() {
 function registerLong() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const rows = document.querySelectorAll("#longTable tbody tr");
-  let allLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  let allLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
   let tableRows = [];
   rows.forEach(row => {
     const inputs = row.querySelectorAll("input");
@@ -664,7 +673,7 @@ function clearPavement() {
 function registerPavement() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const rows = document.querySelectorAll("#pavementTable tbody tr");
-  let pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
+  let pavementLogs = safeParseJSON(localStorage.getItem("pavementLogs3"), {});
   let tableRows = [];
   let areaMap = { 'アスファルト':0, 'コンクリート':0, 'オーバーレイ':0 };
   rows.forEach(row => {
@@ -696,7 +705,7 @@ function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x=>x.id===prjId);
   const k = p ? projectKey(p) : "";
-  const crossLogs = JSON.parse(localStorage.getItem("crossLogs3") || "{}");
+  const crossLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   let logsArr = crossLogs[k] || [];
   let htmlCross = `<h3>横断測量</h3><hr>`;
   logsArr.forEach(log => {
@@ -708,7 +717,7 @@ function updateLogTab() {
     htmlCross += `</table></div>`;
   });
   document.getElementById("logCross").innerHTML = htmlCross;
-  const longLogs = JSON.parse(localStorage.getItem("longLogs3") || "{}");
+  const longLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
   let lArr = longLogs[k] || [];
   let htmlLong = `<h3>縦断測量</h3><hr>`;
   lArr.forEach(log => {
@@ -729,7 +738,7 @@ function updateLogTab() {
     htmlLong += `</table></div>`;
   });
   document.getElementById("logLong").innerHTML = htmlLong;
-  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
+  const pavementLogs = safeParseJSON(localStorage.getItem("pavementLogs3"), {});
   let pArr = pavementLogs[k] || [];
   let htmlPave = `<h3>舗装計算</h3><hr>`;
   pArr.forEach(log => {
@@ -766,7 +775,7 @@ function updateLogTab() {
     htmlPave += `</table>日時:${log.time}</div>`;
   });
   document.getElementById("logPavement").innerHTML = htmlPave;
-  const curveLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  const curveLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
   let cArr = curveLogs[k] || [];
   let htmlCurve = `<h3>道路曲線計算</h3><hr>`;
   cArr.forEach(log => {
@@ -785,7 +794,7 @@ function updateLogTab() {
     </table></div>`;
   });
   document.getElementById("logCurve").innerHTML = htmlCurve;
-  const allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
   document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
 }
@@ -797,7 +806,7 @@ function clearCategory(cat) {
   let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3"};
   if(!keyMap[cat]) return;
   if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
-  let all = JSON.parse(localStorage.getItem(keyMap[cat]) || "{}");
+  let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
   if(all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
   updateLogTab();
@@ -837,7 +846,7 @@ function deleteProject() {
   localStorage.setItem("projects3", JSON.stringify(projects));
   const k = projectKey(p);
   ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
-    let all = JSON.parse(localStorage.getItem(key) || "{}");
+    let all = safeParseJSON(localStorage.getItem(key), {});
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
   });
@@ -859,7 +868,7 @@ function clearAllProjects() {
 function saveMemo() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
-  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  let allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   const k = keyOfActive();
   allMemos[k] = memo;
   localStorage.setItem("memoLogs3", JSON.stringify(allMemos));
@@ -868,7 +877,7 @@ function saveMemo() {
 }
 function loadMemo() {
   if(!activeProject) { document.getElementById("memoText").value = ""; return; }
-  let allMemos = JSON.parse(localStorage.getItem("memoLogs3") || "{}");
+  let allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   const k = keyOfActive();
   document.getElementById("memoText").value = allMemos[k] || "";
   document.getElementById("memoSaved").textContent = "";
@@ -886,7 +895,7 @@ let drawMode = "line";
 let drawing = false;
 let startX, startY;
 let canvas, ctx;
-let savedDrawings = JSON.parse(localStorage.getItem("drawingLogs3") || "{}");
+let savedDrawings = safeParseJSON(localStorage.getItem("drawingLogs3"), {});
 
 function setDrawMode(mode) {
   drawMode = mode;
@@ -1091,7 +1100,7 @@ function calculateCurve() {
 function registerCurve() {
   if (!curveResultObj) { alert("まず「計算する」を押してください"); return; }
   if (!activeProject) { alert("工事を選択してください"); return; }
-  let allLogs = JSON.parse(localStorage.getItem("curveLogs3") || "{}");
+  let allLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
   const k = keyOfActive();
   if (!allLogs[k]) allLogs[k] = [];
   allLogs[k].push({...curveResultObj, time: new Date().toLocaleString()});
