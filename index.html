@@ -1115,6 +1115,13 @@ function setupDrawingCanvas() {
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
       drawing = false;
       redraw();
+    }else if(drawMode === 'text' || drawMode === 'number'){
+      let txt = prompt('入力してください（最大8文字）');
+      if(txt){
+        txt = txt.substring(0,8);
+        drawObjects.push({ type: 'text', x: pos.x, y: pos.y, text: txt });
+        redraw();
+      }
     }
     e.preventDefault();
   };
