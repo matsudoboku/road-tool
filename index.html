@@ -680,14 +680,14 @@ function registerPavement() {
     const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
     const type = select.value;
-    const point = inputs[0].value;
-    const hani = inputs[1].value;
-    const tankyo = inputs[2].value;
-    const tsuikyo = inputs[3].value;
+    const point   = inputs[0].value;
+    const tankyo  = inputs[1].value;
+    const tsuikyo = inputs[2].value;
+    const hani    = inputs[3].value;
     const avgHani = inputs[4].value;
-    const area = inputs[5].value;
-    if(type || point || tankyo || hani || tsuikyo || avgHani || area){
-      tableRows.push({type, point, hani, tankyo, tsuikyo, avgHani, area});
+    const area    = inputs[5].value;
+    if(type || point || tankyo || tsuikyo || hani || avgHani || area){
+      tableRows.push({type, point, tankyo, tsuikyo, hani, avgHani, area});
       areaMap[type] += parseFloat(area) || 0;
     }
   });
