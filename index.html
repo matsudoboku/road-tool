@@ -347,6 +347,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
         <button onclick="addPavementRow()">行を追加</button>
         <button onclick="registerPavement()">登録</button>
         <button onclick="clearPavement()">クリア</button>
+        <button onclick="exportPavementExcel()">Excel出力</button>
       </div>
     </div>
     <!-- 道路曲線計算 -->
@@ -700,6 +701,36 @@ function registerPavement() {
   }
   updateLogTab();
   clearPavementTable();
+}
+function exportPavementExcel() {
+  updatePavementTable();
+  const rows = document.querySelectorAll('#pavementTable tbody tr');
+  let csv = '舗装種類,測点,単距,追距,幅員,平均幅員,面積\n';
+  rows.forEach(row => {
+    const sel = row.querySelector('select').value;
+    const inputs = row.querySelectorAll('input');
+    const vals = [inputs[0].value, inputs[1].value, inputs[2].value, inputs[3].value, inputs[4].value, inputs[5].value];
+    if(sel || vals.some(v => v)) {
+      csv += [sel, ...vals].join(',') + '\n';
+    }
+  });
+  const asphalt = document.getElementById('asphaltAreaCell').textContent;
+  const concrete = document.getElementById('concreteAreaCell').textContent;
+  const overlay = document.getElementById('overlayAreaCell').textContent;
+  const total = document.getElementById('areaTotalCell').textContent;
+  csv += `アスファルト計,,,,,,${asphalt}\n`;
+  csv += `コンクリート計,,,,,,${concrete}\n`;
+  csv += `オーバーレイ計,,,,,,${overlay}\n`;
+  csv += `合計,,,,,,${total}\n`;
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pavement.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
