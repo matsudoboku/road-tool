@@ -603,20 +603,20 @@ function addPavementRow() {
   const tbody = document.querySelector('#pavementTable tbody');
   const row = tbody.insertRow();
   // 順番を「舗装種類｜測点｜単距｜追距｜幅員｜平均幅員｜面積」にする
-  row.insertCell().innerHTML = `␊
+  row.insertCell().innerHTML = `
     <select onchange="propagatePavementType(this)">
-      <option value="アスファルト">アスファルト</option>␊
-      <option value="コンクリート">コンクリート</option>␊
-      <option value="オーバーレイ">オーバーレイ</option>␊
-    </select>␊
-  `;␊
+      <option value="アスファルト">アスファルト</option>
+      <option value="コンクリート">コンクリート</option>
+      <option value="オーバーレイ">オーバーレイ</option>
+    </select>
+  `;
   row.insertCell().innerHTML = `<input type="text" oninput="updatePavementTable()">`;   // 測点
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 単距
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 追距
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 幅員
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 平均幅員
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
-  updatePavementTable();␊
+  updatePavementTable();
 }
   function propagatePavementType(sel){
   const rows = document.querySelectorAll("#pavementTable tbody tr");
