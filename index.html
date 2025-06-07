@@ -717,10 +717,10 @@ function updateLogTab() {
     htmlLong += `</table></div>`;
   });
   document.getElementById("logLong").innerHTML = htmlLong;
-  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");␊
-  let pArr = pavementLogs[k] || [];␊
-  let htmlPave = `<h3>舗装計算</h3><hr>`;␊
-  pArr.forEach(log => {␊
+  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
+  let pArr = pavementLogs[k] || [];
+  let htmlPave = `<h3>舗装計算</h3><hr>`;
+  pArr.forEach(log => {
     htmlPave += `<div class="section"><table class="survey-table"><tr>
       <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
       </tr>`;
