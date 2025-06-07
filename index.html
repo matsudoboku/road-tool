@@ -315,12 +315,24 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
           </tr>
         </thead>
         <tbody></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="6" style="text-align:right;">合計</td>
-            <td id="areaTotalCell"></td>
-          </tr>
-        </tfoot>
+        < tfoot >
+          < tr >
+            <tdcolspan="6"style="text-align:right;">アスファルト計</td>  
+            <ページid = "アスファルトエリアセル" > </ページ> 
+          </tr>​​
+          < tr >
+            <tdcolspan="6"style="text-align:right;">コンクリート計</td>  
+            <ページid = "concreteAreaCell" > </ページ> 
+          </tr>​​
+          < tr >
+            <tdcolspan="6"style="text-align:right;">オーバーレイ計</td>  
+            <ページid = "overlayAreaCell" > </ページ> 
+          </tr>​​
+          < tr >
+            <tdcolspan="6"style="text-align:right;">合計</td>  
+            < td id = "areaTotalCell" > </ td > 
+          </tr>​​
+        </ tfoot >
       </table>
       <div class="buttons">
         <button onclick="addPavementRow()">行を追加</button>
@@ -586,6 +598,7 @@ function addPavementRow() {
     <select onchange="updatePavementTable()">
       <option value="アスファルト">アスファルト</option>
       <option value="コンクリート">コンクリート</option>
+      <option value="オーバーレイ">オーバーレイ</option>
     </select>
   `;
   row.insertCell().innerHTML = `<input type="text" oninput="updatePavementTable()">`;   // 測点
@@ -599,7 +612,9 @@ function addPavementRow() {
 function updatePavementTable() {
   const rows = document.querySelectorAll('#pavementTable tbody tr');
   let prevTsuikyo = 0, prevHani = 0, areaTotal = 0;
+  let areaMap = { 'アスファルト':0, 'コンクリート':0, 'オーバーレイ':0 };
   rows.forEach((row, i) => {
+    const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
     // 順番：[測点, 単距, 追距, 幅員, 平均幅員, 面積]
     const tankyo = parseFloat(inputs[1].value) || 0;  // 単距
@@ -615,8 +630,14 @@ function updatePavementTable() {
     let area = (tankyo && avgHani) ? (tankyo * avgHani) : '';
     inputs[5].value = area ? area.toFixed(2) : '';    // 面積
     areaTotal += parseFloat(inputs[5].value) || 0;
+    if(area){
+      areaMap[select.value] += parseFloat(area);
+    }
   });
   document.getElementById('areaTotalCell').textContent = areaTotal.toFixed(2);
+  document.getElementById('asphaltAreaCell').textContent = areaMap['アスファルト'].toFixed(2);
+  document.getElementById('concreteAreaCell').textContent = areaMap['コンクリート'].toFixed(2);
+  document.getElementById('overlayAreaCell').textContent = areaMap['オーバーレイ'].toFixed(2);
 }
 function clearPavementTable() {
   document.querySelector('#pavementTable tbody').innerHTML = '';
@@ -633,6 +654,7 @@ function registerPavement() {
   const rows = document.querySelectorAll("#pavementTable tbody tr");
   let pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
   let tableRows = [];
+  let areaMap = { 'アスファルト':0, 'コンクリート':0, 'オーバーレイ':0 };
   rows.forEach(row => {
     const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
@@ -645,13 +667,14 @@ function registerPavement() {
     const area = inputs[5].value;
     if(type || point || tankyo || hani || tsuikyo || avgHani || area){
       tableRows.push({type, point, hani, tankyo, tsuikyo, avgHani, area});
+      areaMap[type] += parseFloat(area) || 0;
     }
   });
   let areaTotal = document.getElementById('areaTotalCell').textContent;
   if (tableRows.length > 0) {
     const k = keyOfActive();
     if(!pavementLogs[k]) pavementLogs[k]=[];
-    pavementLogs[k].push({ tableRows, areaTotal, time: new Date().toLocaleString() });
+    pavementLogs[k].push({ tableRows, areaTotal, areaMap, time: new Date().toLocaleString() });
     localStorage.setItem("pavementLogs3", JSON.stringify(pavementLogs));
   }
   updateLogTab();
@@ -694,10 +717,10 @@ function updateLogTab() {
     htmlLong += `</table></div>`;
   });
   document.getElementById("logLong").innerHTML = htmlLong;
-  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");
-  let pArr = pavementLogs[k] || [];
-  let htmlPave = `<h3>舗装計算</h3><hr>`;
-  pArr.forEach(log => {
+  const pavementLogs = JSON.parse(localStorage.getItem("pavementLogs3") || "{}");␊
+  let pArr = pavementLogs[k] || [];␊
+  let htmlPave = `<h3>舗装計算</h3><hr>`;␊
+  pArr.forEach(log => {␊
     htmlPave += `<div class="section"><table class="survey-table"><tr>
       <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
       </tr>`;
@@ -712,6 +735,18 @@ function updateLogTab() {
         <td>${row.area}</td>
       </tr>`;
     });
+    htmlPave += `<tr>
+        <td colspan="6" style="text-align:right;">アスファルト計</td>
+        <td>${(log.areaMap && log.areaMap['アスファルト'] ? parseFloat(log.areaMap['アスファルト']).toFixed(2) : '0.00')}</td>
+      </tr>`;
+    htmlPave += `<tr>
+        <td colspan="6" style="text-align:right;">コンクリート計</td>
+        <td>${(log.areaMap && log.areaMap['コンクリート'] ? parseFloat(log.areaMap['コンクリート']).toFixed(2) : '0.00')}</td>
+      </tr>`;
+    htmlPave += `<tr>
+        <td colspan="6" style="text-align:right;">オーバーレイ計</td>
+        <td>${(log.areaMap && log.areaMap['オーバーレイ'] ? parseFloat(log.areaMap['オーバーレイ']).toFixed(2) : '0.00')}</td>
+      </tr>`;
     htmlPave += `<tr>
         <td colspan="6" style="text-align:right;">合計</td>
         <td>${log.areaTotal}</td>
