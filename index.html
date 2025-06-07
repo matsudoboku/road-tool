@@ -594,21 +594,32 @@ function addPavementRow() {
   const tbody = document.querySelector('#pavementTable tbody');
   const row = tbody.insertRow();
   // 順番を「舗装種類｜測点｜単距｜追距｜幅員｜平均幅員｜面積」にする
-  row.insertCell().innerHTML = `
-    <select onchange="updatePavementTable()">
-      <option value="アスファルト">アスファルト</option>
-      <option value="コンクリート">コンクリート</option>
-      <option value="オーバーレイ">オーバーレイ</option>
-    </select>
-  `;
+  row.insertCell().innerHTML = `␊
+    <select onchange="propagatePavementType(this)">
+      <option value="アスファルト">アスファルト</option>␊
+      <option value="コンクリート">コンクリート</option>␊
+      <option value="オーバーレイ">オーバーレイ</option>␊
+    </select>␊
+  `;␊
   row.insertCell().innerHTML = `<input type="text" oninput="updatePavementTable()">`;   // 測点
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 単距
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 追距
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 幅員
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 平均幅員
   row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
+  updatePavementTable();␊
+}
+  function propagatePavementType(sel){
+  const rows = document.querySelectorAll("#pavementTable tbody tr");
+  const currentRow = sel.closest("tr");
+  const index = Array.from(rows).indexOf(currentRow);
+  for(let i=index+1;i<rows.length;i++){
+    const s = rows[i].querySelector("select");
+    if(s) s.value = sel.value;
+  }
   updatePavementTable();
 }
+
 function updatePavementTable() {
   const rows = document.querySelectorAll('#pavementTable tbody tr');
   let prevTsuikyo = 0, prevHani = 0, areaTotal = 0;
@@ -643,6 +654,7 @@ function clearPavementTable() {
   document.querySelector('#pavementTable tbody').innerHTML = '';
   for(let i=0;i<10;i++) addPavementRow();
   updatePavementTable();
+
 }
 function clearPavement() {
   if (confirm("舗装計算のすべてのデータを削除します。よろしいですか？")) {
