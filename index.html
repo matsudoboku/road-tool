@@ -315,24 +315,24 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
           </tr>
         </thead>
         <tbody></tbody>
-        < tfoot >
-          < tr >
-            <tdcolspan="6"style="text-align:right;">アスファルト計</td>  
-            <ページid = "アスファルトエリアセル" > </ページ> 
-          </tr>​​
-          < tr >
-            <tdcolspan="6"style="text-align:right;">コンクリート計</td>  
-            <ページid = "concreteAreaCell" > </ページ> 
-          </tr>​​
-          < tr >
-            <tdcolspan="6"style="text-align:right;">オーバーレイ計</td>  
-            <ページid = "overlayAreaCell" > </ページ> 
-          </tr>​​
-          < tr >
-            <tdcolspan="6"style="text-align:right;">合計</td>  
-            < td id = "areaTotalCell" > </ td > 
-          </tr>​​
-        </ tfoot >
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align:right;">アスファルト計</td>
+            <td id="asphaltAreaCell"></td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align:right;">コンクリート計</td>
+            <td id="concreteAreaCell"></td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align:right;">オーバーレイ計</td>
+            <td id="overlayAreaCell"></td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align:right;">合計</td>
+            <td id="areaTotalCell"></td>
+          </tr>
+        </tfoot>
       </table>
       <div class="buttons">
         <button onclick="addPavementRow()">行を追加</button>
