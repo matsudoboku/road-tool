@@ -1021,6 +1021,7 @@ function showDrawingLog() {
 function setupDrawingCanvas() {
   getCanvasCtx();
   let rect = canvas.getBoundingClientRect();
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   function xy(e) {
     if(e.touches){ // タッチ端末
       let t = e.touches[0] || e.changedTouches[0];
@@ -1084,6 +1085,7 @@ function setupDrawingCanvas() {
       drawing = true;
       startX = pos.x; startY = pos.y;
     }
+    e.preventDefault();
   };
   canvas.ontouchmove = function(e){
     let pos = xy(e);
@@ -1126,17 +1128,21 @@ function setupDrawingCanvas() {
     }
     e.preventDefault();
   };
-  canvas.onclick = function(e){
-    if(selectedObj || drawing) return;
-    if(drawMode==='text' || drawMode==='number'){
-      let txt = prompt("入力してください（最大8文字）");
-      if(!txt) return;
-      txt = txt.substring(0,8);
-      let pos = xy(e);
-      drawObjects.push({type:'text', x:pos.x, y:pos.y, text:txt});
-      redraw();
-    }
-  };
+  if(!isTouchDevice){
+    canvas.onclick = function(e){
+      if(selectedObj || drawing) return;
+      if(drawMode==='text' || drawMode==='number'){
+        let txt = prompt("入力してください（最大8文字）");
+        if(!txt) return;
+        txt = txt.substring(0,8);
+        let pos = xy(e);
+        drawObjects.push({type:'text', x:pos.x, y:pos.y, text:txt});
+        redraw();
+      }
+    };
+  } else {
+    canvas.onclick = null;
+  }
 }
 // 図形タブを開いた時だけキャンバス初期化＆記録表示
 const _oldSwitchTab = switchTab;
