@@ -947,6 +947,7 @@ function getCanvasCtx() {
 function clearCanvas() {
   getCanvasCtx();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawObjects = [];
 }
 function redraw(){
   clearCanvas();
