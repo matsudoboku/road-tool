@@ -380,7 +380,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
         <button onclick="setDrawMode('line')">線</button>
         <button onclick="setDrawMode('text')">テキスト</button>
         <button onclick="setDrawMode('number')">数字</button>
-        <button onclick="clearCanvas()">クリア</button>
+        <button onclick="clearDrawing()">クリア</button>
         <span id="drawModeLabel"></span>
       </div>
       <canvas id="drawingCanvas" width="340" height="340" style="border:1px solid #aaa; background:#fff; touch-action:none; width:97vw;max-width:380px;"></canvas>
@@ -947,7 +947,10 @@ function getCanvasCtx() {
 function clearCanvas() {
   getCanvasCtx();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+function clearDrawing(){
   drawObjects = [];
+  clearCanvas();
 }
 function redraw(){
   clearCanvas();
@@ -1002,8 +1005,7 @@ function saveDrawing() {
   savedDrawings[k].push({img, time: new Date().toLocaleString()});
   localStorage.setItem("drawingLogs3", JSON.stringify(savedDrawings));
   showDrawingLog();
-  drawObjects = [];
-  clearCanvas();
+  clearDrawing();
   alert("記録しました");
 }
 function showDrawingLog() {
