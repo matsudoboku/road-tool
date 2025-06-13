@@ -377,6 +377,14 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     <!-- 土方カーブ -->
     <div id="mass" class="container">
       <h2>土方カーブ</h2>
+      <label>弦長C(m)</label><br>
+      <input type="number" id="massChordC"><br>
+      <label>曲線半径R(m)</label><br>
+      <input type="number" id="massChordR"><br>
+      <div class="buttons">
+        <button onclick="calculateMassChord()">計算する</button>
+      </div>
+      <div id="massChordResult" class="record"></div>
       <table id="massTable" class="survey-table">
         <thead>
           <tr>
@@ -833,6 +841,23 @@ function registerMass(){
   }
   updateLogTab();
   clearMassTable();
+}
+
+function calculateMassChord(){
+  const c = parseFloat(document.getElementById('massChordC').value);
+  const r = parseFloat(document.getElementById('massChordR').value);
+  if(isNaN(c) || isNaN(r) || r === 0){
+    document.getElementById('massChordResult').textContent = '数値を確認してください';
+    return;
+  }
+  const m  = c * c / (8 * r);
+  const m1 = m / 4;
+  const m2 = m1 / 4;
+  document.getElementById('massChordResult').innerHTML = `
+    <table class="survey-table">
+      <tr><th>中央縦距M</th><th>1/4縦距M1</th><th>1/16縦距M2</th></tr>
+      <tr><td>${m.toFixed(3)}</td><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
+    </table>`;
 }
 function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
