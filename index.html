@@ -850,9 +850,24 @@ function calculateMassChord(){
     document.getElementById('massChordResult').textContent = '数値を確認してください';
     return;
   }
-  const m  = c * c / (8 * r);
-  const m1 = m / 4;
-  const m2 = m1 / 4;
+function calculateMassChord(){
+  const c = parseFloat(document.getElementById('massChordC').value);
+  const r = parseFloat(document.getElementById('massChordR').value);
+  if(isNaN(c) || isNaN(r) || r === 0){
+    document.getElementById('massChordResult').textContent = '数値を確認してください';
+    return;
+  }
+  // 本式
+  // 中央縦距M1（C/2地点）・1/4点縦距M2（C/4地点）
+  const m1 = r - Math.sqrt(r*r - Math.pow(c/2,2));
+  const m2 = r - Math.sqrt(r*r - Math.pow(c/4,2));
+  document.getElementById('massChordResult').innerHTML = `
+    <table class="survey-table">
+      <tr><th>中央縦距M1</th><th>1/4点縦距M2</th></tr>
+      <tr><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
+    </table>`;
+}
+
   document.getElementById('massChordResult').innerHTML = `
     <table class="survey-table">
       <tr><th>中央縦距M</th><th>1/4縦距M1</th><th>1/16縦距M2</th></tr>
