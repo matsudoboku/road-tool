@@ -211,6 +211,9 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   color: #666 !important;
   cursor: not-allowed;
 }
+.survey-table td.readonly-cell {
+  background: #eee;
+}
 .survey-table {
   border: 2px solid #888;
   box-sizing: border-box;
@@ -497,23 +500,31 @@ function clearCross() {
   }
 }
 function addLongRow() {
-  const tbody = document.querySelector("#longTable tbody");
+  con  const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text" class="wide-input">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
+  let c2 = row.insertCell();
+  c2.classList.add('readonly-cell');
+  c2.innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
   row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
   row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input" readonly tabindex="-1">`;
-  row.insertCell().innerHTML = `<input type="number" class="wide-input" readonly tabindex="-1">`;
+  let c5 = row.insertCell();
+  c5.classList.add('readonly-cell');
+  c5.innerHTML = `<input type="number" class="narrow-input" readonly tabindex="-1">`;
+  let c6 = row.insertCell();
+  c6.classList.add('readonly-cell');
+  c6.innerHTML = `<input type="number" class="wide-input" readonly tabindex="-1">`;
   const inputs = row.querySelectorAll("input");
   inputs[1].addEventListener("input", () => calculateLong());
   inputs[3].addEventListener("input", () => {
     if(inputs[3].value !== ""){
       inputs[4].value = "";
       inputs[4].setAttribute("readonly", true);
+      inputs[4].parentElement.classList.add('readonly-cell');
     }else{
       inputs[4].removeAttribute("readonly");
+      inputs[4].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
@@ -521,8 +532,10 @@ function addLongRow() {
     if(inputs[4].value !== ""){
       inputs[3].value = "";
       inputs[3].setAttribute("readonly", true);
+      inputs[3].parentElement.classList.add('readonly-cell');
     }else{
       inputs[3].removeAttribute("readonly");
+      inputs[3].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
@@ -541,14 +554,18 @@ function calculateLong() {
     if (cells[3].value !== "") {
       cells[4].value = "";
       cells[4].setAttribute("readonly", true);
+      cells[4].parentElement.classList.add('readonly-cell');
     } else {
       cells[4].removeAttribute("readonly");
+      cells[4].parentElement.classList.remove('readonly-cell');
     }
     if (cells[4].value !== "") {
       cells[3].value = "";
       cells[3].setAttribute("readonly", true);
+      cells[3].parentElement.classList.add('readonly-cell');
     } else {
       cells[3].removeAttribute("readonly");
+      cells[3].parentElement.classList.remove('readonly-cell');
     }
     if (i === 0) {
       if (!cells[6].value) {
@@ -629,10 +646,16 @@ function addPavementRow() {
   `;
   row.insertCell().innerHTML = `<input type="text" oninput="updatePavementTable()">`;   // 測点
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 単距
-  row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 追距
+  let c2 = row.insertCell();
+  c2.classList.add('readonly-cell');
+  c2.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 追距
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 幅員
-  row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 平均幅員
-  row.insertCell().innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
+  let c4 = row.insertCell();
+  c4.classList.add('readonly-cell');
+  c4.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 平均幅員
+  let c5 = row.insertCell();
+  c5.classList.add('readonly-cell');
+  c5.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
   updatePavementTable();
 }
   function propagatePavementType(sel){
