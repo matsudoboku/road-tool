@@ -202,12 +202,6 @@ th {
     font-size: 1.08em;
     padding: 5px 4px;
   }
-  #massTable input[type="number"] {
-    width: 98%;
-    min-width: 60px;
-    max-width: 98%;
-    font-size: 1.08em;
-    padding: 5px 4px;
   }
 }
 
@@ -234,7 +228,6 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #crossTable { min-width: 360px; }
 #longTable  { min-width: 600px; }
 #pavementTable { min-width: 600px; }
-#massTable { min-width: 600px; }
 @media (max-width: 800px) {
 #crossTable input[type="text"],
 #crossTable input[type="number"] {
@@ -385,23 +378,6 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
         <button onclick="calculateMassChord()">計算する</button>
       </div>
       <div id="massChordResult" class="record"></div>
-      <table id="massTable" class="survey-table">
-        <thead>
-          <tr>
-            <th>測点</th>
-            <th>切土面積</th>
-            <th>盛土面積</th>
-            <th>区間体積</th>
-            <th>累計体積</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="buttons">
-        <button onclick="addMassRow()">行を追加</button>
-        <button onclick="registerMass()">登録</button>
-        <button onclick="clearMass()">クリア</button>
-      </div>
     </div>
     <!-- メモ -->
     <div id="memo" class="container">
@@ -815,7 +791,7 @@ function clearMassTable(){
 function clearMass(){
   if(confirm('土方カーブのすべてのデータを削除します。よろしいですか？')){
     clearMassTable();
-  }
+}
 }
 function registerMass(){
   if(!activeProject){ alert('工事を選択してください'); return; }
@@ -840,16 +816,8 @@ function registerMass(){
     localStorage.setItem('massLogs3', JSON.stringify(massLogs));
   }
   updateLogTab();
-  clearMassTable();
 }
 
-function calculateMassChord(){
-  const c = parseFloat(document.getElementById('massChordC').value);
-  const r = parseFloat(document.getElementById('massChordR').value);
-  if(isNaN(c) || isNaN(r) || r === 0){
-    document.getElementById('massChordResult').textContent = '数値を確認してください';
-    return;
-  }
 function calculateMassChord(){
   const c = parseFloat(document.getElementById('massChordC').value);
   const r = parseFloat(document.getElementById('massChordR').value);
@@ -868,13 +836,7 @@ function calculateMassChord(){
     </table>`;
 }
 
-  document.getElementById('massChordResult').innerHTML = `
-    <table class="survey-table">
-      <tr><th>中央縦距M</th><th>1/4縦距M1</th><th>1/16縦距M2</th></tr>
-      <tr><td>${m.toFixed(3)}</td><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
-    </table>`;
-}
-function updateLogTab() {
+function updateLogTab(){
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x=>x.id===prjId);
   const k = p ? projectKey(p) : "";
@@ -1071,7 +1033,6 @@ window.onload = () => {
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
-  clearMassTable();
   updateLogTab();
   switchTab('project');
 };
