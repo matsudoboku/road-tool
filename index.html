@@ -202,6 +202,13 @@ th {
     font-size: 1.08em;
     padding: 5px 4px;
   }
+  #massTable input[type="number"] {
+    width: 98%;
+    min-width: 60px;
+    max-width: 98%;
+    font-size: 1.08em;
+    padding: 5px 4px;
+  }
 }
 
 /* 入力不可（readonly/disabled）のinputやselectを灰色背景に */
@@ -227,6 +234,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #crossTable { min-width: 360px; }
 #longTable  { min-width: 600px; }
 #pavementTable { min-width: 600px; }
+#massTable { min-width: 600px; }
 @media (max-width: 800px) {
 #crossTable input[type="text"],
 #crossTable input[type="number"] {
@@ -246,6 +254,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
     <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
     <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
     <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線計算</button>
+    <button class="tab" data-tab="mass" onclick="switchTab('mass')">土方カーブ</button>
     <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
     <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
     <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
@@ -365,6 +374,27 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
       </div>
       <div id="curveResult" class="record"></div>
     </div>
+    <!-- 土方カーブ -->
+    <div id="mass" class="container">
+      <h2>土方カーブ</h2>
+      <table id="massTable" class="survey-table">
+        <thead>
+          <tr>
+            <th>測点</th>
+            <th>切土面積</th>
+            <th>盛土面積</th>
+            <th>区間体積</th>
+            <th>累計体積</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="buttons">
+        <button onclick="addMassRow()">行を追加</button>
+        <button onclick="registerMass()">登録</button>
+        <button onclick="clearMass()">クリア</button>
+      </div>
+    </div>
     <!-- メモ -->
     <div id="memo" class="container">
       <h2>現場メモ</h2>
@@ -410,6 +440,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
       <div id="logLong"></div>
       <div id="logPavement"></div>
       <div id="logCurve"></div>
+      <div id="logMass"></div>
       <div id="logMemo"></div>
     </div>
   </div>
@@ -733,6 +764,76 @@ function exportPavementExcel() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// --- 土方カーブ計算 ---
+function addMassRow() {
+  const tbody = document.querySelector('#massTable tbody');
+  const row = tbody.insertRow();
+  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input" oninput="updateMassTable()">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input" oninput="updateMassTable()">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
+  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
+  updateMassTable();
+}
+function updateMassTable() {
+  const rows = document.querySelectorAll('#massTable tbody tr');
+  let cum = 0;
+  rows.forEach((row,i)=>{
+    const inputs = row.querySelectorAll('input');
+    inputs[3].value = ''; inputs[4].value = '';
+    if(i===0) return;
+    const prev = rows[i-1].querySelectorAll('input');
+    const st = parseFloat(inputs[0].value);
+    const pst = parseFloat(prev[0].value);
+    if(isNaN(st) || isNaN(pst)) return;
+    const dist = st - pst;
+    const cut1 = parseFloat(prev[1].value)||0;
+    const fill1 = parseFloat(prev[2].value)||0;
+    const cut2 = parseFloat(inputs[1].value)||0;
+    const fill2 = parseFloat(inputs[2].value)||0;
+    const net1 = fill1 - cut1;
+    const net2 = fill2 - cut2;
+    const interval = (net1 + net2)/2 * dist;
+    cum += interval;
+    inputs[3].value = interval.toFixed(2);
+    inputs[4].value = cum.toFixed(2);
+  });
+}
+function clearMassTable(){
+  document.querySelector('#massTable tbody').innerHTML='';
+  for(let i=0;i<10;i++) addMassRow();
+}
+function clearMass(){
+  if(confirm('土方カーブのすべてのデータを削除します。よろしいですか？')){
+    clearMassTable();
+  }
+}
+function registerMass(){
+  if(!activeProject){ alert('工事を選択してください'); return; }
+  const rows = document.querySelectorAll('#massTable tbody tr');
+  let massLogs = safeParseJSON(localStorage.getItem('massLogs3'), {});
+  let tableRows = [];
+  rows.forEach(row=>{
+    const inputs = row.querySelectorAll('input');
+    const station = inputs[0].value;
+    const cut = inputs[1].value;
+    const fill = inputs[2].value;
+    const interval = inputs[3].value;
+    const cumulative = inputs[4].value;
+    if(station || cut || fill || interval || cumulative){
+      tableRows.push({station, cut, fill, interval, cumulative});
+    }
+  });
+  if(tableRows.length>0){
+    const k = keyOfActive();
+    if(!massLogs[k]) massLogs[k]=[];
+    massLogs[k].push({tableRows, time: new Date().toLocaleString()});
+    localStorage.setItem('massLogs3', JSON.stringify(massLogs));
+  }
+  updateLogTab();
+  clearMassTable();
+}
 function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x=>x.id===prjId);
@@ -826,6 +927,17 @@ function updateLogTab() {
     </table></div>`;
   });
   document.getElementById("logCurve").innerHTML = htmlCurve;
+  const massLogs = safeParseJSON(localStorage.getItem("massLogs3"), {});
+  let mArr = massLogs[k] || [];
+  let htmlMass = `<h3>土方カーブ</h3><hr>`;
+  mArr.forEach(log => {
+    htmlMass += `<div class="section"><table class="survey-table"><tr><th>測点</th><th>切土面積</th><th>盛土面積</th><th>区間体積</th><th>累計体積</th></tr>`;
+    log.tableRows.forEach(r => {
+      htmlMass += `<tr><td>${r.station}</td><td>${r.cut}</td><td>${r.fill}</td><td>${r.interval}</td><td>${r.cumulative}</td></tr>`;
+    });
+    htmlMass += `</table>日時:${log.time}</div>`;
+  });
+  document.getElementById("logMass").innerHTML = htmlMass;
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
   document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
@@ -835,9 +947,9 @@ function clearCategory(cat) {
   const p = projects.find(x=>x.id===prjId);
   if(!p) return;
   const k = projectKey(p);
-  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3"};
+   let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", mass: "massLogs3", memo: "memoLogs3"};
   if(!keyMap[cat]) return;
-  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
+  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",mass:"土方カーブ",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
   let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
   if(all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
@@ -877,7 +989,7 @@ function deleteProject() {
   projects = projects.filter(x=>x.id !== activeProject);
   localStorage.setItem("projects3", JSON.stringify(projects));
   const k = projectKey(p);
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(key=>{
     let all = safeParseJSON(localStorage.getItem(key), {});
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
@@ -891,7 +1003,7 @@ function clearAllProjects() {
   if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
   projects = [];
   activeProject = null;
   renderProjectSelects();
@@ -919,6 +1031,7 @@ window.onload = () => {
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
+  clearMassTable();
   updateLogTab();
   switchTab('project');
 };
