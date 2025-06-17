@@ -1032,3 +1032,23 @@ function registerCalc(){
   document.getElementById('calcMsg').textContent = '記録しました';
   updateLogTab();
 }
+
+// --- Calculator modal management ---
+let calcParent = null;
+function openCalcModal(){
+  const calc = document.getElementById('calc');
+  const overlay = document.getElementById('calcOverlay');
+  if(!calcParent) calcParent = calc.parentElement;
+  overlay.style.display = 'flex';
+  overlay.appendChild(calc);
+  calc.classList.add('modal-mode');
+  calc.onclick = e => e.stopPropagation();
+}
+function closeCalcModal(){
+  const calc = document.getElementById('calc');
+  const overlay = document.getElementById('calcOverlay');
+  overlay.style.display = 'none';
+  calc.classList.remove('modal-mode');
+  calc.onclick = null;
+  if(calcParent) calcParent.appendChild(calc);
+}
