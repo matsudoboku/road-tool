@@ -15,6 +15,7 @@
   <div class="project-bar">
     <label>作業中の工事：</label>
     <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
+    <button id="calcCallBtn" onclick="openCalcModal()">電卓</button>
   </div>
   <div class="tabbar">
     <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
@@ -240,6 +241,7 @@
       <div id="logCalc"></div>
     </div>
   </div>
-<script src="main.js"></script>
+  <div id="calcOverlay" class="calc-overlay" onclick="closeCalcModal()"></div>
+  <script src="main.js"></script>
 </body>
 </html>
