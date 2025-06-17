@@ -88,7 +88,7 @@
 .container.active { display: block; }
 
 /* 中央寄せが必要な単独フォーム */
-#curve, #mass, #memo {
+#curve, #mass, #memo, #calc {
   text-align: center;
 }
 #curve label,
@@ -98,6 +98,7 @@
 }
 #curve input,
 #mass input,
+#calc input,
 #memo textarea {
   display: block;
   width: 96%;
@@ -234,6 +235,24 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 #crossTable { min-width: 360px; }
 #longTable  { min-width: 600px; }
 #pavementTable { min-width: 600px; }
+.calc-display {
+  width: 96%;
+  max-width: 360px;
+  margin: 4px auto;
+  font-size: 1.2em;
+  text-align: right;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-width: 360px;
+  margin: 8px auto;
+}
+.calc-grid button {
+  padding: 10px 0;
+  font-size: 1.1em;
+}
 @media (max-width: 800px) {
 #crossTable input[type="text"],
 #crossTable input[type="number"] {
