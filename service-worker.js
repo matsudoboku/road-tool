@@ -1,5 +1,5 @@
 // Bump the cache name so outdated caches are discarded on activation
-const CACHE_NAME = 'road-tool-cache-v3';
+const CACHE_NAME = 'road-tool-cache-v4';
 const urlsToCache = [
   '/',
   'index.html',
