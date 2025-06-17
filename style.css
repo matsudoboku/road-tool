@@ -250,7 +250,7 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   margin: 8px auto;
 }
 .calc-grid button {
-  padding: 10px 0;
+  padding: 18px 0;
   font-size: 1.1em;
 }
 
