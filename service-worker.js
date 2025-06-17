@@ -1,8 +1,10 @@
 // Bump the cache name so outdated caches are discarded on activation
-const CACHE_NAME = 'road-tool-cache-v2';
+const CACHE_NAME = 'road-tool-cache-v3';
 const urlsToCache = [
   '/',
   'index.html',
+  'style.css',
+  'main.js',
   'manifest.json',
   'icon-192.png',
   'icon-512.png'
