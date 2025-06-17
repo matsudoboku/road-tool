@@ -546,22 +546,15 @@ function updateLogTab(){
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
   document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
-  const calcLogs = safeParseJSON(localStorage.getItem("calcLogs3"), {});
-  let cals = calcLogs[k] || [];
-  let htmlCalc = `<h3>電卓</h3><hr>`;
-  cals.forEach(log => {
-    htmlCalc += `<div class="section">${log.expr} = ${log.result} (${log.time})</div>`;
-  });
-  document.getElementById("logCalc").innerHTML = htmlCalc;
 }
 function clearCategory(cat) {
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x=>x.id===prjId);
   if(!p) return;
   const k = projectKey(p);
-  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", mass: "massLogs3", memo: "memoLogs3", calc: "calcLogs3"};
+  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", mass: "massLogs3", memo: "memoLogs3"};
   if(!keyMap[cat]) return;
-  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",mass:"土方カーブ",memo:"メモ",calc:"電卓"}[cat]+"」記録を削除しますか？")) return;
+  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",mass:"土方カーブ",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
   let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
   if(all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
@@ -601,7 +594,7 @@ function deleteProject() {
   projects = projects.filter(x=>x.id !== activeProject);
   localStorage.setItem("projects3", JSON.stringify(projects));
   const k = projectKey(p);
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3", "calcLogs3"].forEach(key=>{
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(key=>{
     let all = safeParseJSON(localStorage.getItem(key), {});
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
@@ -615,7 +608,7 @@ function clearAllProjects() {
   if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3", "calcLogs3"].forEach(k=>localStorage.removeItem(k));
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
   projects = [];
   activeProject = null;
   renderProjectSelects();
@@ -1005,7 +998,6 @@ function appendCalc(v){
 }
 function clearCalc(){
   document.getElementById('calcDisplay').value = '';
-  document.getElementById('calcMsg').textContent = '';
 }
 function evaluateCalc(){
   const expr = document.getElementById('calcDisplay').value;
@@ -1014,23 +1006,8 @@ function evaluateCalc(){
     document.getElementById('calcDisplay').value = result;
     return result;
   }catch(e){
-    document.getElementById('calcMsg').textContent = '計算エラー';
     return null;
   }
-}
-function registerCalc(){
-  if(!activeProject){ alert('工事を選択してください'); return; }
-  const expr = document.getElementById('calcDisplay').value;
-  if(!expr.trim()) return;
-  const result = evaluateCalc();
-  if(result===null) return;
-  let allLogs = safeParseJSON(localStorage.getItem('calcLogs3'), {});
-  const k = keyOfActive();
-  if(!allLogs[k]) allLogs[k]=[];
-  allLogs[k].push({expr, result, time: new Date().toLocaleString()});
-  localStorage.setItem('calcLogs3', JSON.stringify(allLogs));
-  document.getElementById('calcMsg').textContent = '記録しました';
-  updateLogTab();
 }
 
 // --- Calculator modal management ---
