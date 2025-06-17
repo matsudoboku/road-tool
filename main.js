@@ -645,6 +645,8 @@ let drawing = false;
 let startX, startY;
 let canvas, ctx;
 let drawObjects = [];
+let scale = 100; // pixels per meter
+let currentX = null, currentY = null;
 let selectedObj = null;
 let lastX, lastY;
 let savedDrawings = safeParseJSON(localStorage.getItem("drawingLogs3"), {});
@@ -669,6 +671,8 @@ function clearCanvas() {
 function clearDrawing(){
   drawObjects = [];
   clearCanvas();
+  currentX = null;
+  currentY = null;
 }
 function redraw(){
   clearCanvas();
@@ -685,6 +689,32 @@ function redraw(){
       ctx.fillText(obj.text, obj.x, obj.y);
     }
   });
+}
+function ensureCurrentPoint(){
+  getCanvasCtx();
+  if(currentX===null || currentY===null){
+    currentX = canvas.width/2;
+    currentY = canvas.height/2;
+  }
+}
+function addRelativeLine(){
+  ensureCurrentPoint();
+  const dx = parseFloat(document.getElementById('inputDX').value);
+  const dy = parseFloat(document.getElementById('inputDY').value);
+  if(isNaN(dx) || isNaN(dy)){
+    alert('x,yを入力してください');
+    return;
+  }
+  const x1 = currentX;
+  const y1 = currentY;
+  const x2 = x1 + dx * scale;
+  const y2 = y1 - dy * scale;
+  drawObjects.push({type:'line', x1, y1, x2, y2});
+  currentX = x2;
+  currentY = y2;
+  document.getElementById('inputDX').value = '';
+  document.getElementById('inputDY').value = '';
+  redraw();
 }
 function distToSegment(px,py,x1,y1,x2,y2){
   const A=px-x1, B=py-y1, C=x2-x1, D=y2-y1;
@@ -788,6 +818,8 @@ function setupDrawingCanvas() {
       selectedObj = null;
     }else if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
+      currentX = pos.x;
+      currentY = pos.y;
       drawing = false;
       redraw();
     }
@@ -836,6 +868,8 @@ function setupDrawingCanvas() {
       selectedObj = null;
     }else if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
+      currentX = pos.x;
+      currentY = pos.y;
       drawing = false;
       redraw();
     }else if(drawMode === 'text' || drawMode === 'number'){
@@ -871,6 +905,8 @@ switchTab = function(tabId){
   if(tabId==="drawing"){
     setDrawMode("line");
     drawObjects = [];
+    currentX = null;
+    currentY = null;
     setupDrawingCanvas();
     redraw();
     showDrawingLog();
