@@ -253,6 +253,30 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   padding: 10px 0;
   font-size: 1.1em;
 }
+
+/* Calculator modal overlay */
+.calc-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#calc.modal-mode {
+  display: block !important;
+  width: 90%;
+  max-width: 380px;
+  background: #fff;
+  border: 2px solid #007acc;
+  padding: 20px 0 30px;
+  margin: 0;
+  box-sizing: border-box;
+}
 @media (max-width: 800px) {
 #crossTable input[type="text"],
 #crossTable input[type="number"] {
