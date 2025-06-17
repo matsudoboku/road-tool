@@ -25,6 +25,7 @@
     <button class="tab" data-tab="mass" onclick="switchTab('mass')">土方カーブ</button>
     <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
     <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
+    <button class="tab" data-tab="calc" onclick="switchTab('calc')">電卓</button>
     <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
   </div>
   <div class="main-content">
@@ -184,6 +185,35 @@
         </div>
       <div id="drawingLog"></div>
     </div>
+    <!-- 電卓 -->
+    <div id="calc" class="container">
+      <h2>電卓</h2>
+      <input id="calcDisplay" type="text" readonly class="calc-display">
+      <div class="calc-grid">
+        <button onclick="appendCalc('7')">7</button>
+        <button onclick="appendCalc('8')">8</button>
+        <button onclick="appendCalc('9')">9</button>
+        <button onclick="appendCalc('/')">/</button>
+        <button onclick="appendCalc('4')">4</button>
+        <button onclick="appendCalc('5')">5</button>
+        <button onclick="appendCalc('6')">6</button>
+        <button onclick="appendCalc('*')">*</button>
+        <button onclick="appendCalc('1')">1</button>
+        <button onclick="appendCalc('2')">2</button>
+        <button onclick="appendCalc('3')">3</button>
+        <button onclick="appendCalc('-')">-</button>
+        <button onclick="appendCalc('0')">0</button>
+        <button onclick="appendCalc('.')">.</button>
+        <button onclick="appendCalc('(')">(</button>
+        <button onclick="appendCalc('+')">+</button>
+      </div>
+      <div class="buttons">
+        <button onclick="clearCalc()">クリア</button>
+        <button onclick="evaluateCalc()">＝</button>
+        <button onclick="registerCalc()">記録</button>
+      </div>
+      <div id="calcMsg" class="record"></div>
+    </div>
     <!-- 記録タブ -->
     <div id="log" class="container">
       <div class="工事選択欄">
@@ -199,6 +229,7 @@
         <button class="warn-btn" onclick="clearCategory('pavement')">舗装計算 記録削除</button>
         <button class="warn-btn" onclick="clearCategory('curve')">道路曲線計算 記録削除</button>
         <button class="warn-btn" onclick="clearCategory('memo')">メモ削除</button>
+        <button class="warn-btn" onclick="clearCategory('calc')">電卓 記録削除</button>
       </div>
       <div id="logCross"></div>
       <div id="logLong"></div>
@@ -206,6 +237,7 @@
       <div id="logCurve"></div>
       <div id="logMass"></div>
       <div id="logMemo"></div>
+      <div id="logCalc"></div>
     </div>
   </div>
 <script src="main.js"></script>
