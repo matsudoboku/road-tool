@@ -1,5 +1,5 @@
-// Bump the cache name so outdated caches are discarded on activation
-const CACHE_NAME = 'road-tool-cache-v4';
+//キャッシュ名を変更して、アクティベーション時に古いキャッシュが破棄されるようにします。
+const CACHE_NAME = 'road-tool-cache-v5';
 const urlsToCache = [
   '/',
   'index.html',
@@ -32,7 +32,7 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Use network-first strategy for the main page so updates are picked up
+  // メインページではネットワーク優先戦略を採用し、更新が反映されるようにする
   if (event.request.mode === 'navigate' || event.request.url.endsWith('index.html')) {
     event.respondWith(
       fetch(event.request)
