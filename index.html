@@ -131,12 +131,12 @@
     </div>
     <!-- 道路曲線計算 -->
     <div id="curve" class="container">
-      <label>IP No</label><br>
-      <input type="text" id="ipno" placeholder="例: IP-001"><br>
-      <label>IA（例: 331900）</label><br>
-      <input type="number" id="ia"><br>
-      <label>R（半径）</label><br>
-      <input type="number" id="r"><br>
+      <label>IP No</label>
+      <input type="text" id="ipno" placeholder="例: IP.1">
+      <label>IA（例:33°19'00"=331900）</label>
+      <input type="number" id="ia">
+      <label>R（半径）</label>
+      <input type="number" id="r">
       <div class="buttons">
         <button onclick="calculateCurve()">計算する</button>
         <button onclick="registerCurve()">登録</button>
@@ -145,10 +145,10 @@
     </div>
     <!-- 土方カーブ -->
     <div id="mass" class="container">
-      <label>弦長C(m)</label><br>
-      <input type="number" id="massChordC"><br>
-      <label>曲線半径R(m)</label><br>
-      <input type="number" id="massChordR"><br>
+      <label>弦長C(m)</label>
+      <input type="number" id="massChordC">
+      <label>曲線半径R(m)</label>
+      <input type="number" id="massChordR">
       <div class="buttons">
         <button onclick="calculateMassChord()">計算する</button>
       </div>
