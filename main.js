@@ -650,6 +650,7 @@ let currentX = null, currentY = null;
 let selectedObj = null;
 let lastX, lastY;
 let savedDrawings = safeParseJSON(localStorage.getItem("drawingLogs3"), {});
+let inputsInitialized = false;
 
 function setDrawMode(mode) {
   drawMode = mode;
@@ -674,6 +675,12 @@ function clearDrawing(){
   currentX = null;
   currentY = null;
 }
+function drawMarker(x,y){
+  ctx.beginPath();
+  ctx.arc(x,y,4,0,Math.PI*2);
+  ctx.fillStyle='#ff4444';
+  ctx.fill();
+}
 function redraw(){
   clearCanvas();
   drawObjects.forEach(obj=>{
@@ -683,6 +690,9 @@ function redraw(){
       ctx.lineTo(obj.x2, obj.y2);
       ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
       ctx.stroke();
+      drawMarker(obj.x1,obj.y1);
+      drawMarker(obj.x2,obj.y2);
+      drawMarker((obj.x1+obj.x2)/2,(obj.y1+obj.y2)/2);
     }else if(obj.type==='text'){
       ctx.font="20px sans-serif";
       ctx.fillStyle="#ca6b00";
@@ -699,21 +709,38 @@ function ensureCurrentPoint(){
 }
 function addRelativeLine(){
   ensureCurrentPoint();
-  const dx = parseFloat(document.getElementById('inputDX').value);
-  const dy = parseFloat(document.getElementById('inputDY').value);
-  if(isNaN(dx) || isNaN(dy)){
-    alert('x,yを入力してください');
+  const dxRaw = document.getElementById('inputDX').value;
+  const dyRaw = document.getElementById('inputDY').value;
+  const dx = parseFloat(dxRaw);
+  const dy = parseFloat(dyRaw);
+  if(isNaN(dx) && isNaN(dy)){
+    alert('xまたはyを入力してください');
     return;
   }
   const x1 = currentX;
   const y1 = currentY;
-  const x2 = x1 + dx * scale;
-  const y2 = y1 - dy * scale;
+  const x2 = x1 + (isNaN(dx)?0:dx) * scale;
+  const y2 = y1 - (isNaN(dy)?0:dy) * scale;
   drawObjects.push({type:'line', x1, y1, x2, y2});
   currentX = x2;
   currentY = y2;
   document.getElementById('inputDX').value = '';
   document.getElementById('inputDY').value = '';
+  redraw();
+}
+
+function addAxisLine(axis,val){
+  if(isNaN(val)) return;
+  ensureCurrentPoint();
+  const x1 = currentX;
+  const y1 = currentY;
+  const dx = axis==='x' ? val*scale : 0;
+  const dy = axis==='y' ? val*scale : 0;
+  const x2 = x1 + dx;
+  const y2 = y1 - dy;
+  drawObjects.push({type:'line', x1, y1, x2, y2});
+  currentX = x2;
+  currentY = y2;
   redraw();
 }
 function distToSegment(px,py,x1,y1,x2,y2){
@@ -733,6 +760,14 @@ function findObjectAt(x,y){
   for(let i=drawObjects.length-1;i>=0;i--){
     const obj=drawObjects[i];
     if(obj.type==='line'){
+      const handles=[
+        {x:obj.x1,y:obj.y1},
+        {x:obj.x2,y:obj.y2},
+        {x:(obj.x1+obj.x2)/2,y:(obj.y1+obj.y2)/2}
+      ];
+      for(const h of handles){
+        if(Math.hypot(x-h.x,y-h.y)<=8) return obj;
+      }
       if(distToSegment(x,y,obj.x1,obj.y1,obj.x2,obj.y2)<=6) return obj;
     }else if(obj.type==='text'){
       ctx.font="20px sans-serif";
@@ -770,6 +805,17 @@ function showDrawingLog() {
 // --- キャンバス描画イベント処理 ---
 function setupDrawingCanvas() {
   getCanvasCtx();
+  if(!inputsInitialized){
+    const dxEl = document.getElementById('inputDX');
+    const dyEl = document.getElementById('inputDY');
+    const handleX = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('x', parseFloat(dxEl.value)); dxEl.value=''; };
+    const handleY = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('y', parseFloat(dyEl.value)); dyEl.value=''; };
+    dxEl.addEventListener('keydown', handleX);
+    dxEl.addEventListener('change', handleX);
+    dyEl.addEventListener('keydown', handleY);
+    dyEl.addEventListener('change', handleY);
+    inputsInitialized = true;
+  }
   let rect = canvas.getBoundingClientRect();
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   function xy(e) {
