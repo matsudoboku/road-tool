@@ -1150,13 +1150,91 @@ function clearCalc(){
   document.getElementById('calcDisplay').value = '';
 }
 function evaluateCalc(){
-  const expr = document.getElementById('calcDisplay').value;
-  try{
-    const result = Function('return ('+expr+')')();
-    document.getElementById('calcDisplay').value = result;
+  const display = document.getElementById('calcDisplay');
+  const msg = document.getElementById('calcMsg');
+  const expr = display.value;
+  msg.textContent = '';  try{
+    const parser = new CalcParser(expr);
+    const result = parser.parse();
+    display.value = result;
     return result;
   }catch(e){
+    display.value = 'Error';
+    msg.textContent = '無効な式です';
     return null;
+  }
+}
+
+class CalcParser{
+  constructor(str){
+    this.str = str;
+    this.pos = 0;
+  }
+  peek(){
+    return this.str[this.pos];
+  }
+  skip(){
+    while(this.pos < this.str.length && /\s/.test(this.str[this.pos])) this.pos++; 
+  }
+  parse(){
+    const val = this.parseExpression();
+    this.skip();
+    if(this.pos !== this.str.length) throw new Error('invalid');
+    return val;
+  }
+  parseExpression(){
+    let val = this.parseTerm();
+    while(true){
+      this.skip();
+      const ch = this.peek();
+      if(ch === '+' || ch === '-'){
+        this.pos++;
+        const right = this.parseTerm();
+        val = ch === '+' ? val + right : val - right;
+      }else break;
+    }
+    return val;
+  }
+  parseTerm(){
+    let val = this.parseFactor();
+    while(true){
+      this.skip();
+      const ch = this.peek();
+      if(ch === '*' || ch === '/'){
+        this.pos++;
+        const right = this.parseFactor();
+        if(ch === '/') val = val / right; else val = val * right;
+      }else break;
+    }
+    return val;
+  }
+  parseFactor(){
+    this.skip();
+    let ch = this.peek();
+    if(ch === '+' || ch === '-'){
+      this.pos++;
+      const val = this.parseFactor();
+      return ch === '-' ? -val : val;
+    }
+    if(ch === '('){
+      this.pos++;
+      const val = this.parseExpression();
+      this.skip();
+      if(this.peek() !== ')') throw new Error('missing )');
+      this.pos++;
+      return val;
+    }
+    return this.parseNumber();
+  }
+  parseNumber(){
+    this.skip();
+    let start = this.pos;
+    if(this.peek() === '.') this.pos++; 
+    while(/\d/.test(this.peek())) this.pos++;
+    if(this.peek() === '.'){ this.pos++; while(/\d/.test(this.peek())) this.pos++; }
+    const substr = this.str.slice(start, this.pos);
+    if(!substr || /^\.?$/.test(substr)) throw new Error('number');
+    return parseFloat(substr);
   }
 }
 
