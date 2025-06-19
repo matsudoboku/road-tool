@@ -1134,6 +1134,10 @@ function appendCalc(v){
 function clearCalc(){
   document.getElementById('calcDisplay').value = '';
 }
+function backspaceCalc(){
+  const display = document.getElementById('calcDisplay');
+  display.value = display.value.slice(0, -1);
+}
 function evaluateCalc(){
   const display = document.getElementById('calcDisplay');
   const msg = document.getElementById('calcMsg');
