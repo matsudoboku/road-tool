@@ -94,17 +94,26 @@
 #curve label,
 #mass label {
   display: block;
-  margin: 4px auto;
+  margin: 2px auto;
 }
 #curve input,
-#mass input,
-#calc input,
-#memo textarea {
+#mass input {
   display: block;
   width: 96%;
   max-width: 360px;
+  margin: 2px auto;
+  text-align: center;
+}
+#calc input,
+#memo textarea {
+  display: block;
+  width: 98%;
+  max-width: 380px;
   margin: 4px auto;
   text-align: center;
+}
+#memo textarea {
+  height: 140px;
 }
 .record {
   margin-top: 8px;
