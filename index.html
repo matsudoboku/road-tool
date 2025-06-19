@@ -165,10 +165,10 @@
     <!-- 簡易図形タブの本体を追加 -->
     <div id="drawing" class="container">
       <div style="margin-bottom:12px;">
-        <button onclick="setDrawMode('line')">線</button>
-        <button onclick="setDrawMode('text')">テキスト</button>
-        <button onclick="setDrawMode('number')">数字</button>
-        <button onclick="setDrawMode('freehand')">フリーハンド</button>
+        <button class="draw-mode-btn" data-mode="line" onclick="setDrawMode('line')">線</button>
+        <button class="draw-mode-btn" data-mode="text" onclick="setDrawMode('text')">テキスト</button>
+        <button class="draw-mode-btn" data-mode="number" onclick="setDrawMode('number')">数字</button>
+        <button class="draw-mode-btn" data-mode="freehand" onclick="setDrawMode('freehand')">フリーハンド</button>
         <button onclick="clearDrawing()">クリア</button>
         <button onclick="undoDrawing()">戻る</button>
         <button onclick="redoDrawing()">進む</button>
