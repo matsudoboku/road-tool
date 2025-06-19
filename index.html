@@ -187,6 +187,10 @@
     <!-- 電卓 -->
     <div id="calc" class="container">
       <input id="calcDisplay" type="text" readonly class="calc-display">
+      <div class="calc-top">
+        <button onclick="clearCalc()">クリア</button>
+        <button onclick="backspaceCalc()">⌫</button>
+      </div>
       <div class="calc-grid">
         <button onclick="appendCalc('7')">7</button>
         <button onclick="appendCalc('8')">8</button>
@@ -206,9 +210,8 @@
         <button onclick="appendCalc('+')">+</button>
       </div>
       <div class="buttons">
-        <button onclick="clearCalc()">クリア</button>
-        <button onclick="backspaceCalc()">⌫</button>
         <button onclick="evaluateCalc()">＝</button>
+      </div>
       </div>
     </div>
       <div id="calcMsg" class="record"></div>
