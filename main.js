@@ -862,10 +862,7 @@ function setupDrawingCanvas() {
   }
   canvas.onmousedown = function(e){
     let pos = xy(e);
-    if(drawMode==='line'){
-      drawing = true;
-      startX = pos.x; startY = pos.y;
-    }else if(drawMode==='freehand'){
+    if(drawMode==='freehand'){
       drawing = true;
       freehandPoints = [{x: pos.x, y: pos.y}];
       console.log('freehand start', freehandPoints[0]);
@@ -873,14 +870,7 @@ function setupDrawingCanvas() {
   };
   canvas.onmousemove = function(e){
     let pos = xy(e);
-    if(drawMode==='line' && drawing){
-      redraw();
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
-      ctx.stroke();
-      }else if(drawMode==='freehand' && drawing){
+    if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand move', freehandPoints.length);
       redraw();
@@ -895,14 +885,7 @@ function setupDrawingCanvas() {
   };
   canvas.onmouseup = function(e){
     let pos = xy(e);
-    if(drawMode==='line' && drawing){
-      drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
-      redoStack = [];
-      currentX = pos.x;
-      currentY = pos.y;
-      drawing = false;
-      redraw();
-      }else if(drawMode==='freehand' && drawing){
+    if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
@@ -930,10 +913,7 @@ function setupDrawingCanvas() {
   };
   canvas.ontouchstart = function(e){
     let pos = xy(e);
-    if(drawMode==='line'){
-      drawing = true;
-      startX = pos.x; startY = pos.y;
-    }else if(drawMode==='freehand'){
+    if(drawMode==='freehand'){
       drawing = true;
       freehandPoints = [{x: pos.x, y: pos.y}];
       console.log('freehand start', freehandPoints[0]);
@@ -942,14 +922,7 @@ function setupDrawingCanvas() {
   };
   canvas.ontouchmove = function(e){
     let pos = xy(e);
-    if(drawMode==='line' && drawing){
-      redraw();
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
-      ctx.stroke();
-      }else if(drawMode==='freehand' && drawing){
+    if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand move', freehandPoints.length);
       redraw();
@@ -965,14 +938,7 @@ function setupDrawingCanvas() {
   };
   canvas.ontouchend = function(e){
     let pos = xy(e);
-    if(drawMode==='line' && drawing){
-      drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
-      redoStack = [];
-      currentX = pos.x;
-      currentY = pos.y;
-      drawing = false;
-      redraw();
-      }else if(drawMode==='freehand' && drawing){
+    if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
