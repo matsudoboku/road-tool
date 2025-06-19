@@ -263,6 +263,28 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   font-size: 1.1em;
 }
 
+/* Drawing UI */
+#drawing .draw-controls {
+  margin: 8px 0;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+#drawing .draw-input {
+  width: 80px;
+  font-size: 1.1em;
+  padding: 10px;
+}
+#drawing #addLineBtn,
+#drawing button {
+  padding: 10px 14px;
+  font-size: 1.1em;
+}
+@media (max-width: 800px) {
+  #drawing .draw-input { width: 32vw; max-width: 120px; }
+  #drawing #addLineBtn { width: 40vw; }
+}
+
 /* Calculator modal overlay */
 .calc-overlay {
   position: fixed;
