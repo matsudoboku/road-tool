@@ -94,14 +94,14 @@
 #curve label,
 #mass label {
   display: block;
-  margin: 2px auto;
+  margin: 1px auto;
 }
 #curve input,
 #mass input {
   display: block;
   width: 96%;
   max-width: 360px;
-  margin: 2px auto;
+  margin: 1px auto;
   text-align: center;
 }
 #calc input,
@@ -122,6 +122,11 @@
 .record table {
   margin-left: auto;
   margin-right: auto;
+}
+
+.buttons {
+  margin: 4px 0;
+  text-align: center;
 }
 
 /* 横断測量の入力欄を1行にまとめる */
