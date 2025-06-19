@@ -617,18 +617,18 @@ function clearAllProjects() {
 function saveMemo() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
+  if(!memo) return;
+
   let allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   const k = keyOfActive();
-  allMemos[k] = memo;
+  if(allMemos[k]) allMemos[k] += "\n" + memo; else allMemos[k] = memo;
   localStorage.setItem("memoLogs3", JSON.stringify(allMemos));
+  document.getElementById("memoText").value = "";
   document.getElementById("memoSaved").textContent = "保存しました";
   updateLogTab();
 }
 function loadMemo() {
-  if(!activeProject) { document.getElementById("memoText").value = ""; return; }
-  let allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
-  const k = keyOfActive();
-  document.getElementById("memoText").value = allMemos[k] || "";
+  document.getElementById("memoText").value = "";
   document.getElementById("memoSaved").textContent = "";
 }
 window.onload = () => {
