@@ -660,6 +660,8 @@ function setDrawMode(mode) {
   selectedObj = null;
   const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
   document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;
+  const controls = document.querySelector('.draw-controls');
+  if (controls) controls.style.display = (mode === 'line') ? 'flex' : 'none';
   console.log('drawMode set to', drawMode);
 }
 function getCanvasCtx() {
