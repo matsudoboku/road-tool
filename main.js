@@ -652,6 +652,7 @@ let selectedObj = null;
 let lastX, lastY;
 let savedDrawings = safeParseJSON(localStorage.getItem("drawingLogs3"), {});
 let inputsInitialized = false;
+let redoStack = [];
 
 function setDrawMode(mode) {
   drawMode = mode;
@@ -676,6 +677,19 @@ function clearDrawing(){
   clearCanvas();
   currentX = null;
   currentY = null;
+  redoStack = [];
+}
+function undoDrawing(){
+  if(drawObjects.length===0) return;
+  const obj = drawObjects.pop();
+  redoStack.push(obj);
+  redraw();
+}
+function redoDrawing(){
+  if(redoStack.length===0) return;
+  const obj = redoStack.pop();
+  drawObjects.push(obj);
+  redraw();
 }
 function drawMarker(x,y){
   ctx.beginPath();
@@ -735,6 +749,7 @@ function addRelativeLine(){
   const x2 = x1 + (isNaN(dx)?0:dx) * scale;
   const y2 = y1 - (isNaN(dy)?0:dy) * scale;
   drawObjects.push({type:'line', x1, y1, x2, y2});
+  redoStack = [];
   currentX = x2;
   currentY = y2;
   document.getElementById('inputDX').value = '';
@@ -752,6 +767,7 @@ function addAxisLine(axis,val){
   const x2 = x1 + dx;
   const y2 = y1 - dy;
   drawObjects.push({type:'line', x1, y1, x2, y2});
+  redoStack = [];
   currentX = x2;
   currentY = y2;
   redraw();
@@ -899,6 +915,7 @@ function setupDrawingCanvas() {
       selectedObj = null;
     }else if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
+      redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
@@ -907,6 +924,7 @@ function setupDrawingCanvas() {
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
@@ -918,6 +936,7 @@ function setupDrawingCanvas() {
     if(drawing){
       if(drawMode === 'freehand' && freehandPoints.length > 1){
         drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+        redoStack = [];
         currentX = freehandPoints[freehandPoints.length-1].x;
         currentY = freehandPoints[freehandPoints.length-1].y;
         console.log('freehand cancel', freehandPoints.length);
@@ -984,6 +1003,7 @@ function setupDrawingCanvas() {
       selectedObj = null;
     }else if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
+      redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
@@ -992,6 +1012,7 @@ function setupDrawingCanvas() {
       freehandPoints.push({x: pos.x, y: pos.y});
       console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
@@ -1002,6 +1023,7 @@ function setupDrawingCanvas() {
       if(txt){
         txt = txt.substring(0,8);
         drawObjects.push({ type: 'text', x: pos.x, y: pos.y, text: txt });
+        redoStack = [];
         redraw();
       }
     }
@@ -1016,6 +1038,7 @@ function setupDrawingCanvas() {
         txt = txt.substring(0,8);
         let pos = xy(e);
         drawObjects.push({type:'text', x:pos.x, y:pos.y, text:txt});
+        redoStack = [];
         redraw();
       }
     };
