@@ -257,6 +257,17 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   font-size: 1.2em;
   text-align: right;
 }
+.calc-top {
+  display: flex;
+  gap: 6px;
+  max-width: 360px;
+  margin: 8px auto;
+}
+.calc-top button {
+  flex: 1;
+  padding: 22px 0;
+  font-size: 1.1em;
+}
 .calc-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -266,7 +277,15 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
 }
 .calc-grid button {
   padding: 18px 0;
+  padding: 22px 0;
   font-size: 1.1em;
+}
+#calc .buttons button {
+  padding: 22px 0;
+  font-size: 1.1em;
+  width: 96%;
+  max-width: 360px;
+  margin: 8px auto;
 }
 
 /* Drawing UI */
