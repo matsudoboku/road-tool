@@ -648,8 +648,6 @@ let drawObjects = [];
 let freehandPoints = [];
 let scale = 100; // pixels per meter
 let currentX = null, currentY = null;
-let selectedObj = null;
-let lastX, lastY;
 let savedDrawings = safeParseJSON(localStorage.getItem("drawingLogs3"), {});
 let inputsInitialized = false;
 let redoStack = [];
@@ -657,8 +655,9 @@ let redoStack = [];
 function setDrawMode(mode) {
   drawMode = mode;
   drawing = false;
-  selectedObj = null;
-  const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
+  document.querySelectorAll('.draw-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });  const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
   document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;
   const controls = document.querySelector('.draw-controls');
   if (controls) controls.style.display = (mode === 'line') ? 'flex' : 'none';
@@ -863,35 +862,18 @@ function setupDrawingCanvas() {
   }
   canvas.onmousedown = function(e){
     let pos = xy(e);
-    selectedObj = findObjectAt(pos.x,pos.y);
-    if(selectedObj){
-      lastX = pos.x; lastY = pos.y;
-    }else if(drawMode==='line'){ 
+    if(drawMode==='line'){
       drawing = true;
       startX = pos.x; startY = pos.y;
-    }else if(drawMode==='freehand'){ 
+    }else if(drawMode==='freehand'){
       drawing = true;
       freehandPoints = [{x: pos.x, y: pos.y}];
       console.log('freehand start', freehandPoints[0]);
-
     }
   };
   canvas.onmousemove = function(e){
     let pos = xy(e);
-    if(selectedObj){
-      const dx = pos.x - lastX;
-      const dy = pos.y - lastY;
-      if(selectedObj.type==='line'){
-        selectedObj.x1 += dx; selectedObj.y1 += dy;
-        selectedObj.x2 += dx; selectedObj.y2 += dy;
-      }else if(selectedObj.type==='text'){
-        selectedObj.x += dx; selectedObj.y += dy;
-      }else if(selectedObj.type==='freehand'){
-        selectedObj.points.forEach(p=>{p.x+=dx; p.y+=dy;});
-      }
-      lastX = pos.x; lastY = pos.y;
-      redraw();
-    }else if(drawMode==='line' && drawing){
+    if(drawMode==='line' && drawing){
       redraw();
       ctx.beginPath();
       ctx.moveTo(startX, startY);
@@ -913,9 +895,7 @@ function setupDrawingCanvas() {
   };
   canvas.onmouseup = function(e){
     let pos = xy(e);
-    if(selectedObj){
-      selectedObj = null;
-    }else if(drawMode==='line' && drawing){
+    if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
       redoStack = [];
       currentX = pos.x;
@@ -947,13 +927,10 @@ function setupDrawingCanvas() {
       freehandPoints = [];
       redraw();
     }
-    selectedObj = null;  };
+  };
   canvas.ontouchstart = function(e){
     let pos = xy(e);
-    selectedObj = findObjectAt(pos.x,pos.y);
-    if(selectedObj){
-      lastX = pos.x; lastY = pos.y;
-    }else if(drawMode==='line'){
+    if(drawMode==='line'){
       drawing = true;
       startX = pos.x; startY = pos.y;
     }else if(drawMode==='freehand'){
@@ -965,20 +942,7 @@ function setupDrawingCanvas() {
   };
   canvas.ontouchmove = function(e){
     let pos = xy(e);
-    if(selectedObj){
-      const dx = pos.x - lastX;
-      const dy = pos.y - lastY;
-      if(selectedObj.type==='line'){
-        selectedObj.x1 += dx; selectedObj.y1 += dy;
-        selectedObj.x2 += dx; selectedObj.y2 += dy;
-      }else if(selectedObj.type==='text'){
-        selectedObj.x += dx; selectedObj.y += dy;
-      }else if(selectedObj.type==='freehand'){
-        selectedObj.points.forEach(p=>{p.x+=dx; p.y+=dy;});
-      }
-      lastX = pos.x; lastY = pos.y;
-      redraw();
-    }else if(drawMode==='line' && drawing){
+    if(drawMode==='line' && drawing){
       redraw();
       ctx.beginPath();
       ctx.moveTo(startX, startY);
@@ -1001,9 +965,7 @@ function setupDrawingCanvas() {
   };
   canvas.ontouchend = function(e){
     let pos = xy(e);
-    if(selectedObj){
-      selectedObj = null;
-    }else if(drawMode==='line' && drawing){
+    if(drawMode==='line' && drawing){
       drawObjects.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y});
       redoStack = [];
       currentX = pos.x;
@@ -1033,7 +995,7 @@ function setupDrawingCanvas() {
   };
   if(!isTouchDevice){
     canvas.onclick = function(e){
-      if(selectedObj || drawing) return;
+      if(drawing) return;
       if(drawMode==='text' || drawMode==='number'){
         let txt = prompt("入力してください（最大8文字）");
         if(!txt) return;
