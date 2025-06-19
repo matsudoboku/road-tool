@@ -829,9 +829,7 @@ function setupDrawingCanvas() {
     const handleX = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('x', parseFloat(dxEl.value)); dxEl.value=''; };
     const handleY = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('y', parseFloat(dyEl.value)); dyEl.value=''; };
     dxEl.addEventListener('keydown', handleX);
-    dxEl.addEventListener('change', handleX);
     dyEl.addEventListener('keydown', handleY);
-    dyEl.addEventListener('change', handleY);
     inputsInitialized = true;
   }
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
