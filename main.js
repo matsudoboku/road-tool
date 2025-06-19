@@ -956,17 +956,74 @@ function setupDrawingCanvas() {
         redoStack = [];
         redraw();
       }
+    }else if(drawMode === 'line'){
+      let snapped = false;
+      const obj = findObjectAt(pos.x, pos.y);
+      if(obj && obj.type === 'line'){
+        const handles = [
+          {x: obj.x1, y: obj.y1},
+          {x: obj.x2, y: obj.y2},
+          {x: (obj.x1 + obj.x2)/2, y: (obj.y1 + obj.y2)/2}
+        ];
+        let nearest = null;
+        let minDist = Infinity;
+        for(const h of handles){
+          const d = Math.hypot(pos.x - h.x, pos.y - h.y);
+          if(d < minDist){
+            minDist = d;
+            nearest = h;
+          }
+        }
+        if(minDist <= 8){
+          currentX = nearest.x;
+          currentY = nearest.y;
+          snapped = true;
+        }
+      }
+      if(!snapped){
+        currentX = pos.x;
+        currentY = pos.y;
+      }
+      redraw();
     }
     e.preventDefault();
   };
   if(!isTouchDevice){
     canvas.onclick = function(e){
       if(drawing) return;
-      if(drawMode==='text' || drawMode==='number'){
-        let txt = prompt("入力してください（最大8文字）");
+      let pos = xy(e);
+      if(drawMode==='line'){
+        let snapped = false;
+        const obj = findObjectAt(pos.x, pos.y);
+        if(obj && obj.type === 'line'){
+          const handles = [
+            {x: obj.x1, y: obj.y1},
+            {x: obj.x2, y: obj.y2},
+            {x: (obj.x1 + obj.x2)/2, y: (obj.y1 + obj.y2)/2}
+          ];
+          let nearest = null;
+          let minDist = Infinity;
+          for(const h of handles){
+            const d = Math.hypot(pos.x - h.x, pos.y - h.y);
+            if(d < minDist){
+              minDist = d;
+              nearest = h;
+            }
+          }
+          if(minDist <= 8){
+            currentX = nearest.x;
+            currentY = nearest.y;
+            snapped = true;
+          }
+        }
+        if(!snapped){
+          currentX = pos.x;
+          currentY = pos.y;
+        }
+        redraw();
+      } else if(drawMode==='text' || drawMode==='number'){        let txt = prompt("入力してください（最大8文字）");
         if(!txt) return;
         txt = txt.substring(0,8);
-        let pos = xy(e);
         drawObjects.push({type:'text', x:pos.x, y:pos.y, text:txt});
         redoStack = [];
         redraw();
