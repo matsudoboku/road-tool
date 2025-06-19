@@ -172,10 +172,10 @@
         <span id="drawModeLabel"></span>
       </div>
         <canvas id="drawingCanvas" width="340" height="340" style="border:1px solid #aaa; background:#fff; touch-action:none; width:97vw;max-width:380px;"></canvas>
-        <div style="margin:8px 0;">
-          <label>x(m)<input type="number" id="inputDX" step="0.1" style="width:70px;"></label>
-          <label>y(m)<input type="number" id="inputDY" step="0.1" style="width:70px;"></label>
-          <button onclick="addRelativeLine()">追加</button>
+        <div class="draw-controls">
+          <label>x(m)<input type="number" id="inputDX" step="0.1" class="draw-input"></label>
+          <label>y(m)<input type="number" id="inputDY" step="0.1" class="draw-input"></label>
+          <button onclick="addRelativeLine()" id="addLineBtn">追加</button>
         </div>
         <div style="margin:8px 0;">
           <button onclick="saveDrawing()">記録</button>
