@@ -658,8 +658,9 @@ function setDrawMode(mode) {
   drawing = false;
   selectedObj = null;
   const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
-  document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;}
-
+  document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;
+  console.log('drawMode set to', drawMode);
+}
 function getCanvasCtx() {
   if (!canvas) {
     canvas = document.getElementById("drawingCanvas");
@@ -833,14 +834,15 @@ function setupDrawingCanvas() {
     dyEl.addEventListener('change', handleY);
     inputsInitialized = true;
   }
-  let rect = canvas.getBoundingClientRect();
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   function xy(e) {
+    const rect = canvas.getBoundingClientRect();
+
     if(e.touches){ // タッチ端末
       let t = e.touches[0] || e.changedTouches[0];
       return {x: t.clientX - rect.left, y: t.clientY - rect.top};
     }else{
-      return {x: e.offsetX, y: e.offsetY};
+      return {x: e.clientX - rect.left, y: e.clientY - rect.top};
     }
   }
   canvas.onmousedown = function(e){
@@ -848,12 +850,14 @@ function setupDrawingCanvas() {
     selectedObj = findObjectAt(pos.x,pos.y);
     if(selectedObj){
       lastX = pos.x; lastY = pos.y;
-    }else if(drawMode==='line'){
+    }else if(drawMode==='line'){ 
       drawing = true;
       startX = pos.x; startY = pos.y;
-      }else if(drawMode==='freehand'){
+    }else if(drawMode==='freehand'){ 
       drawing = true;
       freehandPoints = [{x: pos.x, y: pos.y}];
+      console.log('freehand start', freehandPoints[0]);
+
     }
   };
   canvas.onmousemove = function(e){
@@ -880,6 +884,7 @@ function setupDrawingCanvas() {
       ctx.stroke();
       }else if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
+      console.log('freehand move', freehandPoints.length);
       redraw();
       ctx.beginPath();
       ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
@@ -902,6 +907,7 @@ function setupDrawingCanvas() {
       redraw();
       }else if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
+      console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
       currentX = pos.x;
       currentY = pos.y;
@@ -912,11 +918,17 @@ function setupDrawingCanvas() {
   };
   canvas.onmouseleave = function(){
     if(drawing){
+      if(drawMode === 'freehand' && freehandPoints.length > 1){
+        drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+        currentX = freehandPoints[freehandPoints.length-1].x;
+        currentY = freehandPoints[freehandPoints.length-1].y;
+        console.log('freehand cancel', freehandPoints.length);
+      }
       drawing = false;
       freehandPoints = [];
       redraw();
-    }    selectedObj = null;
-  };
+    }
+    selectedObj = null;  };
   canvas.ontouchstart = function(e){
     let pos = xy(e);
     selectedObj = findObjectAt(pos.x,pos.y);
@@ -928,6 +940,7 @@ function setupDrawingCanvas() {
     }else if(drawMode==='freehand'){
       drawing = true;
       freehandPoints = [{x: pos.x, y: pos.y}];
+      console.log('freehand start', freehandPoints[0]);
     }
     e.preventDefault();
   };
@@ -955,6 +968,7 @@ function setupDrawingCanvas() {
       ctx.stroke();
       }else if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
+      console.log('freehand move', freehandPoints.length);
       redraw();
       ctx.beginPath();
       ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
@@ -978,6 +992,7 @@ function setupDrawingCanvas() {
       redraw();
       }else if(drawMode==='freehand' && drawing){
       freehandPoints.push({x: pos.x, y: pos.y});
+      console.log('freehand end', freehandPoints.length);
       drawObjects.push({type:'freehand', points: freehandPoints.slice()});
       currentX = pos.x;
       currentY = pos.y;
