@@ -645,6 +645,7 @@ let drawing = false;
 let startX, startY;
 let canvas, ctx;
 let drawObjects = [];
+let freehandPoints = [];
 let scale = 100; // pixels per meter
 let currentX = null, currentY = null;
 let selectedObj = null;
@@ -656,8 +657,8 @@ function setDrawMode(mode) {
   drawMode = mode;
   drawing = false;
   selectedObj = null;
-  document.getElementById("drawModeLabel").textContent = `モード: ${mode === 'line' ? '線' : mode === 'text' ? 'テキスト' : '数字'}`;
-}
+  const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
+  document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;}
 
 function getCanvasCtx() {
   if (!canvas) {
@@ -697,6 +698,17 @@ function redraw(){
       ctx.font="20px sans-serif";
       ctx.fillStyle="#ca6b00";
       ctx.fillText(obj.text, obj.x, obj.y);
+      }else if(obj.type==='freehand'){
+      if(obj.points.length>1){
+        ctx.beginPath();
+        ctx.moveTo(obj.points[0].x, obj.points[0].y);
+        for(let i=1;i<obj.points.length;i++){
+          ctx.lineTo(obj.points[i].x, obj.points[i].y);
+        }
+        ctx.strokeStyle="#1c1c1c";
+        ctx.lineWidth=2;
+        ctx.stroke();
+      }
     }
   });
 }
@@ -774,6 +786,11 @@ function findObjectAt(x,y){
       const w=ctx.measureText(obj.text).width;
       const h=20;
       if(x>=obj.x && x<=obj.x+w && y<=obj.y && y>=obj.y-h) return obj;
+      }else if(obj.type==='freehand'){
+      for(let j=0;j<obj.points.length-1;j++){
+        const p1=obj.points[j], p2=obj.points[j+1];
+        if(distToSegment(x,y,p1.x,p1.y,p2.x,p2.y)<=6) return obj;
+      }
     }
   }
   return null;
@@ -834,6 +851,9 @@ function setupDrawingCanvas() {
     }else if(drawMode==='line'){
       drawing = true;
       startX = pos.x; startY = pos.y;
+      }else if(drawMode==='freehand'){
+      drawing = true;
+      freehandPoints = [{x: pos.x, y: pos.y}];
     }
   };
   canvas.onmousemove = function(e){
@@ -846,6 +866,8 @@ function setupDrawingCanvas() {
         selectedObj.x2 += dx; selectedObj.y2 += dy;
       }else if(selectedObj.type==='text'){
         selectedObj.x += dx; selectedObj.y += dy;
+      }else if(selectedObj.type==='freehand'){
+        selectedObj.points.forEach(p=>{p.x+=dx; p.y+=dy;});
       }
       lastX = pos.x; lastY = pos.y;
       redraw();
@@ -854,6 +876,16 @@ function setupDrawingCanvas() {
       ctx.beginPath();
       ctx.moveTo(startX, startY);
       ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+      }else if(drawMode==='freehand' && drawing){
+      freehandPoints.push({x: pos.x, y: pos.y});
+      redraw();
+      ctx.beginPath();
+      ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
+      for(let i=1;i<freehandPoints.length;i++){
+        ctx.lineTo(freehandPoints[i].x, freehandPoints[i].y);
+      }
       ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
       ctx.stroke();
     }
@@ -868,11 +900,22 @@ function setupDrawingCanvas() {
       currentY = pos.y;
       drawing = false;
       redraw();
+      }else if(drawMode==='freehand' && drawing){
+      freehandPoints.push({x: pos.x, y: pos.y});
+      drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      currentX = pos.x;
+      currentY = pos.y;
+      drawing = false;
+      freehandPoints = [];
+      redraw();
     }
   };
   canvas.onmouseleave = function(){
-    if(drawing){ drawing = false; redraw(); }
-    selectedObj = null;
+    if(drawing){
+      drawing = false;
+      freehandPoints = [];
+      redraw();
+    }    selectedObj = null;
   };
   canvas.ontouchstart = function(e){
     let pos = xy(e);
@@ -882,6 +925,9 @@ function setupDrawingCanvas() {
     }else if(drawMode==='line'){
       drawing = true;
       startX = pos.x; startY = pos.y;
+    }else if(drawMode==='freehand'){
+      drawing = true;
+      freehandPoints = [{x: pos.x, y: pos.y}];
     }
     e.preventDefault();
   };
@@ -895,6 +941,8 @@ function setupDrawingCanvas() {
         selectedObj.x2 += dx; selectedObj.y2 += dy;
       }else if(selectedObj.type==='text'){
         selectedObj.x += dx; selectedObj.y += dy;
+      }else if(selectedObj.type==='freehand'){
+        selectedObj.points.forEach(p=>{p.x+=dx; p.y+=dy;});
       }
       lastX = pos.x; lastY = pos.y;
       redraw();
@@ -903,6 +951,16 @@ function setupDrawingCanvas() {
       ctx.beginPath();
       ctx.moveTo(startX, startY);
       ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.stroke();
+      }else if(drawMode==='freehand' && drawing){
+      freehandPoints.push({x: pos.x, y: pos.y});
+      redraw();
+      ctx.beginPath();
+      ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
+      for(let i=1;i<freehandPoints.length;i++){
+        ctx.lineTo(freehandPoints[i].x, freehandPoints[i].y);
+      }
       ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
       ctx.stroke();
     }
@@ -917,6 +975,14 @@ function setupDrawingCanvas() {
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
+      redraw();
+      }else if(drawMode==='freehand' && drawing){
+      freehandPoints.push({x: pos.x, y: pos.y});
+      drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      currentX = pos.x;
+      currentY = pos.y;
+      drawing = false;
+      freehandPoints = [];
       redraw();
     }else if(drawMode === 'text' || drawMode === 'number'){
       let txt = prompt('入力してください（最大8文字）');
