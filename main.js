@@ -541,6 +541,9 @@ function crossRowText(rows){
       txt = `${h}/L`;
     }else if(v){
       txt = `${v}`;
+    }else if(note){
+      // 横・縦が空でも備考がある場合は備考のみ返す
+      return note;
     }else{
       return "";
     }
