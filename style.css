@@ -137,8 +137,18 @@
   align-items: center;
   gap: 6px;
 }
-.cross-head #point {
+.cross-head #pointSel {
   width: 68px;
+}
+
+#project .project-inner {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+#project .project-inner > div {
+  flex: 1 1 340px;
 }
 
 input, select, textarea {
@@ -198,6 +208,7 @@ th {
   .project-bar { flex-direction: column; align-items: stretch; gap: 5px; }
   .tabbar { font-size: 0.98em; }
   .tabbar button { font-size: 0.96em; min-width: 84px; padding: 11px 7px; }
+  #project .project-inner { flex-direction: column; }
   .form-inline { flex-direction: column; align-items: stretch; }
   .cross-head { flex-wrap: wrap; }
   #longTable input[type="text"],
