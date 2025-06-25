@@ -92,8 +92,15 @@ function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text">`;
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable(this)">`;
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable(this)">`;
+
+  const tankyoInput = c1.querySelector('input');
+  const tsuikyoInput = c2.querySelector('input');
+  tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
+  tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
+  const c1 = row.insertCell();
+  c1.innerHTML = `<input type="number">`;
+  const c2 = row.insertCell();
+  c2.innerHTML = `<input type="number">`;
   row.insertCell().innerHTML = `<input type="text">`;
 }
 function updatePointTable(changed){
@@ -103,24 +110,33 @@ function updatePointTable(changed){
   　const inputs = row.querySelectorAll('input');
     const tankyoInput = inputs[1];
     const tsuikyoInput = inputs[2];
-    let tankyo = parseFloat(tankyoInput.value);
-    let tsuikyo = parseFloat(tsuikyoInput.value);
+    let tankyo = tankyoInput.valueAsNumber;
+    let tsuikyo = tsuikyoInput.valueAsNumber;
 
     if(changed === tankyoInput && !isNaN(tankyo)){
-      tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
-      tsuikyoInput.value = tsuikyo;
+      const newTsui = (i===0)? tankyo : prevTsui + tankyo;
+      const cur = tsuikyoInput.valueAsNumber;
+      if(isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
+      tsuikyo = newTsui;
     } else if(changed === tsuikyoInput && !isNaN(tsuikyo)){
-      tankyo = tsuikyo - prevTsui;
-      tankyoInput.value = tankyo;
-    } else {      if(!isNaN(tankyo)){
-        tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
-        tsuikyoInput.value = tsuikyo;
+      const newTankyo = tsuikyo - prevTsui;
+      const cur = tankyoInput.valueAsNumber;
+      if(isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
+      tankyo = newTankyo;
+    } else {
+      if(!isNaN(tankyo)){
+        const newTsui = (i===0)? tankyo : prevTsui + tankyo;
+        const cur = tsuikyoInput.valueAsNumber;
+        if(isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
+        tsuikyo = newTsui;
       } else if(!isNaN(tsuikyo)){
-        tankyo = tsuikyo - prevTsui;
-        tankyoInput.value = tankyo;
+        const newTankyo = tsuikyo - prevTsui;
+        const cur = tankyoInput.valueAsNumber;
+        if(isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
+        tankyo = newTankyo;
       } else {
-        tankyoInput.value = '';
-        tsuikyoInput.value = '';
+        if(tankyoInput.value !== '') tankyoInput.value = '';
+        if(tsuikyoInput.value !== '') tsuikyoInput.value = '';
       }
     }
 
