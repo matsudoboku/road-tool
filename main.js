@@ -445,10 +445,15 @@ function crossRowText(rows){
     const v = r[1];
     const note = r[2];
     let txt = "";
-    if(h && v) txt = `${h}/${v}`;
-    else if(h) txt = `${h}/L`;
-    else if(v) txt = `L/${v}`;
-    else return "";
+    if(h && v){
+      txt = `${h}/${v}`;
+    }else if(h){
+      txt = `${h}/L`;
+    }else if(v){
+      txt = `${v}`;
+    }else{
+      return "";
+    }
     if(note) txt += `(${note})`;
     return txt;
   }).filter(Boolean).join(" ");
