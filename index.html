@@ -31,19 +31,36 @@
   <div class="main-content">
     <!-- 工事設定 -->
     <div id="project" class="container active">
-      <h2>工事情報の登録・切替</h2>
-      <div class="form-inline">
-        <label>工事名：<input type="text" id="projectName" style="font-size:1.04em;padding:8px;min-width:160px;"></label>
-        <button class="add-btn" onclick="addProject()">追加</button>
-        <button class="delete-btn" onclick="deleteProject()">この工事を削除</button>
+      <div class="project-inner">
+        <div class="project-info">
+          <h2>工事情報の登録・切替</h2>
+          <div class="form-inline">
+            <label>工事名：<input type="text" id="projectName" style="font-size:1.04em;padding:8px;min-width:160px;"></label>
+            <button class="add-btn" onclick="addProject()">追加</button>
+            <button class="delete-btn" onclick="deleteProject()">この工事を削除</button>
+          </div>
+          <div id="prjList"></div>
+        </div>
+        <div class="point-settings">
+          <h2>測点設定</h2>
+          <table id="pointTable" class="survey-table">
+            <thead>
+              <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="buttons">
+            <button onclick="addPointRow()">行を追加</button>
+            <button onclick="savePointSettings()">登録</button>
+          </div>
+        </div>
       </div>
-      <div id="prjList"></div>
     </div>
     <!-- 横断測量 -->
     <div id="cross" class="container">
       <div class="cross-head">
         <label>測点：</label>
-        <input type="text" id="point" style="font-size:1.03em;">
+        <select id="pointSel" style="font-size:1.03em;"></select>
         <label>方向：</label>
         <select id="direction" style="font-size:1.03em;">
         <option value="左">左</option>
