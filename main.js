@@ -92,16 +92,16 @@ function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text">`;
-
-  const tankyoInput = c1.querySelector('input');
-  const tsuikyoInput = c2.querySelector('input');
-  tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
-  tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="number">`;
   const c2 = row.insertCell();
   c2.innerHTML = `<input type="number">`;
   row.insertCell().innerHTML = `<input type="text">`;
+
+  const tankyoInput = c1.querySelector('input');
+  const tsuikyoInput = c2.querySelector('input');
+  tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
+  tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
 }
 function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
