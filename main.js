@@ -56,7 +56,8 @@ function initializeCrossTable() {
 }
 function registerCross() {
   if(!activeProject){ alert("工事を選択してください"); return; }
-  const point = document.getElementById("pointSel").value.trim();  const dir = document.getElementById("direction").value;
+  const point = document.getElementById("pointSel").value.trim();
+  const dir = document.getElementById("direction").value; 
   if (!point) return alert("測点を入力してください");
   const rows = document.querySelectorAll("#crossTable tbody tr");
   let rowData = [];
@@ -68,6 +69,11 @@ function registerCross() {
   let allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const k = keyOfActive();
   if(!allLogs[k]) allLogs[k]=[];
+  const exists = allLogs[k].some(log => log.point === point && log.dir === dir);
+  if(exists){
+    alert("既に同じ測点と方向で登録されています");
+    return;
+  }
   allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
   localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
   initializeCrossTable();
@@ -158,12 +164,12 @@ function loadPointSettings(){
   updatePointTable();
 }
 function updatePointSelect(){
-  const sel = document.getElementById('pointSel');
-  if(!sel) return;
+  const list = document.getElementById('pointList');
+  if(!list) return;
   let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
   let arr = all[keyOfActive()] || [];
-  sel.innerHTML = `<option value=""></option>`;
-  arr.forEach(p=>{ sel.innerHTML += `<option value="${p.point}">${p.point}</option>`; });
+  list.innerHTML = '';
+  arr.forEach(p=>{ list.innerHTML += `<option value="${p.point}">`; });
 }
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
@@ -284,6 +290,11 @@ function registerLong() {
   if (tableRows.length > 0) {
     const k = keyOfActive();
     if(!allLogs[k]) allLogs[k]=[];
+  const exists = allLogs[k].some(log => log.point === point && log.dir === dir);
+  if(exists){
+    alert("既に同じ測点と方向で登録されています");
+    return;
+  }
     allLogs[k].push({ tableRows, time: new Date().toLocaleString() });
     localStorage.setItem("longLogs3", JSON.stringify(allLogs));
   }
