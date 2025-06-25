@@ -23,6 +23,8 @@ function sidebarSwitchProject() {
   activeProject = document.getElementById("sidebarProjectSel").value;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
+  loadPointSettings();
+  updatePointSelect();
   updateLogTab();
 }
 function switchTab(tabId) {
@@ -54,8 +56,7 @@ function initializeCrossTable() {
 }
 function registerCross() {
   if(!activeProject){ alert("工事を選択してください"); return; }
-  const point = document.getElementById("point").value.trim();
-  const dir = document.getElementById("direction").value;
+  const point = document.getElementById("pointSel").value.trim();  const dir = document.getElementById("direction").value;
   if (!point) return alert("測点を入力してください");
   const rows = document.querySelectorAll("#crossTable tbody tr");
   let rowData = [];
@@ -70,14 +71,85 @@ function registerCross() {
   allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
   localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
   initializeCrossTable();
-  document.getElementById("point").value = "";
+  document.getElementById("pointSel").value = "";
   updateLogTab();
 }
 function clearCross() {
   if (confirm("すべての入力内容を削除します。よろしいですか？")) {
-    document.getElementById("point").value = "";
+    document.getElementById("pointSel").value = "";
     initializeCrossTable();
   }
+}
+
+// --- 測点設定 ---
+function addPointRow(){
+  const tbody = document.querySelector('#pointTable tbody');
+  const row = tbody.insertRow();
+  row.insertCell().innerHTML = `<input type="text">`;
+  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable()">`;
+  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable()">`;
+  row.insertCell().innerHTML = `<input type="text">`;
+}
+function updatePointTable(){
+  const rows = document.querySelectorAll('#pointTable tbody tr');
+  let prevTsui = 0;
+  rows.forEach((row,i)=>{
+    const inputs = row.querySelectorAll('input');
+    let tankyo = parseFloat(inputs[1].value);
+    let tsuikyo = parseFloat(inputs[2].value);
+    if(!isNaN(tankyo)){
+      tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
+      inputs[2].value = tsuikyo;
+    }else if(!isNaN(tsuikyo)){
+      tankyo = tsuikyo - prevTsui;
+      inputs[1].value = tankyo;
+    }
+    prevTsui = !isNaN(tsuikyo)? tsuikyo : prevTsui;
+  });
+}
+function savePointSettings(){
+  if(!activeProject){ alert('工事を選択してください'); return; }
+  const rows = document.querySelectorAll('#pointTable tbody tr');
+  let data = [];
+  rows.forEach(row=>{
+    const inputs = row.querySelectorAll('input');
+    const point = inputs[0].value;
+    const tankyo = inputs[1].value;
+    const tsuikyo = inputs[2].value;
+    const note = inputs[3].value;
+    if(point || tankyo || tsuikyo || note){
+      data.push({point, tankyo, tsuikyo, note});
+    }
+  });
+  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
+  all[keyOfActive()] = data;
+  localStorage.setItem('pointSettings3', JSON.stringify(all));
+  updatePointSelect();
+}
+function loadPointSettings(){
+  const tbody = document.querySelector('#pointTable tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
+  let arr = all[keyOfActive()] || [];
+  const rowCount = Math.max(arr.length, 4);
+  for(let i=0;i<rowCount;i++) addPointRow();
+  arr.forEach((obj,i)=>{
+    const inputs = tbody.rows[i].querySelectorAll('input');
+    inputs[0].value = obj.point || '';
+    inputs[1].value = obj.tankyo || '';
+    inputs[2].value = obj.tsuikyo || '';
+    inputs[3].value = obj.note || '';
+  });
+  updatePointTable();
+}
+function updatePointSelect(){
+  const sel = document.getElementById('pointSel');
+  if(!sel) return;
+  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
+  let arr = all[keyOfActive()] || [];
+  sel.innerHTML = `<option value=""></option>`;
+  arr.forEach(p=>{ sel.innerHTML += `<option value="${p.point}">${p.point}</option>`; });
 }
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
@@ -586,6 +658,8 @@ function addProject() {
   activeProject = id;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
+  loadPointSettings();
+  updatePointSelect();
   alert("工事を追加・切替しました");
 }
 function renderProjectSelects() {
@@ -601,6 +675,8 @@ function renderProjectSelects() {
     txt += `・${i+1}（${p.name}）<br>`;
   });
   document.getElementById("prjList").innerHTML = txt;
+  loadPointSettings();
+  updatePointSelect();
 }
 function deleteProject() {
   if(!activeProject) return;
@@ -618,6 +694,8 @@ function deleteProject() {
   activeProject = projects[0] ? projects[0].id : null;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
+  loadPointSettings();
+  updatePointSelect();
   updateLogTab();
 }
 function clearAllProjects() {
@@ -628,6 +706,8 @@ function clearAllProjects() {
   projects = [];
   activeProject = null;
   renderProjectSelects();
+  loadPointSettings();
+  updatePointSelect();
   updateLogTab();
 }
 function saveMemo() {
