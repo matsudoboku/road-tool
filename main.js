@@ -86,23 +86,41 @@ function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text">`;
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable()">`;
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable()">`;
+  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable(this)">`;
+  row.insertCell().innerHTML = `<input type="number" oninput="updatePointTable(this)">`;
   row.insertCell().innerHTML = `<input type="text">`;
 }
-function updatePointTable(){
+function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
   rows.forEach((row,i)=>{
     const inputs = row.querySelectorAll('input');
-    let tankyo = parseFloat(inputs[1].value);
-    let tsuikyo = parseFloat(inputs[2].value);
-    if(!isNaN(tankyo)){
-      tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
-      inputs[2].value = tsuikyo;
-    }else if(!isNaN(tsuikyo)){
-      tankyo = tsuikyo - prevTsui;
-      inputs[1].value = tankyo;
+    const tankyoInput = inputs[1];
+    const tsuikyoInput = inputs[2];
+    let tankyo = parseFloat(tankyoInput.value);
+    let tsuikyo = parseFloat(tsuikyoInput.value);
+    if(changed === tankyoInput){
+      if(!isNaN(tankyo)){
+        tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
+        tsuikyoInput.value = tsuikyo;
+      } else {
+        tsuikyoInput.value = '';
+      }
+    }else if(changed === tsuikyoInput){
+      if(!isNaN(tsuikyo)){
+        tankyo = tsuikyo - prevTsui;
+        tankyoInput.value = tankyo;
+      } else {
+        tankyoInput.value = '';
+      }
+    }else{
+      if(!isNaN(tankyo) && isNaN(tsuikyo)){
+        tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
+        tsuikyoInput.value = tsuikyo;
+      }else if(!isNaN(tsuikyo) && isNaN(tankyo)){
+        tankyo = tsuikyo - prevTsui;
+        tankyoInput.value = tankyo;
+      }
     }
     prevTsui = !isNaN(tsuikyo)? tsuikyo : prevTsui;
   });
