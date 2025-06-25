@@ -93,36 +93,32 @@ function addPointRow(){
 function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
-  rows.forEach((row,i)=>{
-    const inputs = row.querySelectorAll('input');
+  rows.forEach((row, i) => {
+  　const inputs = row.querySelectorAll('input');
     const tankyoInput = inputs[1];
     const tsuikyoInput = inputs[2];
     let tankyo = parseFloat(tankyoInput.value);
     let tsuikyo = parseFloat(tsuikyoInput.value);
-    if(changed === tankyoInput){
-      if(!isNaN(tankyo)){
+
+    if(changed === tankyoInput && !isNaN(tankyo)){
+      tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
+      tsuikyoInput.value = tsuikyo;
+    } else if(changed === tsuikyoInput && !isNaN(tsuikyo)){
+      tankyo = tsuikyo - prevTsui;
+      tankyoInput.value = tankyo;
+    } else {      if(!isNaN(tankyo)){
         tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
         tsuikyoInput.value = tsuikyo;
-      } else {
-        tsuikyoInput.value = '';
-      }
-    }else if(changed === tsuikyoInput){
-      if(!isNaN(tsuikyo)){
+      } else if(!isNaN(tsuikyo)){
         tankyo = tsuikyo - prevTsui;
         tankyoInput.value = tankyo;
       } else {
         tankyoInput.value = '';
-      }
-    }else{
-      if(!isNaN(tankyo) && isNaN(tsuikyo)){
-        tsuikyo = (i===0)? tankyo : prevTsui + tankyo;
-        tsuikyoInput.value = tsuikyo;
-      }else if(!isNaN(tsuikyo) && isNaN(tankyo)){
-        tankyo = tsuikyo - prevTsui;
-        tankyoInput.value = tankyo;
+        tsuikyoInput.value = '';
       }
     }
-    prevTsui = !isNaN(tsuikyo)? tsuikyo : prevTsui;
+
+    prevTsui = !isNaN(tsuikyo) ? tsuikyo : prevTsui;
   });
 }
 function savePointSettings(){
