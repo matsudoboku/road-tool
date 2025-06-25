@@ -439,6 +439,21 @@ function calculateMassChord(){
     </table>`;
 }
 
+function crossRowText(rows){
+  return rows.map(r => {
+    const h = r[0];
+    const v = r[1];
+    const note = r[2];
+    let txt = "";
+    if(h && v) txt = `${h}/${v}`;
+    else if(h) txt = `${h}/L`;
+    else if(v) txt = `L/${v}`;
+    else return "";
+    if(note) txt += `(${note})`;
+    return txt;
+  }).filter(Boolean).join(" ");
+}
+
 function updateLogTab(){
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x=>x.id===prjId);
@@ -447,12 +462,8 @@ function updateLogTab(){
   let logsArr = crossLogs[k] || [];
   let htmlCross = `<h3>横断測量</h3><hr>`;
   logsArr.forEach(log => {
-    htmlCross += `<div class="section"><b>【測点${log.point} - ${log.dir}】</b><br>`;
-    htmlCross += `<table class="survey-table"><tr><th>横(m)</th><th>縦(m)</th><th>備考</th></tr>`;
-    log.rowData.forEach(r => {
-      htmlCross += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`;
-    });
-    htmlCross += `</table></div>`;
+    const text = crossRowText(log.rowData);
+    htmlCross += `<div class="section"><b>測点 ${log.point} ${log.dir}</b> ${text}</div>`;
   });
   document.getElementById("logCross").innerHTML = htmlCross;
   const longLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
