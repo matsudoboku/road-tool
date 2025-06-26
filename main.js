@@ -113,8 +113,14 @@ function updatePointTable(changed){
     let tankyo = tankyoInput.valueAsNumber;
     let tsuikyo = tsuikyoInput.valueAsNumber;
 
-    if(changed === tankyoInput && !isNaN(tankyo)){
-      const newTsui = (i===0)? tankyo : prevTsui + tankyo;
+    // When user clears one field, don't restore previous value
+    if(changed === tankyoInput && tankyoInput.value === ''){
+      if(tsuikyoInput.value !== '') tsuikyoInput.value = '';
+      tankyo = NaN; tsuikyo = NaN;
+    } else if(changed === tsuikyoInput && tsuikyoInput.value === ''){
+      if(tankyoInput.value !== '') tankyoInput.value = '';
+      tankyo = NaN; tsuikyo = NaN;
+    } else if(changed === tankyoInput && !isNaN(tankyo)){      const newTsui = (i===0)? tankyo : prevTsui + tankyo;
       const cur = tsuikyoInput.valueAsNumber;
       if(isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
       tsuikyo = newTsui;
@@ -148,7 +154,7 @@ function savePointSettings(){
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let data = [];
   rows.forEach(row=>{
-    const inputs = row.querySelectorAll('input');
+   　const inputs = row.querySelectorAll('input');
     const point = inputs[0].value;
     const tankyo = inputs[1].value;
     const tsuikyo = inputs[2].value;
