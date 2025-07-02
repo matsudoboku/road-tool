@@ -91,7 +91,7 @@ function clearCross() {
 function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text">`;
+  row.insertCell().innerHTML = `<input type="text" inputmode="numeric">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="number">`;
   const c2 = row.insertCell();
@@ -196,7 +196,7 @@ function updatePointSelect(){
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text" class="wide-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="wide-input" inputmode="numeric">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
@@ -343,7 +343,7 @@ function addPavementRow() {
       <option value="オーバーレイ">オーバーレイ</option>
     </select>
   `;
-  row.insertCell().innerHTML = `<input type="text" oninput="updatePavementTable()">`;   // 測点
+  row.insertCell().innerHTML = `<input type="text" inputmode="numeric" oninput="updatePavementTable()">`;   // 測点
   row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 単距
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
