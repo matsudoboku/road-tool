@@ -312,11 +312,12 @@ function registerLong() {
   if (tableRows.length > 0) {
     const k = keyOfActive();
     if(!allLogs[k]) allLogs[k]=[];
-  const exists = allLogs[k].some(log => log.point === point && log.dir === dir);
-  if(exists){
-    alert("既に同じ測点と方向で登録されています");
-    return;
-  }
+    // check for duplicate based on identical row contents
+    const exists = allLogs[k].some(log => JSON.stringify(log.tableRows) === JSON.stringify(tableRows));
+    if(exists){
+      alert("既に同じ内容が登録されています");
+      return;
+    }
     allLogs[k].push({ tableRows, time: new Date().toLocaleString() });
     localStorage.setItem("longLogs3", JSON.stringify(allLogs));
   }
