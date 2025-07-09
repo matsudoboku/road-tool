@@ -89,15 +89,17 @@
 .container.active { display: block; }
 
 /* 中央寄せが必要な単独フォーム */
-#curve, #mass, #memo, #calc {
+#curve, #vcurve, #mass, #memo, #calc {
   text-align: center;
 }
 #curve label,
+#vcurve label,
 #mass label {
   display: block;
   margin: 1px auto;
 }
 #curve input,
+#vcurve input,
 #mass input {
   display: block;
   width: 96%;
