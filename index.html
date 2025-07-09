@@ -160,6 +160,23 @@
       </div>
       <div id="curveResult" class="record"></div>
     </div>
+    <!-- 縦断曲線 -->
+    <div id="vcurve" class="container">
+      <label>IP位置</label>
+      <input type="number" id="vcIP">
+      <label>左側勾配G1(%)</label>
+      <input type="number" id="vcG1">
+      <label>右側勾配G2(%)</label>
+      <input type="number" id="vcG2">
+      <label>VCL(曲線長m)</label>
+      <input type="number" id="vcVCL">
+      <label>起点GH</label>
+      <input type="number" id="vcGH0">
+      <div class="buttons">
+        <button onclick="calculateVCurve()">計算する</button>
+      </div>
+      <div id="vcurveResult" class="record"></div>
+    </div>
     <!-- 土方カーブ -->
     <div id="mass" class="container">
       <label>弦長C(m)</label>
