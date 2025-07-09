@@ -555,8 +555,46 @@ function calculateMassChord(){
   document.getElementById('massChordResult').innerHTML = `
     <table class="survey-table">
       <tr><th>中央縦距M1</th><th>1/4点縦距M2</th></tr>
-      <tr><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
+    <tr><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
     </table>`;
+}
+
+function calculateVCurve(){
+  const ip   = parseFloat(document.getElementById('vcIP').value);
+  const g1p  = parseFloat(document.getElementById('vcG1').value);
+  const g2p  = parseFloat(document.getElementById('vcG2').value);
+  const vcl  = parseFloat(document.getElementById('vcVCL').value);
+  const gh0  = parseFloat(document.getElementById('vcGH0').value);
+  const out  = document.getElementById('vcurveResult');
+  if([ip,g1p,g2p,vcl,gh0].some(x=>isNaN(x)) || vcl===0 || g1p===g2p){
+    out.textContent = '数値を確認してください';
+    return;
+  }
+  const g1 = g1p/100; const g2 = g2p/100;
+  const start = ip - vcl/2;
+  const a = (g1 - g2) / (2*vcl);
+  let html = '';
+  const xm = (g1 * vcl)/(g1 - g2);
+  const minSt = start + xm;
+  const ghm = gh0 + g1*xm - a*xm*xm;
+  const vcr = vcl / (g1 - g2);
+  html += `最低地点：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`;
+  html += `VCR：${vcr.toFixed(2)}<br>`;
+  html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>⊿</th></tr>';
+  let prev = null;
+  for(let x=0; x<=vcl; x++){
+    const st = start + x;
+    const gh = gh0 + g1*x - a*x*x;
+    let d = '—';
+    if(prev!==null){
+      const diff = gh - prev;
+      d = (diff>=0?'+':'') + diff.toFixed(2);
+    }
+    html += `<tr><td>${st.toFixed(2)}</td><td>${gh.toFixed(2)}</td><td>${d}</td></tr>`;
+    prev = gh;
+  }
+  html += '</table>';
+  out.innerHTML = html;
 }
 
 function crossRowText(rows){
