@@ -580,17 +580,17 @@ function calculateVCurve(){
   const vcr = vcl / (g1 - g2);
   const label = (g1 - g2) > 0 ? '最高地点' : '最低地点';
   html += `${label}：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`  html += `VCR：${vcr.toFixed(2)}<br>`;
-  html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>⊿</th></tr>';
+  html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>y</th><th>⊿</th></tr>';
   let prev = null;
   for(let x=0; x<=vcl; x++){
     const st = start + x;
-    const gh = gh0 + g1*x - a*x*x;
-    let d = '—';
+    const y = Math.abs(a) * x * x;
+    const gh = gh0 + g1*x + (a < 0 ? y : -y);    let d = '—';
     if(prev!==null){
       const diff = gh - prev;
       d = (diff>=0?'+':'') + diff.toFixed(2);
     }
-    html += `<tr><td>${st.toFixed(2)}</td><td>${gh.toFixed(2)}</td><td>${d}</td></tr>`;
+    html += `<tr><td>${st.toFixed(2)}</td><td>${gh.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${d}</td></tr>`;
     prev = gh;
   }
   html += '</table>';
