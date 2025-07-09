@@ -1374,11 +1374,12 @@ class CalcParser{
     while(true){
       this.skip();
       const ch = this.peek();
-      if(ch === '*' || ch === '/'){
+      if(ch === '*' || ch === '/' || ch === '%'){
         this.pos++;
         const right = this.parseFactor();
-        if(ch === '/') val = val / right; else val = val * right;
-      }else break;
+        if(ch === '*') val = val * right;
+        else if(ch === '/') val = val / right;
+        else val = val % right;      }else break;
     }
     return val;
   }
