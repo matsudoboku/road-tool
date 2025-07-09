@@ -293,6 +293,17 @@ input[readonly], input:disabled, select:disabled, textarea:disabled, textarea[re
   padding: 22px 0;
   font-size: 1.1em;
 }
+.calc-parens {
+  display: flex;
+  gap: 6px;
+  max-width: 180px;
+  margin: 8px auto;
+}
+.calc-parens button {
+  flex: 1;
+  padding: 22px 0;
+  font-size: 1.1em;
+}
 #calc .buttons {
   display: flex;
   gap: 6px;
