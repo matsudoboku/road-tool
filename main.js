@@ -107,7 +107,7 @@ function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
   rows.forEach((row, i) => {
-  　const inputs = row.querySelectorAll('input');
+    const inputs = row.querySelectorAll('input');
     const tankyoInput = inputs[1];
     const tsuikyoInput = inputs[2];
     let tankyo = tankyoInput.valueAsNumber;
@@ -153,8 +153,8 @@ function savePointSettings(){
   if(!activeProject){ alert('工事を選択してください'); return; }
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let data = [];
-  rows.forEach(row=>{
-   　const inputs = row.querySelectorAll('input');
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
     const point = inputs[0].value;
     const tankyo = inputs[1].value;
     const tsuikyo = inputs[2].value;
