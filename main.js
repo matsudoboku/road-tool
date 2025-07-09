@@ -578,8 +578,8 @@ function calculateVCurve(){
   const minSt = start + xm;
   const ghm = gh0 + g1*xm - a*xm*xm;
   const vcr = vcl / (g1 - g2);
-  html += `最低地点：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`;
-  html += `VCR：${vcr.toFixed(2)}<br>`;
+  const label = (g1 - g2) > 0 ? '最高地点' : '最低地点';
+  html += `${label}：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`  html += `VCR：${vcr.toFixed(2)}<br>`;
   html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>⊿</th></tr>';
   let prev = null;
   for(let x=0; x<=vcl; x++){
