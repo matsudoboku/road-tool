@@ -1339,6 +1339,31 @@ function evaluateCalc(){
   }
 }
 
+function copyCalc(){
+  const text = document.getElementById('calcDisplay').value;
+  const msg = document.getElementById('calcMsg');
+  if(!text){ msg.textContent = 'コピー対象がありません'; return; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => {
+      msg.textContent = 'コピーしました';
+    }).catch(() => {
+      msg.textContent = 'コピーできませんでした';
+    });
+  } else {
+    const input = document.createElement('input');
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    try{
+      document.execCommand('copy');
+      msg.textContent = 'コピーしました';
+    }catch(e){
+      msg.textContent = 'コピーできませんでした';
+    }
+    document.body.removeChild(input);
+  }
+}
+
 class CalcParser{
   constructor(str){
     this.str = str;
