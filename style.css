@@ -153,6 +153,10 @@
   flex: 1 1 340px;
 }
 
+#prjList {
+  display: none;
+}
+
 input, select, textarea {
   font-size: 1.05em;
   padding: 8px 10px;
