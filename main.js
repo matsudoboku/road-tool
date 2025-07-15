@@ -93,9 +93,9 @@ function addPointRow(){
   const row = tbody.insertRow();
   row.insertCell().innerHTML =`<input type="text" inputmode="decimal" pattern="[0-9+\\-.]*">`;
   const c1 = row.insertCell();
-  c1.innerHTML = `<input type="text" inputmode="decimal" pattern="[0-9+\\-.]*">`;
+  c1.innerHTML = `<input type="number" class="mid-input">`;
   const c2 = row.insertCell();
-  c2.innerHTML = `<input type="text" inputmode="decimal" pattern="[0-9+\\-.]*">`;
+  c2.innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text">`;
 
   const tankyoInput = c1.querySelector('input');
