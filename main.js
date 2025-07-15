@@ -581,8 +581,14 @@ function calculateVCurve(){
   const label = (g1 - g2) > 0 ? '最高地点' : '最低地点';
   html += `${label}：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`;
   html += `VCR：${vcr.toFixed(2)}<br>`;  html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>y</th><th>⊿</th></tr>';
+  const xs = [];
+  for(let i=0;i<=Math.floor(vcl);i++) xs.push(i);
+  const ipOffset = vcl/2;
+  if(!xs.some(x=>Math.abs(x-ipOffset)<1e-9)) xs.push(ipOffset);
+  if(!xs.some(x=>Math.abs(x-vcl)<1e-9)) xs.push(vcl);
+  xs.sort((a,b)=>a-b);
   let prev = null;
-  for(let x=0; x<=vcl; x++){
+  xs.forEach(x => {
     const st = start + x;
     const y = Math.abs(a) * x * x;
     const gh = gh0 + g1*x + (a < 0 ? y : -y);
@@ -594,14 +600,14 @@ function calculateVCurve(){
     let label = '';
     if(Math.abs(x) < 1e-9){
       label = '(始点)';
-    } else if(Math.abs(st - ip) < 0.01){
+    } else if(Math.abs(x - ipOffset) < 0.01){
       label = '(IP点)';
-    } else if(Math.abs(x - vcl) < 1e-9){
+    } else if(Math.abs(x - vcl) < 0.01){
       label = '(終点)';
     }
     html += `<tr><td>${st.toFixed(2)}${label}</td><td>${gh.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${d}</td></tr>`;
     prev = gh;
-  }
+  });
   html += '</table>';
   out.innerHTML = html;
 }
