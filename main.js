@@ -585,12 +585,21 @@ function calculateVCurve(){
   for(let x=0; x<=vcl; x++){
     const st = start + x;
     const y = Math.abs(a) * x * x;
-    const gh = gh0 + g1*x + (a < 0 ? y : -y);    let d = '—';
+    const gh = gh0 + g1*x + (a < 0 ? y : -y);
+    let d = '—';
     if(prev!==null){
       const diff = gh - prev;
       d = (diff>=0?'+':'') + diff.toFixed(2);
     }
-    html += `<tr><td>${st.toFixed(2)}</td><td>${gh.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${d}</td></tr>`;
+    let label = '';
+    if(Math.abs(x) < 1e-9){
+      label = '(始点)';
+    } else if(Math.abs(st - ip) < 0.01){
+      label = '(IP点)';
+    } else if(Math.abs(x - vcl) < 1e-9){
+      label = '(終点)';
+    }
+    html += `<tr><td>${st.toFixed(2)}${label}</td><td>${gh.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${d}</td></tr>`;
     prev = gh;
   }
   html += '</table>';
