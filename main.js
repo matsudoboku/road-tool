@@ -1354,7 +1354,6 @@ function copyCalc(){
     input.select();
     try{
       document.execCommand('copy');
-      msg.textContent = 'コピーしました';
     }catch(e){
       msg.textContent = 'コピーできませんでした';
     }
