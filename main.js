@@ -1344,9 +1344,7 @@ function copyCalc(){
   const msg = document.getElementById('calcMsg');
   if(!text){ msg.textContent = 'コピー対象がありません'; return; }
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(() => {
-      msg.textContent = 'コピーしました';
-    }).catch(() => {
+    navigator.clipboard.writeText(text).catch(() => {
       msg.textContent = 'コピーできませんでした';
     });
   } else {
