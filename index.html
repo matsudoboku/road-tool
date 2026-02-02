@@ -33,6 +33,7 @@
   <nav class="tabbar-wrapper">
     <div class="tabbar">
       <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
+      <button class="tab" data-tab="point-tab" onclick="switchTab('point-tab')">測点</button>
       <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
       <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
       <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
@@ -69,26 +70,6 @@
       </div>
 
       <!-- 測点設定カード -->
-      <div class="card">
-        <div class="card-header">
-          <h2>測点設定</h2>
-        </div>
-        <div class="card-body no-padding">
-          <div class="table-wrapper">
-            <table id="pointTable" class="survey-table">
-              <thead>
-                <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card-footer">
-          <button class="btn btn-secondary" onclick="addPointRow()">＋ 行を追加</button>
-          <button class="btn btn-success" onclick="savePointSettings()">登録</button>
-        </div>
-      </div>
-
       <!-- バックアップインポートカード -->
       <div class="card">
         <div class="card-header">
@@ -101,6 +82,59 @@
             <button class="btn btn-warning full-width" onclick="importBackup()">インポート実行</button>
           </div>
           <div id="backupImportStatus" class="status-msg mt-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 測点タブ -->
+    <div id="point-tab" class="container">
+      <div class="card">
+        <div class="card-header flex-between">
+          <h2>測点設定</h2>
+          <div class="mode-switch">
+            <label><input type="radio" name="pointMode" value="manual" checked> 手動入力</label>
+            <label><input type="radio" name="pointMode" value="auto"> オートフィル</label>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="point-mode-manual">
+            <div class="table-wrapper">
+              <table id="pointTable" class="survey-table">
+                <thead>
+                  <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="point-mode-auto" class="is-hidden">
+            <div class="form-grid">
+              <div class="input-group">
+                <label>開始単距</label>
+                <input type="number" id="autoStart" placeholder="例: 0">
+              </div>
+              <div class="input-group">
+                <label>終了単距</label>
+                <input type="number" id="autoEnd" placeholder="例: 200">
+              </div>
+              <div class="input-group">
+                <label>ピッチ(m)</label>
+                <input type="number" id="autoPitch" placeholder="例: 20">
+              </div>
+              <div class="input-group full-width">
+                <label>主要点(BC,ECなど)</label>
+                <textarea id="autoMajorPoints" rows="4" placeholder="例: BC,35.5&#10;EC,120.0"></textarea>
+                <small class="text-sm text-muted">1行ごとに「名称,単距」で入力してください。</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="point-manual-actions" class="card-footer">
+          <button class="btn btn-secondary" onclick="addPointRow()">＋ 行を追加</button>
+          <button class="btn btn-success" onclick="savePointSettings()">登録</button>
+        </div>
+        <div id="point-auto-actions" class="card-footer is-hidden">
+          <button class="btn btn-primary" onclick="runAutoFill()">オートフィル生成</button>
         </div>
       </div>
     </div>
@@ -521,3 +555,4 @@
   <script src="main.js"></script>
 </body>
 </html>
+
