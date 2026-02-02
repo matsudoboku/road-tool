@@ -584,6 +584,24 @@ tfoot td {
   color: var(--danger-color);
 }
 
+.is-hidden {
+  display: none !important;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.mode-switch label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+}
+
 .draw-controls {
   display: flex;
   justify-content: center;
