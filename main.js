@@ -1322,7 +1322,7 @@ function calculateCurve() {
     cl: baseRow.cl,
     cl2: baseRow.cl2,
     mc: baseRow.mc
-
+  };
   // 結果表示
   document.getElementById("curveResult").innerHTML = `
     <table class="survey-table">
