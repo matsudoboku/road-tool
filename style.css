@@ -131,7 +131,27 @@
   margin: 4px 0;
   text-align: center;
 }
-
+.backup-panel {
+  background: #fff;
+  border: 2px solid #c2d7ee;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px auto;
+  max-width: 520px;
+  text-align: center;
+}
+.backup-panel .help-text {
+  margin: 4px 0 8px;
+  font-size: 0.95em;
+  color: #444;
+}
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
 /* 横断測量の入力欄を1行にまとめる */
 .cross-head {
   display: flex;
