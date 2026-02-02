@@ -1064,6 +1064,75 @@ function clearAllProjects() {
   updatePointSelect();
   updateLogTab();
 }
+function normalizeBackupPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  if (payload.storage && typeof payload.storage === "object") {
+    return payload.storage;
+  }
+  return payload;
+}
+function setStorageValue(key, value) {
+  if (value === undefined || value === null) return;
+  if (typeof value === "string") {
+    localStorage.setItem(key, value);
+    return;
+  }
+  localStorage.setItem(key, JSON.stringify(value));
+}
+function importBackup() {
+  const input = document.getElementById("backupFileInput");
+  const status = document.getElementById("backupImportStatus");
+  if (!input || !input.files || input.files.length === 0) {
+    alert("バックアップファイルを選択してください");
+    return;
+  }
+  const file = input.files[0];
+  if (!confirm("バックアップをインポートすると現在のデータを上書きします。よろしいですか？")) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const raw = String(reader.result || "");
+      const payload = normalizeBackupPayload(JSON.parse(raw));
+      if (!payload) throw new Error("invalid backup");
+      const storageKeys = [
+        "projects3",
+        "activeProject3",
+        "pointSettings3",
+        "crossLogs3",
+        "longLogs3",
+        "pavementLogs3",
+        "curveLogs3",
+        "massLogs3",
+        "memoLogs3",
+        "drawingLogs3",
+        DRAFT_STORAGE_KEY
+      ];
+      storageKeys.forEach((key) => localStorage.removeItem(key));
+      storageKeys.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(payload, key)) {
+          setStorageValue(key, payload[key]);
+        }
+      });
+      projects = safeParseJSON(localStorage.getItem("projects3"), []);
+      activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
+      renderProjectSelects();
+      loadPointSettings();
+      updatePointSelect();
+      updateLogTab();
+      loadDraftInputs();
+      draftReady = true;
+      if (status) status.textContent = "インポートが完了しました";
+      input.value = "";
+    } catch (error) {
+      console.error("Import failed", error);
+      if (status) status.textContent = "インポートに失敗しました。ファイル内容を確認してください。";
+    }
+  };
+  reader.onerror = () => {
+    if (status) status.textContent = "ファイルの読み込みに失敗しました。";
+  };
+  reader.readAsText(file);
+}
 function saveMemo() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
