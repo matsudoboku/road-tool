@@ -2,297 +2,522 @@
 <html lang="ja">
 <head>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#007acc">
+  <meta name="theme-color" content="#0d47a1">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>道路ツール</title>
   <link rel="stylesheet" href="style.css">
+  <!-- 視認性向上のためGoogle Fonts (Noto Sans JP) を利用（任意） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="project-bar">
-    <label>作業中の工事：</label>
-    <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
-    <button id="calcCallBtn" onclick="openCalcModal()">電卓</button>
-  </div>
-  <div class="tabbar">
-    <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
-    <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
-    <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
-    <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
-    <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線計算</button>
-    <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
-    <button class="tab" data-tab="mass" onclick="switchTab('mass')">土方カーブ</button>
-    <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
-    <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
-    <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
-    <button class="tab" data-tab="disclaimer" onclick="switchTab('disclaimer')">免責事項</button>  </div>
-  <div class="main-content">
+  
+  <!-- 上部固定ヘッダー -->
+  <header class="app-header">
+    <div class="project-selector">
+      <label for="sidebarProjectSel">工事:</label>
+      <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
+    </div>
+    <button id="calcCallBtn" class="btn-icon" onclick="openCalcModal()" aria-label="電卓">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="16" y1="18" x2="16" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="14" x2="8" y2="14"/></svg>
+      電卓
+    </button>
+  </header>
+
+  <!-- タブナビゲーション -->
+  <nav class="tabbar-wrapper">
+    <div class="tabbar">
+      <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
+      <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
+      <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
+      <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
+      <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
+      <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
+      <button class="tab" data-tab="mass" onclick="switchTab('mass')">土方カーブ</button>
+      <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
+      <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
+      <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
+      <button class="tab" data-tab="disclaimer" onclick="switchTab('disclaimer')">情報</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    
     <!-- 工事設定 -->
     <div id="project" class="container active">
-      <div class="project-inner">
-        <div class="project-info">
+      <!-- 工事情報カード -->
+      <div class="card">
+        <div class="card-header">
           <h2>工事情報の登録・切替</h2>
-          <div class="form-inline">
-            <label>工事名：<input type="text" id="projectName" style="font-size:1.04em;padding:8px;min-width:160px;"></label>
-            <button class="add-btn" onclick="addProject()">追加</button>
-            <button class="delete-btn" onclick="deleteProject()">この工事を削除</button>
-          </div>
-          <div id="prjList"></div>
         </div>
-        <div class="point-settings">
-          <h2>測点設定</h2>
-          <table id="pointTable" class="survey-table">
-            <thead>
-              <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-          <div class="buttons">
-            <button onclick="addPointRow()">行を追加</button>
-            <button onclick="savePointSettings()">登録</button>
+        <div class="card-body">
+          <div class="form-group-row">
+            <label class="input-label">工事名</label>
+            <input type="text" id="projectName" placeholder="工事名を入力">
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="addProject()">追加</button>
+              <button class="btn btn-danger-outline" onclick="deleteProject()">削除</button>
+            </div>
           </div>
+          <div id="prjList" class="info-list"></div>
+        </div>
+      </div>
+
+      <!-- 測点設定カード -->
+      <div class="card">
+        <div class="card-header">
+          <h2>測点設定</h2>
+        </div>
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table id="pointTable" class="survey-table">
+              <thead>
+                <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" onclick="addPointRow()">＋ 行を追加</button>
+          <button class="btn btn-success" onclick="savePointSettings()">登録</button>
+        </div>
+      </div>
+
+      <!-- バックアップインポートカード (New: main.js対応) -->
+      <div class="card">
+        <div class="card-header">
+          <h2>データ復元（インポート）</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-sm text-muted">バックアップJSONファイルを読み込んでデータを復元します。</p>
+          <div class="form-stack mt-2">
+            <input type="file" id="backupFileInput" accept=".json" class="file-input-control">
+            <button class="btn btn-warning full-width" onclick="importBackup()">インポート実行</button>
+          </div>
+          <div id="backupImportStatus" class="status-msg mt-2"></div>
         </div>
       </div>
     </div>
+
     <!-- 横断測量 -->
     <div id="cross" class="container">
-      <div class="cross-head">
-        <label>測点：</label>
-        <input id="pointSel" list="pointList" style="font-size:1.03em;">
-        <datalist id="pointList"></datalist>
-        <label>方向：</label>
-        <select id="direction" style="font-size:1.03em;">
-        <option value="左">左</option>
-        <option value="右">右</option>
-        </select>
-      </div>
-      <table id="crossTable" class="survey-table">
-        <thead>
-          <tr>
-            <th>横(m)</th>
-            <th>縦(m)</th>
-            <th>備考</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="buttons">
-        <button onclick="addCrossRow()">行を追加</button>
-        <button onclick="registerCross()">登録</button>
+      <div class="card">
+        <div class="card-header sticky-controls">
+          <div class="form-inline-group">
+            <div class="input-wrapper">
+              <label>測点</label>
+              <input id="pointSel" list="pointList" placeholder="No.">
+              <datalist id="pointList"></datalist>
+            </div>
+            <div class="input-wrapper">
+              <label>方向</label>
+              <select id="direction">
+                <option value="左">左</option>
+                <option value="右">右</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table id="crossTable" class="survey-table">
+              <thead>
+                <tr>
+                  <th style="width: 30%">横(m)</th>
+                  <th style="width: 30%">縦(m)</th>
+                  <th>備考</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" onclick="addCrossRow()">＋ 行を追加</button>
+          <div class="btn-pair">
+            <button class="btn btn-success" onclick="registerCross()">登録</button>
+          </div>
+        </div>
       </div>
     </div>
+
     <!-- 縦断測量 -->
     <div id="long" class="container">
-      <table id="longTable" class="survey-table">
-        <thead>
-          <tr>
-            <th>測点</th>
-            <th>単距</th>
-            <th>追距</th>
-            <th>BS</th>
-            <th>FS</th>
-            <th>⊿</th>
-            <th>GH</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="buttons">
-        <button onclick="addLongRow()">行を追加</button>
-        <button onclick="registerLong()">登録</button>
-        <button onclick="clearLong()">クリア</button>
+      <div class="card">
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table id="longTable" class="survey-table dense-table">
+              <thead>
+                <tr>
+                  <th style="width:15%">測点</th>
+                  <th style="width:12%">単距</th>
+                  <th style="width:12%">追距</th>
+                  <th style="width:12%">BS</th>
+                  <th style="width:12%">FS</th>
+                  <th style="width:12%">⊿</th>
+                  <th style="width:15%">GH</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" onclick="addLongRow()">＋ 行を追加</button>
+          <div class="btn-group-right">
+            <button class="btn btn-warning" onclick="clearLong()">クリア</button>
+            <button class="btn btn-success" onclick="registerLong()">登録</button>
+          </div>
+        </div>
       </div>
     </div>
+
     <!-- 舗装計算 -->
     <div id="pavement" class="container">
-      <table id="pavementTable" class="survey-table">
-        <thead>
-          <tr>
-             <th>舗装種類</th>
-              <th>測点</th>
-              <th>単距</th>
-              <th>追距</th>
-              <th>幅員</th>
-              <th>平均幅員</th>
-              <th>面積</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="6" style="text-align:right;">アスファルト計</td>
-            <td id="asphaltAreaCell"></td>
-          </tr>
-          <tr>
-            <td colspan="6" style="text-align:right;">コンクリート計</td>
-            <td id="concreteAreaCell"></td>
-          </tr>
-          <tr>
-            <td colspan="6" style="text-align:right;">オーバーレイ計</td>
-            <td id="overlayAreaCell"></td>
-          </tr>
-          <tr>
-            <td colspan="6" style="text-align:right;">合計</td>
-            <td id="areaTotalCell"></td>
-          </tr>
-        </tfoot>
-      </table>
-      <div class="buttons">
-        <button onclick="addPavementRow()">行を追加</button>
-        <button onclick="registerPavement()">登録</button>
-        <button onclick="clearPavement()">クリア</button>
-        <button onclick="exportPavementExcel()">Excel出力</button>
+      <div class="card">
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table id="pavementTable" class="survey-table dense-table">
+              <thead>
+                <tr>
+                  <th style="min-width:100px">舗装種類</th>
+                  <th>測点</th>
+                  <th>単距</th>
+                  <th>追距</th>
+                  <th>幅員</th>
+                  <th>平均幅員</th>
+                  <th>面積</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" class="text-right">アスファルト計</td>
+                  <td id="asphaltAreaCell" class="result-cell"></td>
+                </tr>
+                <tr>
+                  <td colspan="6" class="text-right">コンクリート計</td>
+                  <td id="concreteAreaCell" class="result-cell"></td>
+                </tr>
+                <tr>
+                  <td colspan="6" class="text-right">オーバーレイ計</td>
+                  <td id="overlayAreaCell" class="result-cell"></td>
+                </tr>
+                <tr class="total-row">
+                  <td colspan="6" class="text-right">合計</td>
+                  <td id="areaTotalCell" class="result-cell"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" onclick="addPavementRow()">＋ 行を追加</button>
+          <div class="btn-group-right">
+            <button class="btn btn-outline" onclick="exportPavementExcel()">Excel出力</button>
+            <button class="btn btn-warning" onclick="clearPavement()">クリア</button>
+            <button class="btn btn-success" onclick="registerPavement()">登録</button>
+          </div>
+        </div>
       </div>
     </div>
+
     <!-- 道路曲線計算 -->
-    <div id="curve" class="container">
-      <label>IP No</label>
-      <input type="text" id="ipno" placeholder="例: IP.1">
-      <label>IA（例:33°19'00"=331900）</label>
-      <input type="number" id="ia">
-      <label>R（半径）</label>
-      <input type="number" id="r">
-      <div class="buttons">
-        <button onclick="calculateCurve()">計算する</button>
-        <button onclick="registerCurve()">登録</button>
+    <div id="curve" class="container text-center-container">
+      <div class="card">
+        <div class="card-header">
+          <h2>道路曲線諸元</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-stack">
+            <div class="input-group">
+              <label>IP No</label>
+              <input type="text" id="ipno" placeholder="例: IP.1">
+            </div>
+            <div class="input-group">
+              <label>IA <small>(例:33°19'00" → 331900)</small></label>
+              <input type="number" id="ia" placeholder="331900">
+            </div>
+            <div class="input-group">
+              <label>R (半径)</label>
+              <input type="number" id="r" placeholder="半径 m">
+            </div>
+          </div>
+          <div class="btn-group-center">
+            <button class="btn btn-primary" onclick="calculateCurve()">計算する</button>
+            <button class="btn btn-success" onclick="registerCurve()">登録</button>
+          </div>
+          <div id="curveResult" class="result-area"></div>
+        </div>
       </div>
-      <div id="curveResult" class="record"></div>
     </div>
+
     <!-- 縦断曲線 -->
-    <div id="vcurve" class="container">
-      <label>IP位置</label>
-      <input type="number" id="vcIP">
-      <label>左側勾配G1(%)</label>
-      <input type="number" id="vcG1">
-      <label>右側勾配G2(%)</label>
-      <input type="number" id="vcG2">
-      <label>VCL(曲線長m)</label>
-      <input type="number" id="vcVCL">
-      <label>起点GH</label>
-      <input type="number" id="vcGH0">
-      <div class="buttons">
-        <button onclick="calculateVCurve()">計算する</button>
+    <div id="vcurve" class="container text-center-container">
+      <div class="card">
+        <div class="card-header">
+          <h2>縦断曲線 (VCL)</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="input-group">
+              <label>IP位置</label>
+              <input type="number" id="vcIP">
+            </div>
+            <div class="input-group">
+              <label>VCL (m)</label>
+              <input type="number" id="vcVCL">
+            </div>
+            <div class="input-group">
+              <label>左勾配 G1(%)</label>
+              <input type="number" id="vcG1">
+            </div>
+            <div class="input-group">
+              <label>右勾配 G2(%)</label>
+              <input type="number" id="vcG2">
+            </div>
+            <div class="input-group full-width">
+              <label>起点 GH</label>
+              <input type="number" id="vcGH0">
+            </div>
+          </div>
+          <div class="btn-group-center">
+            <button class="btn btn-primary" onclick="calculateVCurve()">計算する</button>
+          </div>
+          <div id="vcurveResult" class="result-area"></div>
+        </div>
       </div>
-      <div id="vcurveResult" class="record"></div>
     </div>
+
     <!-- 土方カーブ -->
-    <div id="mass" class="container">
-      <label>弦長C(m)</label>
-      <input type="number" id="massChordC">
-      <label>曲線半径R(m)</label>
-      <input type="number" id="massChordR">
-      <div class="buttons">
-        <button onclick="calculateMassChord()">計算する</button>
+    <div id="mass" class="container text-center-container">
+      <div class="card">
+        <div class="card-header">
+          <h2>土方カーブ (Mass)</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-stack">
+            <div class="input-group">
+              <label>弦長 C(m)</label>
+              <input type="number" id="massChordC">
+            </div>
+            <div class="input-group">
+              <label>曲線半径 R(m)</label>
+              <input type="number" id="massChordR">
+            </div>
+          </div>
+          <div class="btn-group-center">
+            <button class="btn btn-primary" onclick="calculateMassChord()">計算する</button>
+          </div>
+          <div id="massChordResult" class="result-area"></div>
+        </div>
+        <div class="card-body no-padding border-top">
+          <div class="table-wrapper">
+             <table id="massTable" class="survey-table">
+              <thead>
+                 <tr><th>測点</th><th>切土</th><th>盛土</th><th>区間V</th><th>累計V</th></tr>
+              </thead>
+              <tbody></tbody>
+             </table>
+          </div>
+        </div>
+        <div class="card-footer">
+           <button class="btn btn-secondary" onclick="addMassRow()">＋ 行を追加</button>
+           <button class="btn btn-warning" onclick="clearMass()">クリア</button>
+           <button class="btn btn-success" onclick="registerMass()">登録</button>
+        </div>
       </div>
-      <div id="massChordResult" class="record"></div>
     </div>
+
     <!-- メモ -->
     <div id="memo" class="container">
-      <textarea id="memoText" rows="6" placeholder="ここに現場や工事のメモを記入できます"></textarea>
-      <div class="buttons">
-        <button onclick="saveMemo()">保存</button>
+      <div class="card">
+        <div class="card-header">
+          <h2>現場メモ</h2>
+        </div>
+        <div class="card-body">
+          <textarea id="memoText" rows="8" placeholder="ここに現場や工事のメモを記入できます..."></textarea>
+          <div id="memoSaved" class="status-msg"></div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-success full-width" onclick="saveMemo()">保存</button>
+        </div>
       </div>
-      <div id="memoSaved" class="record"></div>
     </div>
-    <!-- 簡易図形タブの本体を追加 -->
+
+    <!-- 図形タブ -->
     <div id="drawing" class="container">
-      <div style="margin-bottom:12px;">
-        <button class="draw-mode-btn" data-mode="line" onclick="setDrawMode('line')">線</button>
-        <button class="draw-mode-btn" data-mode="text" onclick="setDrawMode('text')">テキスト</button>
-        <button class="draw-mode-btn" data-mode="number" onclick="setDrawMode('number')">数字</button>
-        <button class="draw-mode-btn" data-mode="freehand" onclick="setDrawMode('freehand')">フリーハンド</button>
-        <button onclick="clearDrawing()">クリア</button>
-        <button onclick="undoDrawing()">戻る</button>
-        <button onclick="redoDrawing()">進む</button>
-        <span id="drawModeLabel"></span>
-      </div>
-        <canvas id="drawingCanvas" width="340" height="340" style="border:1px solid #aaa; background:#fff; touch-action:none; width:97vw;max-width:380px;"></canvas>
-        <div class="draw-controls">
-          <label>x(m)<input type="number" id="inputDX" step="0.1" class="draw-input"></label>
-          <label>y(m)<input type="number" id="inputDY" step="0.1" class="draw-input"></label>
-          <button onclick="addRelativeLine()" id="addLineBtn">追加</button>
+      <div class="card">
+        <div class="card-body">
+          <div class="drawing-toolbar">
+            <div class="tool-group">
+              <button class="draw-mode-btn" data-mode="line" onclick="setDrawMode('line')">線</button>
+              <button class="draw-mode-btn" data-mode="text" onclick="setDrawMode('text')">文字</button>
+              <button class="draw-mode-btn" data-mode="number" onclick="setDrawMode('number')">数字</button>
+              <button class="draw-mode-btn" data-mode="freehand" onclick="setDrawMode('freehand')">自由</button>
+            </div>
+            <div class="tool-actions">
+              <button class="btn-icon-small" onclick="undoDrawing()" aria-label="戻る">↩</button>
+              <button class="btn-icon-small" onclick="redoDrawing()" aria-label="進む">↪</button>
+              <button class="btn-icon-small danger" onclick="clearDrawing()" aria-label="クリア">✕</button>
+            </div>
+            <span id="drawModeLabel" class="mode-badge"></span>
+          </div>
+
+          <div class="canvas-container">
+            <canvas id="drawingCanvas" width="340" height="340"></canvas>
+          </div>
+
+          <div class="draw-controls">
+            <div class="input-with-label">
+              <span>x</span>
+              <input type="number" id="inputDX" step="0.1" class="draw-input" placeholder="m">
+            </div>
+            <div class="input-with-label">
+              <span>y</span>
+              <input type="number" id="inputDY" step="0.1" class="draw-input" placeholder="m">
+            </div>
+            <button onclick="addRelativeLine()" id="addLineBtn" class="btn btn-primary btn-sm">追加</button>
+          </div>
         </div>
-        <div style="margin:8px 0;">
-          <button onclick="saveDrawing()">記録</button>
+        <div class="card-footer">
+          <button class="btn btn-success full-width" onclick="saveDrawing()">記録</button>
         </div>
-      <div id="drawingLog"></div>
+        <div id="drawingLog" class="log-area"></div>
+      </div>
     </div>
-    <!-- 電卓 -->
-    <div id="calc" class="container">
-      <input id="calcDisplay" type="text" readonly class="calc-display">
-      <div class="calc-top">
-        <button onclick="clearCalc()">クリア</button>
-        <button onclick="backspaceCalc()">⌫</button>
-      </div>
-      <div class="calc-grid">
-        <button onclick="appendCalc('7')">7</button>
-        <button onclick="appendCalc('8')">8</button>
-        <button onclick="appendCalc('9')">9</button>
-        <button onclick="appendCalc('/')">/</button>
-        <button onclick="appendCalc('4')">4</button>
-        <button onclick="appendCalc('5')">5</button>
-        <button onclick="appendCalc('6')">6</button>
-        <button onclick="appendCalc('*')">*</button>
-        <button onclick="appendCalc('1')">1</button>
-        <button onclick="appendCalc('2')">2</button>
-        <button onclick="appendCalc('3')">3</button>
-        <button onclick="appendCalc('-')">-</button>
-        <button onclick="appendCalc('0')">0</button>
-        <button onclick="appendCalc('.')">.</button>
-        <button onclick="copyCalc()" aria-label="コピー">Copy</button>
-        <button onclick="appendCalc('+')">+</button>
-      </div>
-      <div class="calc-parens">
-        <button onclick="appendCalc('(')">(</button>
-        <button onclick="appendCalc(')')">)</button>
-      </div>
-      <div class="buttons">
-        <button onclick="evaluateCalc()">＝</button>
-      </div>
-      <div id="calcMsg" class="record"></div>
-    </div>
+
     <!-- 記録タブ -->
     <div id="log" class="container">
-      <div class="工事選択欄">
-        <label>工事を選択：
-          <select id="logProjectSel" onchange="updateLogTab()"></select>
-        </label>
-        <button class="danger-btn" onclick="clearAllProjects()">全工事＆記録一括削除</button>
-      </div>
-      <div class="backup-panel">
-        <h3>バックアップのインポート</h3>
-        <p class="help-text">バックアップJSONを選択してインポートすると、現在のデータを上書きします。</p>
-        <div class="backup-actions">
-          <input type="file" id="backupFileInput" accept="application/json">
-          <button class="warn-btn" onclick="importBackup()">インポート</button>
+      <div class="card warning-card">
+        <div class="card-body">
+          <div class="log-filter">
+            <label>記録の表示：</label>
+            <select id="logProjectSel" onchange="updateLogTab()"></select>
+          </div>
+          <button class="btn btn-danger full-width mt-2" onclick="clearAllProjects()">⚠ 全データ完全消去</button>
         </div>
-        <div id="backupImportStatus" class="record"></div>
       </div>
-      <h2>記録（カテゴリ別）</h2>
-      <div style="margin:8px 0;">
-        <button class="warn-btn" onclick="clearCategory('cross')">横断測量 記録削除</button>
-        <button class="warn-btn" onclick="clearCategory('long')">縦断測量 記録削除</button>
-        <button class="warn-btn" onclick="clearCategory('pavement')">舗装計算 記録削除</button>
-        <button class="warn-btn" onclick="clearCategory('curve')">道路曲線計算 記録削除</button>
-        <button class="warn-btn" onclick="clearCategory('memo')">メモ削除</button>
+
+      <div class="log-sections">
+        <!-- 横断測量 -->
+        <div class="card">
+          <div class="card-header flex-between">
+            <h3>横断測量</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('cross')">削除</button>
+          </div>
+          <div id="logCross" class="card-body log-content"></div>
+        </div>
+        
+        <!-- 縦断測量 -->
+        <div class="card">
+          <div class="card-header flex-between">
+            <h3>縦断測量</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('long')">削除</button>
+          </div>
+          <div id="logLong" class="card-body log-content"></div>
+        </div>
+
+        <!-- 舗装計算 -->
+        <div class="card">
+          <div class="card-header flex-between">
+            <h3>舗装計算</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('pavement')">削除</button>
+          </div>
+          <div id="logPavement" class="card-body log-content"></div>
+        </div>
+
+        <!-- 道路曲線 -->
+        <div class="card">
+          <div class="card-header flex-between">
+             <h3>道路曲線</h3>
+             <button class="btn btn-danger-text" onclick="clearCategory('curve')">削除</button>
+          </div>
+          <div id="logCurve" class="card-body log-content"></div>
+        </div>
+
+        <!-- 土方カーブ -->
+        <div class="card">
+           <div class="card-header flex-between">
+             <h3>土方カーブ</h3>
+             <button class="btn btn-danger-text" onclick="clearCategory('mass')">削除</button>
+           </div>
+           <div id="logMass" class="card-body log-content"></div>
+        </div>
+
+        <!-- メモ -->
+        <div class="card">
+          <div class="card-header flex-between">
+             <h3>メモ</h3>
+             <button class="btn btn-danger-text" onclick="clearCategory('memo')">削除</button>
+          </div>
+          <div id="logMemo" class="card-body log-content"></div>
+        </div>
       </div>
-      <div id="logCross"></div>
-      <div id="logLong"></div>
-      <div id="logPavement"></div>
-      <div id="logCurve"></div>
-      <div id="logMass"></div>
-      <div id="logMemo"></div>
     </div>
+
     <div id="disclaimer" class="container">
-      本Webアプリは現状のまま無保証で提供しています。利用による一切の損害について、作者は責任を負いません。業務・商用利用の際は必ずご自身で検証してください。
+      <div class="card">
+        <div class="card-body text-center">
+          <p class="text-muted">
+            本Webアプリは現状のまま無保証で提供しています。利用による一切の損害について、作者は責任を負いません。業務・商用利用の際は必ずご自身で検証してください。
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 電卓 (モーダル) -->
+  <div id="calc" class="container calc-modal">
+    <div class="calc-wrapper">
+      <input id="calcDisplay" type="text" readonly class="calc-display">
+      <div class="calc-body">
+        <div class="calc-top">
+          <button class="btn-calc danger-text" onclick="clearCalc()">AC</button>
+          <button class="btn-calc" onclick="backspaceCalc()">⌫</button>
+        </div>
+        <div class="calc-grid">
+          <button onclick="appendCalc('7')">7</button>
+          <button onclick="appendCalc('8')">8</button>
+          <button onclick="appendCalc('9')">9</button>
+          <button class="op" onclick="appendCalc('/')">÷</button>
+          
+          <button onclick="appendCalc('4')">4</button>
+          <button onclick="appendCalc('5')">5</button>
+          <button onclick="appendCalc('6')">6</button>
+          <button class="op" onclick="appendCalc('*')">×</button>
+          
+          <button onclick="appendCalc('1')">1</button>
+          <button onclick="appendCalc('2')">2</button>
+          <button onclick="appendCalc('3')">3</button>
+          <button class="op" onclick="appendCalc('-')">−</button>
+          
+          <button onclick="appendCalc('0')">0</button>
+          <button onclick="appendCalc('.')">.</button>
+          <button class="func" onclick="copyCalc()">Copy</button>
+          <button class="op" onclick="appendCalc('+')">+</button>
+        </div>
+        <div class="calc-parens">
+          <button class="func" onclick="appendCalc('(')">(</button>
+          <button class="func" onclick="appendCalc(')')">)</button>
+        </div>
+        <div class="calc-bottom">
+          <button class="btn-equal" onclick="evaluateCalc()">＝</button>
+        </div>
+        <div id="calcMsg" class="calc-msg"></div>
+      </div>
     </div>
   </div>
-  </div>
+
   <div id="calcOverlay" class="calc-overlay" onclick="closeCalcModal()"></div>
+
   <script src="main.js"></script>
 </body>
 </html>
-
