@@ -1278,37 +1278,83 @@ function calculateCurve() {
   const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
   const iaRadHalf = (iaDecimal * Math.PI / 180) / 2;
 
-  const tl = r * Math.tan(iaRadHalf);                                      // 接線長 TL
-  const sl = r * (1 / Math.cos(iaRadHalf) - 1);                            // SL（GAS式。弦長ではない）
-  const cl = r * (iaDecimal * Math.PI / 180);                              // 曲線長 CL
-  const clHalf = cl / 2;
   const mcDMS = decimalToDMS((180 - iaDecimal) / 2);                       // MC（角度で返す）
+
+    const buildCurveRow = (radius, label) => {
+    if (!radius || radius <= 0 || isNaN(radius)) {
+      return {
+        label,
+        r: radius,
+        tl: "—",
+        sl: "—",
+        cl: "—",
+        cl2: "—",
+        mc: mcDMS
+      };
+    }
+    const tl = radius * Math.tan(iaRadHalf);                                      // 接線長 TL
+    const sl = radius * (1 / Math.cos(iaRadHalf) - 1);                            // SL（GAS式。弦長ではない）
+    const cl = radius * (iaDecimal * Math.PI / 180);                              // 曲線長 CL
+    const clHalf = cl / 2;
+    return {
+      label,
+      r: radius,
+      tl: tl.toFixed(3),
+      sl: sl.toFixed(3),
+      cl: cl.toFixed(3),
+      cl2: clHalf.toFixed(3),
+      mc: mcDMS
+    };
+  };
+
+  const baseRow = buildCurveRow(r, "R");
+  const minusRow = buildCurveRow(r - 5, "R-5");
+  const plusRow = buildCurveRow(r + 5, "R+5");
 
   const iaStr = decimalToDMS(iaDecimal);
 
   curveResultObj = {
     ipNo: ipNo ? ipNo : "",
     iaStr,
-    r,
-    tl: tl.toFixed(3),
-    sl: sl.toFixed(3),
-    cl: cl.toFixed(3),
-    cl2: clHalf.toFixed(3),
-    mc: mcDMS
-  };
-
+    r: baseRow.r,
+    tl: baseRow.tl,
+    sl: baseRow.sl,
+    cl: baseRow.cl,
+    cl2: baseRow.cl2,
+    mc: baseRow.mc
 
   // 結果表示
   document.getElementById("curveResult").innerHTML = `
     <table class="survey-table">
       <tr><th>IP No</th><td>${curveResultObj.ipNo}</td></tr>
       <tr><th>IA</th><td>${curveResultObj.iaStr}</td></tr>
-      <tr><th>R</th><td>${curveResultObj.r}</td></tr>
-      <tr><th>TL</th><td>${curveResultObj.tl}</td></tr>
-      <tr><th>SL</th><td>${curveResultObj.sl}</td></tr>
-      <tr><th>CL</th><td>${curveResultObj.cl}</td></tr>
-      <tr><th>CL/2</th><td>${curveResultObj.cl2}</td></tr>
-      <tr><th>MC</th><td>${curveResultObj.mc}</td></tr>
+    </table>
+    <table class="survey-table">
+      <tr><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+      <tr>
+        <td>${minusRow.label} (${minusRow.r})</td>
+        <td>${minusRow.tl}</td>
+        <td>${minusRow.sl}</td>
+        <td>${minusRow.cl}</td>
+        <td>${minusRow.cl2}</td>
+        <td>${minusRow.mc}</td>
+      </tr>
+      <tr>
+        <td>${baseRow.label} (${baseRow.r})</td>
+        <td>${baseRow.tl}</td>
+        <td>${baseRow.sl}</td>
+        <td>${baseRow.cl}</td>
+        <td>${baseRow.cl2}</td>
+        <td>${baseRow.mc}</td>
+      </tr>
+      <tr>
+        <td>${plusRow.label} (${plusRow.r})</td>
+        <td>${plusRow.tl}</td>
+        <td>${plusRow.sl}</td>
+        <td>${plusRow.cl}</td>
+        <td>${plusRow.cl2}</td>
+        <td>${plusRow.mc}</td>
+      </tr>
     </table>`;
 }
 function registerCurve() {
