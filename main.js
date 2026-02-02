@@ -19,13 +19,242 @@ function keyOfActive() {
   const p = projects.find(x=>x.id===activeProject);
   return p ? projectKey(p) : "";
 }
+let draftReady = false;
+const DRAFT_STORAGE_KEY = "draftInputs3";
+function draftKey() {
+  return keyOfActive() || "__global__";
+}
+function getDraftStore() {
+  return safeParseJSON(localStorage.getItem(DRAFT_STORAGE_KEY), {});
+}
+function setDraftStore(store) {
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(store));
+}
+let draftSaveTimer = null;
+function scheduleDraftSave() {
+  if (!draftReady) return;
+  if (draftSaveTimer) clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraftInputs, 250);
+}
+function saveDraftInputs() {
+  const store = getDraftStore();
+  const key = draftKey();
+  const crossRows = Array.from(document.querySelectorAll("#crossTable tbody tr")).map(row => {
+    const inputs = row.querySelectorAll("input");
+    return {
+      h: inputs[0]?.value || "",
+      v: inputs[1]?.value || "",
+      note: inputs[2]?.value || ""
+    };
+  });
+  const pointRows = Array.from(document.querySelectorAll("#pointTable tbody tr")).map(row => {
+    const inputs = row.querySelectorAll("input");
+    return {
+      point: inputs[0]?.value || "",
+      tankyo: inputs[1]?.value || "",
+      tsuikyo: inputs[2]?.value || "",
+      note: inputs[3]?.value || ""
+    };
+  });
+  const longRows = Array.from(document.querySelectorAll("#longTable tbody tr")).map(row => {
+    const inputs = row.querySelectorAll("input");
+    return {
+      point: inputs[0]?.value || "",
+      tankyo: inputs[1]?.value || "",
+      tsuikyo: inputs[2]?.value || "",
+      bs: inputs[3]?.value || "",
+      fs: inputs[4]?.value || "",
+      delta: inputs[5]?.value || "",
+      gh: inputs[6]?.value || ""
+    };
+  });
+  const pavementRows = Array.from(document.querySelectorAll("#pavementTable tbody tr")).map(row => {
+    const select = row.querySelector("select");
+    const inputs = row.querySelectorAll("input");
+    return {
+      type: select ? select.value : "",
+      point: inputs[0]?.value || "",
+      tankyo: inputs[1]?.value || "",
+      tsuikyo: inputs[2]?.value || "",
+      hani: inputs[3]?.value || "",
+      avgHani: inputs[4]?.value || "",
+      area: inputs[5]?.value || ""
+    };
+  });
+  const memoText = document.getElementById("memoText")?.value || "";
+  const curveDraft = {
+    ipno: document.getElementById("ipno")?.value || "",
+    ia: document.getElementById("ia")?.value || "",
+    r: document.getElementById("r")?.value || ""
+  };
+  const vcurveDraft = {
+    ip: document.getElementById("vcIP")?.value || "",
+    g1: document.getElementById("vcG1")?.value || "",
+    g2: document.getElementById("vcG2")?.value || "",
+    vcl: document.getElementById("vcVCL")?.value || "",
+    gh0: document.getElementById("vcGH0")?.value || ""
+  };
+  const massChordDraft = {
+    c: document.getElementById("massChordC")?.value || "",
+    r: document.getElementById("massChordR")?.value || ""
+  };
+  store[key] = {
+    project: { rows: pointRows },
+    cross: {
+      point: document.getElementById("pointSel")?.value || "",
+      direction: document.getElementById("direction")?.value || "左",
+      rows: crossRows
+    },
+    long: { rows: longRows },
+    pavement: { rows: pavementRows },
+    memo: memoText,
+    curve: curveDraft,
+    vcurve: vcurveDraft,
+    massChord: massChordDraft
+  };
+  setDraftStore(store);
+}
+function loadDraftInputs() {
+  const store = getDraftStore();
+  const key = draftKey();
+  const draft = store[key];
+  if (!draft) return;
+  if (draft.cross) {
+    const crossPoint = document.getElementById("pointSel");
+    const crossDir = document.getElementById("direction");
+    if (crossPoint) crossPoint.value = draft.cross.point || "";
+    if (crossDir && draft.cross.direction) crossDir.value = draft.cross.direction;
+    const crossRows = draft.cross.rows || [];
+    const crossBody = document.querySelector("#crossTable tbody");
+    if (crossBody) {
+      crossBody.innerHTML = "";
+      const rowCount = Math.max(10, crossRows.length);
+      for (let i = 0; i < rowCount; i++) addCrossRow();
+      crossRows.forEach((row, i) => {
+        const inputs = crossBody.rows[i]?.querySelectorAll("input");
+        if (!inputs) return;
+        inputs[0].value = row.h || "";
+        inputs[1].value = row.v || "";
+        inputs[2].value = row.note || "";
+      });
+    }
+  }
+  if (draft.project) {
+    const rows = draft.project.rows || [];
+    const pointBody = document.querySelector("#pointTable tbody");
+    if (pointBody) {
+      pointBody.innerHTML = "";
+      const rowCount = Math.max(4, rows.length);
+      for (let i = 0; i < rowCount; i++) addPointRow();
+      rows.forEach((row, i) => {
+        const inputs = pointBody.rows[i]?.querySelectorAll("input");
+        if (!inputs) return;
+        inputs[0].value = row.point || "";
+        inputs[1].value = row.tankyo || "";
+        inputs[2].value = row.tsuikyo || "";
+        inputs[3].value = row.note || "";
+      });
+      updatePointTable();
+    }
+  }
+  if (draft.long) {
+    const rows = draft.long.rows || [];
+    const longBody = document.querySelector("#longTable tbody");
+    if (longBody) {
+      longBody.innerHTML = "";
+      const rowCount = Math.max(10, rows.length);
+      for (let i = 0; i < rowCount; i++) addLongRow();
+      rows.forEach((row, i) => {
+        const inputs = longBody.rows[i]?.querySelectorAll("input");
+        if (!inputs) return;
+        inputs[0].value = row.point || "";
+        inputs[1].value = row.tankyo || "";
+        inputs[2].value = row.tsuikyo || "";
+        inputs[3].value = row.bs || "";
+        inputs[4].value = row.fs || "";
+        inputs[5].value = row.delta || "";
+        inputs[6].value = row.gh || "";
+      });
+      calculateLong(true);
+    }
+  }
+  if (draft.pavement) {
+    const rows = draft.pavement.rows || [];
+    const pavBody = document.querySelector("#pavementTable tbody");
+    if (pavBody) {
+      pavBody.innerHTML = "";
+      const rowCount = Math.max(10, rows.length);
+      for (let i = 0; i < rowCount; i++) addPavementRow();
+      rows.forEach((row, i) => {
+        const tr = pavBody.rows[i];
+        if (!tr) return;
+        const select = tr.querySelector("select");
+        const inputs = tr.querySelectorAll("input");
+        if (select && row.type) select.value = row.type;
+        inputs[0].value = row.point || "";
+        inputs[1].value = row.tankyo || "";
+        inputs[2].value = row.tsuikyo || "";
+        inputs[3].value = row.hani || "";
+        inputs[4].value = row.avgHani || "";
+        inputs[5].value = row.area || "";
+      });
+      updatePavementTable();
+    }
+  }
+  if (typeof draft.memo === "string") {
+    const memo = document.getElementById("memoText");
+    if (memo) memo.value = draft.memo;
+  }
+  if (draft.curve) {
+    const ipno = document.getElementById("ipno");
+    const ia = document.getElementById("ia");
+    const r = document.getElementById("r");
+    if (ipno) ipno.value = draft.curve.ipno || "";
+    if (ia) ia.value = draft.curve.ia || "";
+    if (r) r.value = draft.curve.r || "";
+    if (draft.curve.ia && draft.curve.r) calculateCurve();
+  }
+  if (draft.vcurve) {
+    const ip = document.getElementById("vcIP");
+    const g1 = document.getElementById("vcG1");
+    const g2 = document.getElementById("vcG2");
+    const vcl = document.getElementById("vcVCL");
+    const gh0 = document.getElementById("vcGH0");
+    if (ip) ip.value = draft.vcurve.ip || "";
+    if (g1) g1.value = draft.vcurve.g1 || "";
+    if (g2) g2.value = draft.vcurve.g2 || "";
+    if (vcl) vcl.value = draft.vcurve.vcl || "";
+    if (gh0) gh0.value = draft.vcurve.gh0 || "";
+    if (draft.vcurve.ip && draft.vcurve.g1 && draft.vcurve.g2 && draft.vcurve.vcl && draft.vcurve.gh0) {
+      calculateVCurve();
+    }
+  }
+  if (draft.massChord) {
+    const c = document.getElementById("massChordC");
+    const r = document.getElementById("massChordR");
+    if (c) c.value = draft.massChord.c || "";
+    if (r) r.value = draft.massChord.r || "";
+    if (draft.massChord.c && draft.massChord.r) calculateMassChord();
+  }
+}
+function clearDraftForProject(projectName) {
+  const store = getDraftStore();
+  if (store[projectName]) {
+    delete store[projectName];
+    setDraftStore(store);
+  }
+}
 function sidebarSwitchProject() {
+  saveDraftInputs();
+  draftReady = false;
   activeProject = document.getElementById("sidebarProjectSel").value;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
   loadPointSettings();
   updatePointSelect();
   updateLogTab();
+  loadDraftInputs();
+  draftReady = true;
 }
 function switchTab(tabId) {
   // タブとコンテナ両方のactiveを一度クリア
@@ -46,6 +275,7 @@ function addCrossRow() {
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
+  scheduleDraftSave();
 }
 function initializeCrossTable() {
   const tbody = document.querySelector("#crossTable tbody");
@@ -79,11 +309,13 @@ function registerCross() {
   initializeCrossTable();
   document.getElementById("pointSel").value = "";
   updateLogTab();
+  saveDraftInputs();
 }
 function clearCross() {
   if (confirm("すべての入力内容を削除します。よろしいですか？")) {
     document.getElementById("pointSel").value = "";
     initializeCrossTable();
+    saveDraftInputs();
   }
 }
 
@@ -102,6 +334,7 @@ function addPointRow(){
   const tsuikyoInput = c2.querySelector('input');
   tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
   tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
+  scheduleDraftSave();
 }
 function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
@@ -233,8 +466,9 @@ function addLongRow() {
     }
     calculateLong();
   });
+  scheduleDraftSave();
 }
-function calculateLong() {
+function calculateLong(skipPrompt = false) {
   const rows = document.querySelectorAll("#longTable tbody tr");
   let prevGH = null, prevDelta = null, prevTsui = 0;
   rows.forEach((row, i) => {
@@ -263,6 +497,13 @@ function calculateLong() {
     }
     if (i === 0) {
       if (!cells[6].value) {
+        if (skipPrompt) {
+          cells[5].value = "";
+          cells[6].value = "";
+          prevGH = null;
+          prevDelta = null;
+          return;
+        }
         let gh = prompt("初期GHを入力してください", "");
         if (gh === null || gh.trim() === "" || isNaN(parseFloat(gh))) return;
         cells[6].value = parseFloat(gh).toFixed(2);
@@ -323,6 +564,7 @@ function registerLong() {
   }
   updateLogTab();
   clearLongTable();
+  saveDraftInputs();
 }
 function clearLongTable() {
   document.querySelector("#longTable tbody").innerHTML = "";
@@ -331,6 +573,7 @@ function clearLongTable() {
 function clearLong() {
   if (confirm("縦断測量のすべてのデータを削除します。よろしいですか？")) {
     clearLongTable();
+    saveDraftInputs();
   }
 }
 function addPavementRow() {
@@ -357,6 +600,7 @@ function addPavementRow() {
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
   updatePavementTable();
+  scheduleDraftSave();
 }
   function propagatePavementType(sel){
   const rows = document.querySelectorAll("#pavementTable tbody tr");
@@ -408,6 +652,7 @@ function clearPavementTable() {
 function clearPavement() {
   if (confirm("舗装計算のすべてのデータを削除します。よろしいですか？")) {
     clearPavementTable();
+    saveDraftInputs();
   }
 }
 function registerPavement() {
@@ -440,6 +685,7 @@ function registerPavement() {
   }
   updateLogTab();
   clearPavementTable();
+  saveDraftInputs();
 }
 function exportPavementExcel() {
   updatePavementTable();
@@ -514,6 +760,7 @@ function clearMassTable(){
 function clearMass(){
   if(confirm('土方カーブのすべてのデータを削除します。よろしいですか？')){
     clearMassTable();
+    saveDraftInputs();
 }
 }
 function registerMass(){
@@ -539,6 +786,7 @@ function registerMass(){
     localStorage.setItem('massLogs3', JSON.stringify(massLogs));
   }
   updateLogTab();
+  saveDraftInputs();
 }
 
 function calculateMassChord(){
@@ -795,6 +1043,7 @@ function deleteProject() {
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
   });
+  clearDraftForProject(k);
   activeProject = projects[0] ? projects[0].id : null;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
@@ -807,6 +1056,7 @@ function clearAllProjects() {
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
   ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
   renderProjectSelects();
@@ -826,11 +1076,26 @@ function saveMemo() {
   document.getElementById("memoText").value = "";
   document.getElementById("memoSaved").textContent = "保存しました";
   updateLogTab();
+  saveDraftInputs();
 }
 function loadMemo() {
-  document.getElementById("memoText").value = "";
   document.getElementById("memoSaved").textContent = "";
+  const draft = getDraftStore()[draftKey()];
+  const memoText = document.getElementById("memoText");
+  if (memoText && draft && typeof draft.memo === "string") {
+    memoText.value = draft.memo;
+  }
 }
+document.addEventListener("input", (event) => {
+  if (event.target.closest("#project, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+    scheduleDraftSave();
+  }
+});
+document.addEventListener("change", (event) => {
+  if (event.target.closest("#project, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+    scheduleDraftSave();
+  }
+});
 window.onload = () => {
   renderProjectSelects();
   initializeCrossTable();
@@ -838,6 +1103,8 @@ window.onload = () => {
   clearPavementTable();
   updateLogTab();
   switchTab('project');
+  loadDraftInputs();
+  draftReady = true;
 };
 // --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
 let drawMode = "line";
@@ -1371,6 +1638,7 @@ function registerCurve() {
   document.getElementById('ia').value = "";
   document.getElementById('r').value = "";
   updateLogTab();
+  saveDraftInputs();
 }
 
 // --- 電卓機能 --- //
