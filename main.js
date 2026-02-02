@@ -19,6 +19,29 @@ function keyOfActive() {
   const p = projects.find(x=>x.id===activeProject);
   return p ? projectKey(p) : "";
 }
+function save() {
+  localStorage.setItem("projects3", JSON.stringify(projects));
+}
+function getActiveProject() {
+  return projects.find(x => x.id === activeProject) || null;
+}
+function ensureProjectPoints(project) {
+  if (project && !Array.isArray(project.points)) {
+    project.points = [];
+  }
+}
+function migratePointSettings() {
+  const legacy = safeParseJSON(localStorage.getItem("pointSettings3"), {});
+  let changed = false;
+  projects = projects.map((project) => {
+    if (Array.isArray(project.points)) return project;
+    const points = legacy[projectKey(project)] || [];
+    changed = true;
+    return { ...project, points };
+  });
+  if (changed) save();
+}
+migratePointSettings();
 let draftReady = false;
 const DRAFT_STORAGE_KEY = "draftInputs3";
 function draftKey() {
@@ -336,6 +359,111 @@ function addPointRow(){
   tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
   scheduleDraftSave();
 }
+function formatDistance(value) {
+  if (!Number.isFinite(value)) return "";
+  return value.toFixed(3);
+}
+function formatStationName(distance) {
+  if (!Number.isFinite(distance)) return "";
+  const sign = distance < 0 ? "-" : "";
+  const abs = Math.abs(distance);
+  const no = Math.floor(abs / 100);
+  const offset = abs - no * 100;
+  return `${sign}No.${no} + ${offset.toFixed(3)}`;
+}
+function parseMajorPointsInput(text) {
+  if (!text) return [];
+  return text
+    .split(/\n|;/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.split(",").map(part => part.trim()).filter(Boolean);
+      if (parts.length === 0) return null;
+      let label = "";
+      let distance = NaN;
+      if (parts.length === 1) {
+        distance = parseFloat(parts[0]);
+      } else {
+        const first = parseFloat(parts[0]);
+        const second = parseFloat(parts[1]);
+        if (!isNaN(first) && isNaN(second)) {
+          distance = first;
+          label = parts[1] || "";
+        } else if (!isNaN(second)) {
+          distance = second;
+          label = parts[0] || "";
+        }
+      }
+      if (isNaN(distance)) return null;
+      return { label, distance };
+    })
+    .filter(Boolean);
+}
+function generateStations(start, end, pitch, majorPoints) {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(pitch)) return [];
+  if (pitch <= 0) return [];
+  const round = (value) => Math.round(value * 1000) / 1000;
+  const map = new Map();
+  for (let dist = start; dist <= end + 1e-6; dist += pitch) {
+    const key = round(dist);
+    if (!map.has(key)) map.set(key, { distance: key, notes: [] });
+  }
+  (majorPoints || []).forEach((mp) => {
+    const key = round(mp.distance);
+    if (!map.has(key)) map.set(key, { distance: key, notes: [] });
+    if (mp.label) map.get(key).notes.push(mp.label);
+  });
+  const sorted = Array.from(map.values()).sort((a, b) => a.distance - b.distance);
+  let prev = null;
+  return sorted.map((entry) => {
+    const tsuikyo = round(entry.distance);
+    const tankyo = prev === null ? tsuikyo : round(tsuikyo - prev);
+    prev = tsuikyo;
+    return {
+      point: formatStationName(tsuikyo),
+      tankyo: formatDistance(tankyo),
+      tsuikyo: formatDistance(tsuikyo),
+      note: entry.notes.join("/")
+    };
+  });
+}
+function mergePoints(existing, generated) {
+  const round = (value) => Math.round(value * 1000) / 1000;
+  const map = new Map();
+  existing.forEach((row) => {
+    const dist = parseFloat(row.tsuikyo);
+    if (!isNaN(dist)) {
+      map.set(round(dist), { ...row });
+    }
+  });
+  generated.forEach((row) => {
+    const dist = parseFloat(row.tsuikyo);
+    if (isNaN(dist)) return;
+    const key = round(dist);
+    if (map.has(key)) {
+      const prev = map.get(key);
+      map.set(key, { ...prev, ...row, note: row.note || prev.note || "" });
+    } else {
+      map.set(key, { ...row });
+    }
+  });
+  const merged = [
+    ...existing.filter((row) => isNaN(parseFloat(row.tsuikyo))),
+    ...Array.from(map.entries()).sort((a, b) => a[0] - b[0]).map(([, row]) => row)
+  ];
+  return merged;
+}
+function setPointMode(mode) {
+  const manual = document.getElementById("point-mode-manual");
+  const auto = document.getElementById("point-mode-auto");
+  const manualActions = document.getElementById("point-manual-actions");
+  const autoActions = document.getElementById("point-auto-actions");
+  if (manual) manual.classList.toggle("is-hidden", mode !== "manual");
+  if (auto) auto.classList.toggle("is-hidden", mode !== "auto");
+  if (manualActions) manualActions.classList.toggle("is-hidden", mode !== "manual");
+  if (autoActions) autoActions.classList.toggle("is-hidden", mode !== "auto");
+}
 function updatePointTable(changed){
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
@@ -396,17 +524,21 @@ function savePointSettings(){
       data.push({point, tankyo, tsuikyo, note});
     }
   });
-  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
-  all[keyOfActive()] = data;
-  localStorage.setItem('pointSettings3', JSON.stringify(all));
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectPoints(project);
+  project.points = data;
+  save();
   updatePointSelect();
 }
 function loadPointSettings(){
   const tbody = document.querySelector('#pointTable tbody');
   if(!tbody) return;
   tbody.innerHTML = '';
-  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
-  let arr = all[keyOfActive()] || [];
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectPoints(project);
+  let arr = project.points || [];
   const rowCount = Math.max(arr.length, 4);
   for(let i=0;i<rowCount;i++) addPointRow();
   arr.forEach((obj,i)=>{
@@ -421,10 +553,43 @@ function loadPointSettings(){
 function updatePointSelect(){
   const list = document.getElementById('pointList');
   if(!list) return;
-  let all = safeParseJSON(localStorage.getItem('pointSettings3'), {});
-  let arr = all[keyOfActive()] || [];
+  const project = getActiveProject();
+  if (!project) {
+    list.innerHTML = '';
+    return;
+  }
+  ensureProjectPoints(project);
+  let arr = project.points || [];
   list.innerHTML = '';
   arr.forEach(p=>{ list.innerHTML += `<option value="${p.point}">`; });
+}
+function runAutoFill() {
+  if(!activeProject){ alert('工事を選択してください'); return; }
+  const start = parseFloat(document.getElementById("autoStart").value);
+  const end = parseFloat(document.getElementById("autoEnd").value);
+  const pitch = parseFloat(document.getElementById("autoPitch").value);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(pitch)) {
+    alert("開始単距・終了単距・ピッチを入力してください");
+    return;
+  }
+  if (end < start) {
+    alert("終了単距は開始単距以上を指定してください");
+    return;
+  }
+  const majorText = document.getElementById("autoMajorPoints").value;
+  const majorPoints = parseMajorPointsInput(majorText);
+  const generated = generateStations(start, end, pitch, majorPoints);
+  if (generated.length === 0) {
+    alert("測点を生成できませんでした");
+    return;
+  }
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectPoints(project);
+  project.points = mergePoints(project.points || [], generated);
+  save();
+  loadPointSettings();
+  updatePointSelect();
 }
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
@@ -1005,8 +1170,8 @@ function addProject() {
   if(!name) return alert("工事名を入力してください");
   if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
   const id = Date.now().toString();
-  projects.push({id, name});
-  localStorage.setItem("projects3", JSON.stringify(projects));
+  projects.push({id, name, points: []});
+  save();
   activeProject = id;
   localStorage.setItem("activeProject3", activeProject);
   renderProjectSelects();
@@ -1036,7 +1201,7 @@ function deleteProject() {
   if(!p) return;
   if(!confirm("この工事（"+p.name+"）と記録を完全削除します。よろしいですか？")) return;
   projects = projects.filter(x=>x.id !== activeProject);
-  localStorage.setItem("projects3", JSON.stringify(projects));
+  save();
   const k = projectKey(p);
   ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(key=>{
     let all = safeParseJSON(localStorage.getItem(key), {});
@@ -1055,7 +1220,7 @@ function clearAllProjects() {
   if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(k=>localStorage.removeItem(k));
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k)); 
   localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
@@ -1115,6 +1280,7 @@ function importBackup() {
       });
       projects = safeParseJSON(localStorage.getItem("projects3"), []);
       activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
+      migratePointSettings();
       renderProjectSelects();
       loadPointSettings();
       updatePointSelect();
@@ -1156,13 +1322,18 @@ function loadMemo() {
   }
 }
 document.addEventListener("input", (event) => {
-  if (event.target.closest("#project, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
     scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
-  if (event.target.closest("#project, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
     scheduleDraftSave();
+  }
+});
+document.addEventListener("change", (event) => {
+  if (event.target && event.target.name === "pointMode") {
+    setPointMode(event.target.value);
   }
 });
 window.onload = () => {
@@ -1172,6 +1343,7 @@ window.onload = () => {
   clearPavementTable();
   updateLogTab();
   switchTab('project');
+  setPointMode("manual");
   loadDraftInputs();
   draftReady = true;
 };
