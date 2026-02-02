@@ -262,6 +262,15 @@
         </label>
         <button class="danger-btn" onclick="clearAllProjects()">全工事＆記録一括削除</button>
       </div>
+      <div class="backup-panel">
+        <h3>バックアップのインポート</h3>
+        <p class="help-text">バックアップJSONを選択してインポートすると、現在のデータを上書きします。</p>
+        <div class="backup-actions">
+          <input type="file" id="backupFileInput" accept="application/json">
+          <button class="warn-btn" onclick="importBackup()">インポート</button>
+        </div>
+        <div id="backupImportStatus" class="record"></div>
+      </div>
       <h2>記録（カテゴリ別）</h2>
       <div style="margin:8px 0;">
         <button class="warn-btn" onclick="clearCategory('cross')">横断測量 記録削除</button>
@@ -286,3 +295,4 @@
   <script src="main.js"></script>
 </body>
 </html>
+
