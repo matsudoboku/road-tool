@@ -445,6 +445,10 @@ tfoot td {
   min-height: 44px; /* タッチターゲット */
 }
 
+.container .btn {
+  min-height: 50px;
+}
+
 .btn-large {
   min-height: 56px;
   padding: 14px 18px;
@@ -557,6 +561,22 @@ tfoot td {
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.test-cross-inputs .full-width {
+  grid-column: 1 / -1;
+}
+
+.test-cross-inputs input:focus {
+  background-color: #fff3cd;
+}
+
+.test-cross-status {
+  background: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-weight: 600;
 }
 
 .large-input {
