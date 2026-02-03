@@ -30,6 +30,11 @@ function ensureProjectPoints(project) {
     project.points = [];
   }
 }
+function ensureProjectTestCrossData(project) {
+  if (project && !Array.isArray(project.testCrossData)) {
+    project.testCrossData = [];
+  }
+}
 function migratePointSettings() {
   const legacy = safeParseJSON(localStorage.getItem("pointSettings3"), {});
   let changed = false;
@@ -68,7 +73,7 @@ let testCrossData = [];
 let testCrossState = {
   direction: "right",
   slope: 0.3,
-  slopeLabel: "3分(1:0.3)"
+  slopeLabel: "3分(0.3)"
 };
 function scheduleDraftSave() {
   if (!draftReady) return;
@@ -361,19 +366,51 @@ function clearCross() {
 
 // --- テスト横断（ポール横断） ---
 function loadTestCrossData() {
-  const store = getTestCrossStore();
-  testCrossData = store[testCrossKey()] || [];
+  const project = getActiveProject();
+  if (!project) {
+    testCrossData = [];
+    renderTestCrossList();
+    drawTestCrossCanvas();
+    updateTestCrossStatus();
+    return;
+  }
+  ensureProjectTestCrossData(project);
+  if (!project.testCrossData.length) {
+    const store = getTestCrossStore();
+    const legacy = store[testCrossKey()] || [];
+    if (legacy.length) {
+      let prev = { x: 0, y: 0 };
+      project.testCrossData = legacy.map(point => {
+        const dx = point.x - prev.x;
+        const dy = point.y - prev.y;
+        prev = { x: point.x, y: point.y };
+        return {
+          side: dx >= 0 ? "right" : "left",
+          h: dx,
+          v: dy,
+          absH: point.x,
+          absV: point.y,
+          memo: point.note || ""
+        };
+      });
+      save();
+    }
+  }
+  testCrossData = project.testCrossData;
   renderTestCrossList();
   drawTestCrossCanvas();
+  updateTestCrossStatus();
 }
 function saveTestCrossData() {
-  const store = getTestCrossStore();
-  store[testCrossKey()] = testCrossData;
-  setTestCrossStore(store);
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectTestCrossData(project);
+  project.testCrossData = testCrossData;
+  save();
 }
 function setTestCrossDirection(direction) {
   testCrossState.direction = direction;
-  const buttons = document.querySelectorAll("#test-cross [data-direction]");
+  const buttons = document.querySelectorAll("#testCross [data-direction]");
   buttons.forEach(button => {
     button.classList.toggle("active", button.dataset.direction === direction);
   });
@@ -381,23 +418,29 @@ function setTestCrossDirection(direction) {
 function setTestCrossSlope(slope, label) {
   testCrossState.slope = slope;
   testCrossState.slopeLabel = label;
-  const buttons = document.querySelectorAll("#test-cross .preset-btn");
+  const buttons = document.querySelectorAll("#testCross .preset-btn");
   buttons.forEach(button => {
     button.classList.toggle("active", Number(button.dataset.slope) === slope);
   });
   const labelEl = document.getElementById("testCrossSlopeLabel");
   if (labelEl) labelEl.textContent = `選択中勾配: ${label}`;
 }
-function addTestCrossPoint(dx, dy, note) {
-  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { x: 0, y: 0 };
+function addTestCrossPoint(h, v, memo, side) {
+  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { absH: 0, absV: 0 };
+  const absH = last.absH + h;
+  const absV = last.absV + v;
   testCrossData.push({
-    x: last.x + dx,
-    y: last.y + dy,
-    note: note || ""
+    side: side || (h >= 0 ? "right" : "left"),
+    h,
+    v,
+    absH,
+    absV,
+    memo: memo || ""
   });
   saveTestCrossData();
   renderTestCrossList();
   drawTestCrossCanvas();
+  updateTestCrossStatus();
 }
 function renderTestCrossList() {
   const tbody = document.getElementById("testCrossList");
@@ -406,11 +449,11 @@ function renderTestCrossList() {
   testCrossData.forEach(point => {
     const row = document.createElement("tr");
     const distCell = document.createElement("td");
-    distCell.textContent = formatDistance(point.x);
+    distCell.textContent = formatDistance(point.absH);
     const elevCell = document.createElement("td");
-    elevCell.textContent = formatDistance(point.y);
+    elevCell.textContent = formatDistance(point.absV);
     const noteCell = document.createElement("td");
-    noteCell.textContent = point.note || "";
+    noteCell.textContent = point.memo || "";
     row.appendChild(distCell);
     row.appendChild(elevCell);
     row.appendChild(noteCell);
@@ -439,8 +482,8 @@ function drawTestCrossCanvas() {
   let maxX = 0;
   let maxY = 0;
   testCrossData.forEach(point => {
-    maxX = Math.max(maxX, Math.abs(point.x));
-    maxY = Math.max(maxY, Math.abs(point.y));
+    maxX = Math.max(maxX, Math.abs(point.absH));
+    maxY = Math.max(maxY, Math.abs(point.absV));
   });
   const padding = 20;
   const scaleX = maxX ? (width / 2 - padding) / maxX : 1;
@@ -459,63 +502,80 @@ function drawTestCrossCanvas() {
   ctx.beginPath();
   ctx.moveTo(centerX, centerY);
   testCrossData.forEach(point => {
-    const px = centerX + point.x * scale;
-    const py = centerY - point.y * scale;
+    const px = centerX + point.absH * scale;
+    const py = centerY - point.absV * scale;
     ctx.lineTo(px, py);
   });
   ctx.stroke();
 
   ctx.fillStyle = "#1b5e20";
   testCrossData.forEach(point => {
-    const px = centerX + point.x * scale;
-    const py = centerY - point.y * scale;
+    const px = centerX + point.absH * scale;
+    const py = centerY - point.absV * scale;
     ctx.beginPath();
     ctx.arc(px, py, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 }
+function updateTestCrossStatus() {
+  const hEl = document.getElementById("testCrossAbsH");
+  const vEl = document.getElementById("testCrossAbsV");
+  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { absH: 0, absV: 0 };
+  if (hEl) hEl.textContent = formatDistance(last.absH);
+  if (vEl) vEl.textContent = formatDistance(last.absV);
+}
+function applyTestCrossSlopeFromSL() {
+  const slInput = document.getElementById("testCrossSL");
+  const hInput = document.getElementById("testCrossH");
+  const vInput = document.getElementById("testCrossV");
+  if (!slInput || !hInput || !vInput) return;
+  const sl = Number(slInput.value);
+  if (!Number.isFinite(sl)) return;
+  const n = testCrossState.slope;
+  const v = sl / Math.sqrt(1 + n * n);
+  const h = v * n;
+  hInput.value = Number.isFinite(h) ? h.toFixed(3) : "";
+  vInput.value = Number.isFinite(v) ? v.toFixed(3) : "";
+}
 function handleTestCrossAction(action) {
-  const valueInput = document.getElementById("testCrossValue");
-  const noteInput = document.getElementById("testCrossNote");
-  if (!valueInput || !noteInput) return;
+  const hInput = document.getElementById("testCrossH");
+  const vInput = document.getElementById("testCrossV");
+  const slInput = document.getElementById("testCrossSL");
+  const memoInput = document.getElementById("testCrossMemo");
+  if (!hInput || !vInput || !memoInput) return;
   if (action === "clear") {
-    valueInput.value = "";
-    noteInput.value = "";
+    hInput.value = "";
+    vInput.value = "";
+    if (slInput) slInput.value = "";
+    memoInput.value = "";
     return;
   }
-  const value = Number(valueInput.value);
-  if (!Number.isFinite(value)) {
-    alert("数値を入力してください");
+  if (action !== "add") return;
+  const rawH = hInput.value === "" ? NaN : Number(hInput.value);
+  const rawV = vInput.value === "" ? NaN : Number(vInput.value);
+  if (!Number.isFinite(rawH) && !Number.isFinite(rawV)) {
+    alert("水平距離(H)か高低差(V)を入力してください");
     return;
   }
   const directionSign = testCrossState.direction === "right" ? 1 : -1;
-  let dx = 0;
-  let dy = 0;
-  if (action === "h") {
-    dx = value * directionSign;
-  } else if (action === "v") {
-    dy = value;
-  } else if (action === "sl") {
-    const n = testCrossState.slope;
-    const v = value / Math.sqrt(1 + n * n);
-    const h = v * n;
-    dx = h * directionSign;
-    dy = v;
-  }
-  addTestCrossPoint(dx, dy, noteInput.value.trim());
-  valueInput.value = "";
+  const h = (Number.isFinite(rawH) ? rawH : 0) * directionSign;
+  const v = Number.isFinite(rawV) ? rawV : 0;
+  addTestCrossPoint(h, v, memoInput.value.trim(), testCrossState.direction);
+  hInput.value = "";
+  vInput.value = "";
+  if (slInput) slInput.value = "";
 }
 function appendTestCrossTag(tag) {
-  const noteInput = document.getElementById("testCrossNote");
-  if (!noteInput) return;
-  if (!noteInput.value) {
-    noteInput.value = tag;
+  const memoInput = document.getElementById("testCrossMemo");
+  if (!memoInput) return;
+  if (!memoInput.value) {
+    memoInput.value = tag;
     return;
   }
-  noteInput.value = `${noteInput.value} ${tag}`;
+  memoInput.value = `${memoInput.value} ${tag}`;
 }
 function initTestCrossControls() {
-  const container = document.getElementById("test-cross");
+  const container = document.getElementById("testCross");
   if (!container) return;
   container.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => setTestCrossDirection(button.dataset.direction));
@@ -528,11 +588,28 @@ function initTestCrossControls() {
       const slope = Number(button.dataset.slope);
       const label = button.dataset.label || button.textContent.trim();
       setTestCrossSlope(slope, label);
+      applyTestCrossSlopeFromSL();
     });
   });
   container.querySelectorAll("[data-tag]").forEach(button => {
     button.addEventListener("click", () => appendTestCrossTag(button.dataset.tag));
   });
+  const hInput = document.getElementById("testCrossH");
+  const vInput = document.getElementById("testCrossV");
+  const slInput = document.getElementById("testCrossSL");
+  if (hInput && slInput) {
+    hInput.addEventListener("input", () => {
+      slInput.value = "";
+    });
+  }
+  if (vInput && slInput) {
+    vInput.addEventListener("input", () => {
+      slInput.value = "";
+    });
+  }
+  if (slInput) {
+    slInput.addEventListener("input", applyTestCrossSlopeFromSL);
+  }
   setTestCrossDirection(testCrossState.direction);
   setTestCrossSlope(testCrossState.slope, testCrossState.slopeLabel);
   loadTestCrossData();
@@ -1374,7 +1451,7 @@ function addProject() {
   if(!name) return alert("工事名を入力してください");
   if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
   const id = Date.now().toString();
-  projects.push({id, name, points: []});
+  projects.push({id, name, points: [], testCrossData: []});
   save();
   activeProject = id;
   localStorage.setItem("activeProject3", activeProject);
