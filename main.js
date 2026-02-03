@@ -44,7 +44,11 @@ function migratePointSettings() {
 migratePointSettings();
 let draftReady = false;
 const DRAFT_STORAGE_KEY = "draftInputs3";
+const TEST_CROSS_STORAGE_KEY = "testCrossData3";
 function draftKey() {
+  return keyOfActive() || "__global__";
+}
+function testCrossKey() {
   return keyOfActive() || "__global__";
 }
 function getDraftStore() {
@@ -53,7 +57,19 @@ function getDraftStore() {
 function setDraftStore(store) {
   localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(store));
 }
+function getTestCrossStore() {
+  return safeParseJSON(localStorage.getItem(TEST_CROSS_STORAGE_KEY), {});
+}
+function setTestCrossStore(store) {
+  localStorage.setItem(TEST_CROSS_STORAGE_KEY, JSON.stringify(store));
+}
 let draftSaveTimer = null;
+let testCrossData = [];
+let testCrossState = {
+  direction: "right",
+  slope: 0.3,
+  slopeLabel: "3分(1:0.3)"
+};
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -275,6 +291,7 @@ function sidebarSwitchProject() {
   renderProjectSelects();
   loadPointSettings();
   updatePointSelect();
+  loadTestCrossData();
   updateLogTab();
   loadDraftInputs();
   draftReady = true;
@@ -340,6 +357,185 @@ function clearCross() {
     initializeCrossTable();
     saveDraftInputs();
   }
+}
+
+// --- テスト横断（ポール横断） ---
+function loadTestCrossData() {
+  const store = getTestCrossStore();
+  testCrossData = store[testCrossKey()] || [];
+  renderTestCrossList();
+  drawTestCrossCanvas();
+}
+function saveTestCrossData() {
+  const store = getTestCrossStore();
+  store[testCrossKey()] = testCrossData;
+  setTestCrossStore(store);
+}
+function setTestCrossDirection(direction) {
+  testCrossState.direction = direction;
+  const buttons = document.querySelectorAll("#test-cross [data-direction]");
+  buttons.forEach(button => {
+    button.classList.toggle("active", button.dataset.direction === direction);
+  });
+}
+function setTestCrossSlope(slope, label) {
+  testCrossState.slope = slope;
+  testCrossState.slopeLabel = label;
+  const buttons = document.querySelectorAll("#test-cross .preset-btn");
+  buttons.forEach(button => {
+    button.classList.toggle("active", Number(button.dataset.slope) === slope);
+  });
+  const labelEl = document.getElementById("testCrossSlopeLabel");
+  if (labelEl) labelEl.textContent = `選択中勾配: ${label}`;
+}
+function addTestCrossPoint(dx, dy, note) {
+  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { x: 0, y: 0 };
+  testCrossData.push({
+    x: last.x + dx,
+    y: last.y + dy,
+    note: note || ""
+  });
+  saveTestCrossData();
+  renderTestCrossList();
+  drawTestCrossCanvas();
+}
+function renderTestCrossList() {
+  const tbody = document.getElementById("testCrossList");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  testCrossData.forEach(point => {
+    const row = document.createElement("tr");
+    const distCell = document.createElement("td");
+    distCell.textContent = formatDistance(point.x);
+    const elevCell = document.createElement("td");
+    elevCell.textContent = formatDistance(point.y);
+    const noteCell = document.createElement("td");
+    noteCell.textContent = point.note || "";
+    row.appendChild(distCell);
+    row.appendChild(elevCell);
+    row.appendChild(noteCell);
+    tbody.appendChild(row);
+  });
+}
+function drawTestCrossCanvas() {
+  const canvas = document.getElementById("testCrossCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.strokeStyle = "#d0d7de";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, centerY);
+  ctx.lineTo(width, centerY);
+  ctx.moveTo(centerX, 0);
+  ctx.lineTo(centerX, height);
+  ctx.stroke();
+
+  let maxX = 0;
+  let maxY = 0;
+  testCrossData.forEach(point => {
+    maxX = Math.max(maxX, Math.abs(point.x));
+    maxY = Math.max(maxY, Math.abs(point.y));
+  });
+  const padding = 20;
+  const scaleX = maxX ? (width / 2 - padding) / maxX : 1;
+  const scaleY = maxY ? (height / 2 - padding) / maxY : 1;
+  let scale = Math.min(scaleX, scaleY);
+  if (!Number.isFinite(scale) || scale <= 0) scale = 20;
+
+  ctx.fillStyle = "#1976d2";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!testCrossData.length) return;
+  ctx.strokeStyle = "#1976d2";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  testCrossData.forEach(point => {
+    const px = centerX + point.x * scale;
+    const py = centerY - point.y * scale;
+    ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  ctx.fillStyle = "#1b5e20";
+  testCrossData.forEach(point => {
+    const px = centerX + point.x * scale;
+    const py = centerY - point.y * scale;
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+function handleTestCrossAction(action) {
+  const valueInput = document.getElementById("testCrossValue");
+  const noteInput = document.getElementById("testCrossNote");
+  if (!valueInput || !noteInput) return;
+  if (action === "clear") {
+    valueInput.value = "";
+    noteInput.value = "";
+    return;
+  }
+  const value = Number(valueInput.value);
+  if (!Number.isFinite(value)) {
+    alert("数値を入力してください");
+    return;
+  }
+  const directionSign = testCrossState.direction === "right" ? 1 : -1;
+  let dx = 0;
+  let dy = 0;
+  if (action === "h") {
+    dx = value * directionSign;
+  } else if (action === "v") {
+    dy = value;
+  } else if (action === "sl") {
+    const n = testCrossState.slope;
+    const v = value / Math.sqrt(1 + n * n);
+    const h = v * n;
+    dx = h * directionSign;
+    dy = v;
+  }
+  addTestCrossPoint(dx, dy, noteInput.value.trim());
+  valueInput.value = "";
+}
+function appendTestCrossTag(tag) {
+  const noteInput = document.getElementById("testCrossNote");
+  if (!noteInput) return;
+  if (!noteInput.value) {
+    noteInput.value = tag;
+    return;
+  }
+  noteInput.value = `${noteInput.value} ${tag}`;
+}
+function initTestCrossControls() {
+  const container = document.getElementById("test-cross");
+  if (!container) return;
+  container.querySelectorAll("[data-direction]").forEach(button => {
+    button.addEventListener("click", () => setTestCrossDirection(button.dataset.direction));
+  });
+  container.querySelectorAll("[data-action]").forEach(button => {
+    button.addEventListener("click", () => handleTestCrossAction(button.dataset.action));
+  });
+  container.querySelectorAll(".preset-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      const slope = Number(button.dataset.slope);
+      const label = button.dataset.label || button.textContent.trim();
+      setTestCrossSlope(slope, label);
+    });
+  });
+  container.querySelectorAll("[data-tag]").forEach(button => {
+    button.addEventListener("click", () => appendTestCrossTag(button.dataset.tag));
+  });
+  setTestCrossDirection(testCrossState.direction);
+  setTestCrossSlope(testCrossState.slope, testCrossState.slopeLabel);
+  loadTestCrossData();
 }
 
 // --- 測点設定 ---
@@ -1342,6 +1538,7 @@ window.onload = () => {
   clearLongTable();
   clearPavementTable();
   updateLogTab();
+  initTestCrossControls();
   switchTab('project');
   setPointMode("manual");
   loadDraftInputs();
