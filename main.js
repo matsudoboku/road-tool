@@ -167,7 +167,10 @@ function loadDraftInputs() {
     const crossPoint = document.getElementById("pointSel");
     const crossDir = document.getElementById("direction");
     if (crossPoint) crossPoint.value = draft.cross.point || "";
-    if (crossDir && draft.cross.direction) crossDir.value = draft.cross.direction;
+    if (crossDir && draft.cross.direction) {
+      crossDir.value = draft.cross.direction;
+      setCrossDirection(crossDir.value);
+    }
     const crossRows = draft.cross.rows || [];
     const crossBody = document.querySelector("#crossTable tbody");
     if (crossBody) {
@@ -328,6 +331,26 @@ function initializeCrossTable() {
   for (let i = 0; i < 10; i++) {
     addCrossRow();
   }
+}
+function setCrossDirection(direction) {
+  const dirInput = document.getElementById("direction");
+  if (dirInput) dirInput.value = direction;
+  const buttons = document.querySelectorAll("#cross [data-direction]");
+  buttons.forEach(button => {
+    button.classList.toggle("active", button.dataset.direction === direction);
+  });
+  scheduleDraftSave();
+}
+function initCrossDirectionControls() {
+  const container = document.getElementById("cross");
+  if (!container) return;
+  container.querySelectorAll("[data-direction]").forEach(button => {
+    button.addEventListener("click", () => {
+      setCrossDirection(button.dataset.direction);
+    });
+  });
+  const dirInput = document.getElementById("direction");
+  if (dirInput?.value) setCrossDirection(dirInput.value);
 }
 function registerCross() {
   if(!activeProject){ alert("工事を選択してください"); return; }
@@ -1623,6 +1646,7 @@ window.onload = () => {
   clearLongTable();
   clearPavementTable();
   updateLogTab();
+  initCrossDirectionControls();
   initTestCrossControls();
   switchTab('project');
   setPointMode("manual");
