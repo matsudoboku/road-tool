@@ -35,6 +35,7 @@
       <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
       <button class="tab" data-tab="point-tab" onclick="switchTab('point-tab')">測点</button>
       <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
+      <button class="tab" data-tab="test-cross" onclick="switchTab('test-cross')">テスト横断</button>
       <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
       <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
       <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
@@ -176,6 +177,75 @@
           <button class="btn btn-secondary" onclick="addCrossRow()">＋ 行を追加</button>
           <div class="btn-pair">
             <button class="btn btn-success" onclick="registerCross()">登録</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- テスト横断 -->
+    <div id="test-cross" class="container">
+      <div class="card">
+        <div class="card-header">
+          <h2>テスト横断（ポール横断）</h2>
+        </div>
+        <div class="card-body">
+          <div class="test-cross-section">
+            <p class="section-label">方向切替</p>
+            <div class="direction-toggle">
+              <button id="testCrossLeftBtn" class="btn btn-secondary btn-large btn-toggle" data-direction="left">左へ</button>
+              <button id="testCrossRightBtn" class="btn btn-secondary btn-large btn-toggle active" data-direction="right">右へ</button>
+            </div>
+          </div>
+          <div class="test-cross-section">
+            <p class="section-label">クイック入力</p>
+            <div class="test-cross-inputs">
+              <input id="testCrossValue" type="number" inputmode="decimal" class="large-input" placeholder="数値入力">
+              <input id="testCrossNote" type="text" class="large-input" placeholder="備考">
+            </div>
+            <div class="test-cross-actions">
+              <button class="btn btn-primary btn-large" data-action="h">水平(H)</button>
+              <button class="btn btn-primary btn-large" data-action="v">垂直(V)</button>
+              <button class="btn btn-primary btn-large" data-action="sl">SL(斜距離)</button>
+              <button class="btn btn-secondary btn-large" data-action="clear">クリア</button>
+            </div>
+            <div class="test-cross-presets">
+              <button class="btn btn-secondary btn-large preset-btn active" data-slope="0.3" data-label="3分(1:0.3)">3分(1:0.3)</button>
+              <button class="btn btn-secondary btn-large preset-btn" data-slope="0.4" data-label="4分(1:0.4)">4分(1:0.4)</button>
+              <button class="btn btn-secondary btn-large preset-btn" data-slope="1" data-label="1割(1:1.0)">1割(1:1.0)</button>
+            </div>
+            <p id="testCrossSlopeLabel" class="text-sm text-muted">選択中勾配: 3分(1:0.3)</p>
+          </div>
+          <div class="test-cross-section">
+            <p class="section-label">備考クイックタグ</p>
+            <div class="test-cross-tags">
+              <button class="btn btn-outline btn-large" data-tag="舗装">舗装</button>
+              <button class="btn btn-outline btn-large" data-tag="路肩">路肩</button>
+              <button class="btn btn-outline btn-large" data-tag="3分ブロック">3分ブロック</button>
+              <button class="btn btn-outline btn-large" data-tag="3分石積">3分石積</button>
+              <button class="btn btn-outline btn-large" data-tag="現況">現況</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>断面プレビュー</h2>
+        </div>
+        <div class="card-body">
+          <div class="canvas-container test-cross-canvas">
+            <canvas id="testCrossCanvas" width="340" height="240"></canvas>
+          </div>
+          <div class="table-wrapper">
+            <table class="survey-table dense-table">
+              <thead>
+                <tr>
+                  <th>離れ(m)</th>
+                  <th>標高(m)</th>
+                  <th>備考</th>
+                </tr>
+              </thead>
+              <tbody id="testCrossList"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -555,4 +625,5 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
