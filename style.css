@@ -445,6 +445,12 @@ tfoot td {
   min-height: 44px; /* タッチターゲット */
 }
 
+.btn-large {
+  min-height: 56px;
+  padding: 14px 18px;
+  font-size: 1.05rem;
+}
+
 .btn:active {
   transform: translateY(1px);
 }
@@ -517,6 +523,50 @@ tfoot td {
   font-size: 0.85rem;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* -----------------------------
+   テスト横断
+----------------------------- */
+.test-cross-section {
+  margin-bottom: 18px;
+}
+
+.section-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.direction-toggle,
+.test-cross-actions,
+.test-cross-presets,
+.test-cross-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-toggle.active {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+.test-cross-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.large-input {
+  font-size: 1.05rem;
+  padding: 14px 16px;
+  min-height: 56px;
+}
+
+.test-cross-canvas {
+  margin-bottom: 12px;
 }
 
 /* -----------------------------
