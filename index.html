@@ -35,8 +35,7 @@
       <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
       <button class="tab" data-tab="point-tab" onclick="switchTab('point-tab')">測点</button>
       <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
-      <button class="tab" data-tab="test-cross" onclick="switchTab('test-cross')">テスト横断</button>
-      <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
+      <button class="tab" data-tab="testCross" onclick="switchTab('testCross')">テスト横断</button>      <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
       <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
       <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
       <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
@@ -183,7 +182,7 @@
     </div>
 
     <!-- テスト横断 -->
-    <div id="test-cross" class="container">
+    <div id="testCross" class="container">
       <div class="card">
         <div class="card-header">
           <h2>テスト横断（ポール横断）</h2>
@@ -192,37 +191,58 @@
           <div class="test-cross-section">
             <p class="section-label">方向切替</p>
             <div class="direction-toggle">
-              <button id="testCrossLeftBtn" class="btn btn-secondary btn-large btn-toggle" data-direction="left">左へ</button>
-              <button id="testCrossRightBtn" class="btn btn-secondary btn-large btn-toggle active" data-direction="right">右へ</button>
+              <button id="testCrossLeftBtn" class="btn btn-secondary btn-large btn-toggle" data-direction="left">左へ ◀</button>
+              <button id="testCrossRightBtn" class="btn btn-secondary btn-large btn-toggle active" data-direction="right">▶ 右へ</button>
             </div>
           </div>
           <div class="test-cross-section">
-            <p class="section-label">クイック入力</p>
+            <p class="section-label">ステータス</p>
+            <div class="test-cross-status">
+              現在の起点からの離れ: <span id="testCrossAbsH">0.000</span>m,
+              標高: <span id="testCrossAbsV">0.000</span>m
+            </div>
+          </div>
+          <div class="test-cross-section">
+            <p class="section-label">入力</p>
             <div class="test-cross-inputs">
-              <input id="testCrossValue" type="number" inputmode="decimal" class="large-input" placeholder="数値入力">
-              <input id="testCrossNote" type="text" class="large-input" placeholder="備考">
+              <div class="input-group">
+                <label for="testCrossH">水平距離(H)</label>
+                <input id="testCrossH" type="number" inputmode="decimal" placeholder="例: 1.20">
+              </div>
+              <div class="input-group">
+                <label for="testCrossV">高低差(V)</label>
+                <input id="testCrossV" type="number" inputmode="decimal" placeholder="例: -0.20">
+              </div>
+              <div class="input-group full-width">
+                <label for="testCrossSL">SL(斜距離)</label>
+                <input id="testCrossSL" type="number" inputmode="decimal" placeholder="勾配選択時に自動分解">
+              </div>
+              <div class="input-group full-width">
+                <label for="testCrossMemo">備考</label>
+                <input id="testCrossMemo" type="text" placeholder="例: As舗">
+              </div>
             </div>
             <div class="test-cross-actions">
-              <button class="btn btn-primary btn-large" data-action="h">水平(H)</button>
-              <button class="btn btn-primary btn-large" data-action="v">垂直(V)</button>
-              <button class="btn btn-primary btn-large" data-action="sl">SL(斜距離)</button>
+              <button class="btn btn-primary btn-large" data-action="add">追加</button>
               <button class="btn btn-secondary btn-large" data-action="clear">クリア</button>
             </div>
+          </div>
+          <div class="test-cross-section">
+            <p class="section-label">勾配ショートカット</p>
             <div class="test-cross-presets">
-              <button class="btn btn-secondary btn-large preset-btn active" data-slope="0.3" data-label="3分(1:0.3)">3分(1:0.3)</button>
-              <button class="btn btn-secondary btn-large preset-btn" data-slope="0.4" data-label="4分(1:0.4)">4分(1:0.4)</button>
-              <button class="btn btn-secondary btn-large preset-btn" data-slope="1" data-label="1割(1:1.0)">1割(1:1.0)</button>
+              <button class="btn btn-secondary btn-large preset-btn active" data-slope="0.3" data-label="3分(0.3)">3分(0.3)</button>
+              <button class="btn btn-secondary btn-large preset-btn" data-slope="0.4" data-label="4分(0.4)">4分(0.4)</button>
+              <button class="btn btn-secondary btn-large preset-btn" data-slope="1" data-label="1割(1.0)">1割(1.0)</button>
             </div>
-            <p id="testCrossSlopeLabel" class="text-sm text-muted">選択中勾配: 3分(1:0.3)</p>
+            <p id="testCrossSlopeLabel" class="text-sm text-muted">選択中勾配: 3分(0.3)</p>
           </div>
           <div class="test-cross-section">
             <p class="section-label">備考クイックタグ</p>
             <div class="test-cross-tags">
-              <button class="btn btn-outline btn-large" data-tag="舗装">舗装</button>
-              <button class="btn btn-outline btn-large" data-tag="路肩">路肩</button>
-              <button class="btn btn-outline btn-large" data-tag="3分ブロック">3分ブロック</button>
-              <button class="btn btn-outline btn-large" data-tag="3分石積">3分石積</button>
-              <button class="btn btn-outline btn-large" data-tag="現況">現況</button>
+              <button class="btn btn-outline btn-large" data-tag="As舗">As舗</button>
+              <button class="btn btn-outline btn-large" data-tag="Con舗">Con舗</button>
+              <button class="btn btn-outline btn-large" data-tag="3分ブロックSL">3分ブロックSL</button>
+              <button class="btn btn-outline btn-large" data-tag="2分ブロックSL">2分ブロックSL</button>
             </div>
           </div>
         </div>
@@ -629,6 +649,7 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
