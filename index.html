@@ -151,10 +151,11 @@
             </div>
             <div class="input-wrapper">
               <label>方向</label>
-              <select id="direction">
-                <option value="左">左</option>
-                <option value="右">右</option>
-              </select>
+              <input type="hidden" id="direction" value="左">
+              <div class="direction-toggle cross-direction-toggle">
+                <button id="crossLeftBtn" class="btn btn-secondary btn-toggle active" data-direction="左">左へ ◀</button>
+                <button id="crossRightBtn" class="btn btn-secondary btn-toggle" data-direction="右">▶ 右へ</button>
+              </div>
             </div>
           </div>
         </div>
@@ -649,6 +650,7 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
