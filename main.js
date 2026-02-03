@@ -943,9 +943,10 @@ function addPavementRow() {
   // 順番を「舗装種類｜測点｜単距｜追距｜幅員｜平均幅員｜面積」にする
   row.insertCell().innerHTML = `
     <select onchange="propagatePavementType(this)">
-      <option value="アスファルト">アスファルト</option>
-      <option value="コンクリート">コンクリート</option>
-      <option value="オーバーレイ">オーバーレイ</option>
+      <option value="As">As</option>
+      <option value="Con">Con</option>
+      <option value="OL">OL</option>
+      <option value="As+Con">As+Con</option>
     </select>
   `;
   row.insertCell().innerHTML =  `<input type="number" oninput="updatePavementTable()">`;    // 測点
@@ -977,7 +978,7 @@ function addPavementRow() {
 function updatePavementTable() {
   const rows = document.querySelectorAll('#pavementTable tbody tr');
   let prevTsuikyo = 0, prevHani = 0, areaTotal = 0;
-  let areaMap = { 'アスファルト':0, 'コンクリート':0, 'オーバーレイ':0 };
+  let areaMap = { 'As':0, 'Con':0, 'OL':0, 'As+Con':0 }; 
   rows.forEach((row, i) => {
     const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
@@ -1000,9 +1001,10 @@ function updatePavementTable() {
     }
   });
   document.getElementById('areaTotalCell').textContent = areaTotal.toFixed(2);
-  document.getElementById('asphaltAreaCell').textContent = areaMap['アスファルト'].toFixed(2);
-  document.getElementById('concreteAreaCell').textContent = areaMap['コンクリート'].toFixed(2);
-  document.getElementById('overlayAreaCell').textContent = areaMap['オーバーレイ'].toFixed(2);
+  document.getElementById('asphaltAreaCell').textContent = areaMap['As'].toFixed(2);
+  document.getElementById('concreteAreaCell').textContent = areaMap['Con'].toFixed(2);
+  document.getElementById('overlayAreaCell').textContent = areaMap['OL'].toFixed(2);
+  document.getElementById('asConAreaCell').textContent = areaMap['As+Con'].toFixed(2);
 }
 function clearPavementTable() {
   document.querySelector('#pavementTable tbody').innerHTML = '';
@@ -1063,10 +1065,12 @@ function exportPavementExcel() {
   const asphalt = document.getElementById('asphaltAreaCell').textContent;
   const concrete = document.getElementById('concreteAreaCell').textContent;
   const overlay = document.getElementById('overlayAreaCell').textContent;
+  const asCon = document.getElementById('asConAreaCell').textContent;
   const total = document.getElementById('areaTotalCell').textContent;
-  csv += `アスファルト計,,,,,,${asphalt}\n`;
-  csv += `コンクリート計,,,,,,${concrete}\n`;
-  csv += `オーバーレイ計,,,,,,${overlay}\n`;
+  csv += `As計,,,,,,${asphalt}\n`;
+  csv += `Con計,,,,,,${concrete}\n`;
+  csv += `OL計,,,,,,${overlay}\n`;
+  csv += `As+Con計,,,,,,${asCon}\n`;
   csv += `合計,,,,,,${total}\n`;
   const blob = new Blob(['\uFEFF' + csv], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
@@ -1296,16 +1300,20 @@ function updateLogTab(){
       </tr>`;
     });
     htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">アスファルト計</td>
-        <td>${(log.areaMap && log.areaMap['アスファルト'] ? parseFloat(log.areaMap['アスファルト']).toFixed(2) : '0.00')}</td>
+            <td colspan="6" style="text-align:right;">As計</td>
+        <td>${(log.areaMap && log.areaMap['As'] ? parseFloat(log.areaMap['As']).toFixed(2) : '0.00')}</td>
       </tr>`;
     htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">コンクリート計</td>
-        <td>${(log.areaMap && log.areaMap['コンクリート'] ? parseFloat(log.areaMap['コンクリート']).toFixed(2) : '0.00')}</td>
+        <td colspan="6" style="text-align:right;">Con計</td>
+        <td>${(log.areaMap && log.areaMap['Con'] ? parseFloat(log.areaMap['Con']).toFixed(2) : '0.00')}</td>
       </tr>`;
     htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">オーバーレイ計</td>
-        <td>${(log.areaMap && log.areaMap['オーバーレイ'] ? parseFloat(log.areaMap['オーバーレイ']).toFixed(2) : '0.00')}</td>
+        <td colspan="6" style="text-align:right;">OL計</td>
+        <td>${(log.areaMap && log.areaMap['OL'] ? parseFloat(log.areaMap['OL']).toFixed(2) : '0.00')}</td>
+      </tr>`;
+    htmlPave += `<tr>
+        <td colspan="6" style="text-align:right;">As+Con計</td>
+        <td>${(log.areaMap && log.areaMap['As+Con'] ? parseFloat(log.areaMap['As+Con']).toFixed(2) : '0.00')}</td>
       </tr>`;
     htmlPave += `<tr>
         <td colspan="6" style="text-align:right;">合計</td>
