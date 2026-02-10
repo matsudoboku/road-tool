@@ -827,6 +827,17 @@ function savePointSettings(){
   save();
   updatePointSelect();
 }
+function clearPointSettings() {
+  if (!confirm("測点の入力内容をクリアします。よろしいですか？")) return;
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectPoints(project);
+  project.points = [];
+  save();
+  loadPointSettings();
+  updatePointSelect();
+  saveDraftInputs();
+}
 function loadPointSettings(){
   const tbody = document.querySelector('#pointTable tbody');
   if(!tbody) return;
