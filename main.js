@@ -982,6 +982,22 @@ function updatePointSelect(){
   list.innerHTML = '';
   arr.forEach(p=>{ list.innerHTML += `<option value="${p.point}">`; });
 }
+function findRegisteredPoint(pointName) {
+  const name = String(pointName || "").trim();
+  if (!name) return null;
+  const project = getActiveProject();
+  if (!project) return null;
+  ensureProjectPoints(project);
+  return (project.points || []).find((row) => String(row.point || "").trim() === name) || null;
+}
+function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterUpdate) {
+  if (!pointInput || !tankyoInput || !tsuikyoInput) return;
+  const registered = findRegisteredPoint(pointInput.value);
+  if (!registered) return;
+  if (registered.tankyo !== undefined) tankyoInput.value = registered.tankyo || "";
+  if (registered.tsuikyo !== undefined) tsuikyoInput.value = registered.tsuikyo || "";
+  if (typeof afterUpdate === "function") afterUpdate();
+}
 function runAutoFill() {
   if(!activeProject){ alert('工事を選択してください'); return; }
   const start = parseFloat(document.getElementById("autoStart").value);
@@ -1013,7 +1029,7 @@ function runAutoFill() {
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
@@ -1027,6 +1043,11 @@ function addLongRow() {
   c6.classList.add('readonly-cell');
   c6.innerHTML = `<input type="number" class="wide-input" readonly tabindex="-1">`;
   const inputs = row.querySelectorAll("input");
+  ["input", "change"].forEach((eventName) => {
+    inputs[0].addEventListener(eventName, () => {
+      applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], () => calculateLong(true));
+    });
+  });
   inputs[1].addEventListener("input", () => calculateLong());
   inputs[3].addEventListener("input", () => {
     if(inputs[3].value !== ""){
@@ -1172,18 +1193,26 @@ function addPavementRow() {
       <option value="As+Con">As+Con</option>
     </select>
   `;
-  row.insertCell().innerHTML =  `<input type="number" oninput="updatePavementTable()">`;    // 測点
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 単距
+  row.insertCell().innerHTML =  `<input type="text" list="pointList">`;    // 測点
+  row.insertCell().innerHTML = `<input type="number">`; // 単距
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
   c2.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 追距
-  row.insertCell().innerHTML = `<input type="number" oninput="updatePavementTable()">`; // 幅員
+  row.insertCell().innerHTML = `<input type="number">`; // 幅員
   let c4 = row.insertCell();
   c4.classList.add('readonly-cell');
   c4.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 平均幅員
   let c5 = row.insertCell();
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
+    const inputs = row.querySelectorAll('input');
+  ['input', 'change'].forEach((eventName) => {
+    inputs[0].addEventListener(eventName, () => {
+      applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], updatePavementTable);
+    });
+  });
+  inputs[1].addEventListener('input', updatePavementTable);
+  inputs[3].addEventListener('input', updatePavementTable);
   updatePavementTable();
   scheduleDraftSave();
 }
