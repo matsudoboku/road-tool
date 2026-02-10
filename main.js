@@ -70,6 +70,8 @@ function setTestCrossStore(store) {
 }
 let draftSaveTimer = null;
 let testCrossData = [];
+let activeCrossRecordKey = "";
+let activeCrossRemarkInput = null;
 let testCrossState = {
   direction: "right",
   slope: 0.3,
@@ -332,6 +334,77 @@ function initializeCrossTable() {
     addCrossRow();
   }
 }
+function getCrossRowDataFromTable() {
+  return Array.from(document.querySelectorAll("#crossTable tbody tr")).map(row => {
+    const inputs = row.querySelectorAll("input");
+    return Array.from(inputs).map(input => input.value.trim());
+  }).filter(values => values.some(v => v));
+}
+function fillCrossTableFromRowData(rowData) {
+  const tbody = document.querySelector("#crossTable tbody");
+  if (!tbody) return;
+  const safeRows = Array.isArray(rowData) ? rowData : [];
+  tbody.innerHTML = "";
+  const rowCount = Math.max(10, safeRows.length);
+  for (let i = 0; i < rowCount; i++) addCrossRow();
+  safeRows.forEach((row, i) => {
+    const inputs = tbody.rows[i]?.querySelectorAll("input");
+    if (!inputs) return;
+    inputs[0].value = row[0] || "";
+    inputs[1].value = row[1] || "";
+    inputs[2].value = row[2] || "";
+  });
+}
+function getCrossSelection() {
+  const point = document.getElementById("pointSel")?.value.trim() || "";
+  const dir = document.getElementById("direction")?.value || "左";
+  return { point, dir, key: point ? `${point}__${dir}` : "" };
+}
+function saveCurrentCrossRecord() {
+  if (!activeProject) return;
+  const { point, dir } = getCrossSelection();
+  if (!point) return;
+  const rowData = getCrossRowDataFromTable();
+  const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
+  const k = keyOfActive();
+  if (!allLogs[k]) allLogs[k] = [];
+  const index = allLogs[k].findIndex(log => log.point === point && log.dir === dir);
+  if (!rowData.length) {
+    if (index >= 0) {
+      allLogs[k].splice(index, 1);
+      localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
+      updateLogTab();
+    }
+    return;
+  }
+  const payload = { point, dir, rowData, time: new Date().toLocaleString() };
+  if (index >= 0) allLogs[k][index] = payload;
+  else allLogs[k].push(payload);
+  localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
+  updateLogTab();
+}
+function loadCrossRecordBySelection() {
+  const { point, dir } = getCrossSelection();
+  if (!point || !activeProject) {
+    initializeCrossTable();
+    return;
+  }
+  const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
+  const k = keyOfActive();
+  const logs = allLogs[k] || [];
+  const saved = logs.find(log => log.point === point && log.dir === dir);
+  fillCrossTableFromRowData(saved?.rowData || []);
+}
+function handleCrossSelectionChange() {
+  const prevKey = activeCrossRecordKey;
+  const next = getCrossSelection();
+  if (prevKey && prevKey !== next.key) {
+    saveCurrentCrossRecord();
+  }
+  loadCrossRecordBySelection();
+  activeCrossRecordKey = next.key;
+  saveDraftInputs();
+}
 function setCrossDirection(direction) {
   const dirInput = document.getElementById("direction");
   if (dirInput) dirInput.value = direction;
@@ -347,42 +420,62 @@ function initCrossDirectionControls() {
   container.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
       setCrossDirection(button.dataset.direction);
+      handleCrossSelectionChange();
     });
+  });
+  const pointInput = document.getElementById("pointSel");
+  if (pointInput) {
+    pointInput.addEventListener("change", handleCrossSelectionChange);
+    pointInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") handleCrossSelectionChange();
+    });
+  }
+  const quickTags = document.getElementById("crossQuickTags");
+  if (quickTags) {
+    quickTags.addEventListener("click", (event) => {
+      const tagButton = event.target.closest("[data-tag]");
+      if (!tagButton || !activeCrossRemarkInput) return;
+      const tag = tagButton.dataset.tag || "";
+      const input = activeCrossRemarkInput;
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? input.value.length;
+      input.value = `${input.value.slice(0, start)}${tag}${input.value.slice(end)}`;
+      const caret = start + tag.length;
+      input.setSelectionRange(caret, caret);
+      input.focus();
+      scheduleDraftSave();
+    });
+  }
+  container.addEventListener("focusin", (event) => {
+    if (event.target.matches("#crossTable .remark-input")) {
+      activeCrossRemarkInput = event.target;
+      quickTags?.classList.remove("is-hidden");
+    }
+  });
+  container.addEventListener("focusout", () => {
+    setTimeout(() => {
+      const focused = document.activeElement;
+      if (!focused || (!focused.closest("#crossTable") && !focused.closest("#crossQuickTags"))) {
+        quickTags?.classList.add("is-hidden");
+      }
+    }, 0);
   });
   const dirInput = document.getElementById("direction");
   if (dirInput?.value) setCrossDirection(dirInput.value);
+  handleCrossSelectionChange();
 }
 function registerCross() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const point = document.getElementById("pointSel").value.trim();
-  const dir = document.getElementById("direction").value; 
   if (!point) return alert("測点を入力してください");
-  const rows = document.querySelectorAll("#crossTable tbody tr");
-  let rowData = [];
-  rows.forEach(row => {
-    const inputs = row.querySelectorAll("input");
-    const values = Array.from(inputs).map(input => input.value.trim());
-    if (values.some(v => v)) rowData.push(values);
-  });
-  let allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
-  const k = keyOfActive();
-  if(!allLogs[k]) allLogs[k]=[];
-  const exists = allLogs[k].some(log => log.point === point && log.dir === dir);
-  if(exists){
-    alert("既に同じ測点と方向で登録されています");
-    return;
-  }
-  allLogs[k].push({ point, dir, rowData, time: new Date().toLocaleString() });
-  localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
-  initializeCrossTable();
-  document.getElementById("pointSel").value = "";
-  updateLogTab();
+  saveCurrentCrossRecord();
+  alert("入力内容を保存しました");
   saveDraftInputs();
 }
 function clearCross() {
-  if (confirm("すべての入力内容を削除します。よろしいですか？")) {
-    document.getElementById("pointSel").value = "";
-    initializeCrossTable();
+  if (confirm("現在選択中の測点・方向の入力内容を削除します。よろしいですか？")) {
+    fillCrossTableFromRowData([]);
+    saveCurrentCrossRecord();
     saveDraftInputs();
   }
 }
