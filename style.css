@@ -550,6 +550,15 @@ tfoot td {
   flex-wrap: wrap;
 }
 
+.cross-quick-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  background: #f8f9fa;
+}
+
 .btn-toggle.active {
   background-color: var(--accent-color);
   color: white;
