@@ -642,7 +642,7 @@ function initTestCrossControls() {
 function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML =`<input type="text">`;
+  row.insertCell().innerHTML =`<input type="text" inputmode="decimal">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="number" class="mid-input">`;
   const c2 = row.insertCell();
@@ -654,6 +654,25 @@ function addPointRow(){
   tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
   tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
   scheduleDraftSave();
+}
+function rowHasUserInput(row) {
+  if (!row) return false;
+  return Array.from(row.querySelectorAll("input, textarea")).some((field) => {
+    if (field.readOnly || field.disabled) return false;
+    return String(field.value || "").trim() !== "";
+  });
+}
+function setupAutoAppendRow(tableSelector, addRowFn) {
+  const tbody = document.querySelector(`${tableSelector} tbody`);
+  if (!tbody || typeof addRowFn !== "function") return;
+  const handler = (event) => {
+    const row = event.target.closest("tr");
+    if (!row || row !== tbody.lastElementChild) return;
+    if (!rowHasUserInput(row)) return;
+    addRowFn();
+  };
+  tbody.addEventListener("input", handler);
+  tbody.addEventListener("change", handler);
 }
 function formatDistance(value) {
   if (!Number.isFinite(value)) return "";
@@ -1656,6 +1675,12 @@ window.onload = () => {
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
+  clearMassTable();
+  setupAutoAppendRow("#pointTable", addPointRow);
+  setupAutoAppendRow("#crossTable", addCrossRow);
+  setupAutoAppendRow("#longTable", addLongRow);
+  setupAutoAppendRow("#pavementTable", addPavementRow);
+  setupAutoAppendRow("#massTable", addMassRow);
   updateLogTab();
   initCrossDirectionControls();
   initTestCrossControls();
