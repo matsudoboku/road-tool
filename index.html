@@ -131,7 +131,10 @@
         </div>
         <div id="point-manual-actions" class="card-footer">
           <button class="btn btn-secondary" onclick="addPointRow()">＋ 行を追加</button>
-          <button class="btn btn-success" onclick="savePointSettings()">登録</button>
+          <div class="btn-pair">
+            <button class="btn btn-warning" onclick="clearPointSettings()">クリア</button>
+            <button class="btn btn-success" onclick="savePointSettings()">登録</button>
+          </div>
         </div>
         <div id="point-auto-actions" class="card-footer is-hidden">
           <button class="btn btn-primary" onclick="runAutoFill()">オートフィル生成</button>
@@ -176,6 +179,7 @@
         <div class="card-footer">
           <button class="btn btn-secondary" onclick="addCrossRow()">＋ 行を追加</button>
           <div class="btn-pair">
+            <button class="btn btn-warning" onclick="clearCross()">クリア</button>
             <button class="btn btn-success" onclick="registerCross()">登録</button>
           </div>
         </div>
@@ -650,6 +654,7 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
