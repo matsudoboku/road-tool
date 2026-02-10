@@ -642,7 +642,7 @@ function initTestCrossControls() {
 function addPointRow(){
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML =`<input type="text" inputmode="decimal" pattern="[0-9+\\-.]*">`;
+  row.insertCell().innerHTML =`<input type="text">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="number" class="mid-input">`;
   const c2 = row.insertCell();
