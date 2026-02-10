@@ -869,10 +869,9 @@ tfoot td {
     border-bottom: 2px solid var(--accent-color);
   }
   
-  /* 電卓を画面下部に寄せる */
+  /* 電卓をモバイルでも中央表示 */
   #calc.modal-mode {
-    position: absolute;
-    bottom: 20px;
+    position: static;
     width: 95%;
   }
 }
