@@ -358,9 +358,31 @@ input[readonly] {
 #pavementTable th, #pavementTable td {
   min-width: 75px;
 }
-#pavementTable th:first-child,
-#pavementTable td:first-child {
-  min-width: 110px; /* 舗装種類のプルダウンは少し広く */
+#crossTable th.station-col,
+#crossTable td.station-col,
+#pavementTable th.station-col,
+#pavementTable td.station-col {
+  min-width: 92px;
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: #fff;
+}
+#crossTable thead th.station-col,
+#pavementTable thead th.station-col {
+  background-color: #f8f9fa;
+  z-index: 6;
+}
+#crossTable tbody .station-col,
+#pavementTable tbody .station-col {
+  z-index: 5;
+}
+#crossTable td.station-col,
+#pavementTable td.station-col {
+  padding: 0 8px;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-main);
 }
 
 .survey-table th {
