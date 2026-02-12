@@ -56,6 +56,7 @@ function setDraftStore(store) {
 let draftSaveTimer = null;
 let activeCrossRecordKey = "";
 let activeCrossRemarkInput = null;
+let crossQuickTagsAnchorRow = null;
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -64,7 +65,7 @@ function scheduleDraftSave() {
 function saveDraftInputs() {
   const store = getDraftStore();
   const key = draftKey();
-  const crossRows = Array.from(document.querySelectorAll("#crossTable tbody tr")).map(row => {
+  const crossRows = Array.from(document.querySelectorAll("#crossTable tbody tr.cross-data-row")).map(row => {
     const inputs = row.querySelectorAll("input");
     return {
       h: inputs[0]?.value || "",
@@ -153,8 +154,9 @@ function loadDraftInputs() {
       crossBody.innerHTML = "";
       const rowCount = Math.max(10, crossRows.length);
       for (let i = 0; i < rowCount; i++) addCrossRow();
+      const rows = crossBody.querySelectorAll("tr.cross-data-row");
       crossRows.forEach((row, i) => {
-        const inputs = crossBody.rows[i]?.querySelectorAll("input");
+        const inputs = rows[i]?.querySelectorAll("input");
         if (!inputs) return;
         inputs[0].value = row.h || "";
         inputs[1].value = row.v || "";
@@ -288,6 +290,7 @@ function switchTab(tabId) {
 function addCrossRow() {
   const tbody = document.querySelector("#crossTable tbody");
   const row = tbody.insertRow();
+  row.classList.add("cross-data-row");
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
@@ -301,7 +304,7 @@ function initializeCrossTable() {
   }
 }
 function getCrossRowDataFromTable() {
-  return Array.from(document.querySelectorAll("#crossTable tbody tr")).map(row => {
+  return Array.from(document.querySelectorAll("#crossTable tbody tr.cross-data-row")).map(row => {
     const inputs = row.querySelectorAll("input");
     return Array.from(inputs).map(input => input.value.trim());
   }).filter(values => values.some(v => v));
@@ -313,8 +316,9 @@ function fillCrossTableFromRowData(rowData) {
   tbody.innerHTML = "";
   const rowCount = Math.max(10, safeRows.length);
   for (let i = 0; i < rowCount; i++) addCrossRow();
+  const rows = tbody.querySelectorAll("tr.cross-data-row");
   safeRows.forEach((row, i) => {
-    const inputs = tbody.rows[i]?.querySelectorAll("input");
+    const inputs = rows[i]?.querySelectorAll("input");
     if (!inputs) return;
     inputs[0].value = row[0] || "";
     inputs[1].value = row[1] || "";
@@ -322,6 +326,34 @@ function fillCrossTableFromRowData(rowData) {
   });
 }
 function getCrossSelection() {
+function hideCrossQuickTags() {
+  const quickTags = document.getElementById("crossQuickTags");
+  if (quickTags) {
+    quickTags.classList.add("is-hidden");
+    quickTags.classList.remove("is-floating");
+  }
+  if (crossQuickTagsAnchorRow?.parentNode) {
+    crossQuickTagsAnchorRow.remove();
+  }
+  crossQuickTagsAnchorRow = null;
+  activeCrossRemarkInput = null;
+}
+function showCrossQuickTagsForInput(input) {
+  const quickTags = document.getElementById("crossQuickTags");
+  const targetRow = input?.closest("tr.cross-data-row");
+  if (!quickTags || !targetRow) return;
+  if (!crossQuickTagsAnchorRow) {
+    crossQuickTagsAnchorRow = document.createElement("tr");
+    crossQuickTagsAnchorRow.className = "cross-quick-tags-anchor";
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    crossQuickTagsAnchorRow.appendChild(td);
+  }
+  crossQuickTagsAnchorRow.firstElementChild?.appendChild(quickTags);
+  targetRow.parentNode.insertBefore(crossQuickTagsAnchorRow, targetRow);
+  quickTags.classList.remove("is-hidden");
+  quickTags.classList.add("is-floating");
+}
   const point = document.getElementById("pointSel")?.value.trim() || "";
   const dir = document.getElementById("direction")?.value || "左";
   return { point, dir, key: point ? `${point}__${dir}` : "" };
@@ -420,16 +452,22 @@ function initCrossDirectionControls() {
   container.addEventListener("focusin", (event) => {
     if (event.target.matches("#crossTable .remark-input")) {
       activeCrossRemarkInput = event.target;
-      quickTags?.classList.remove("is-hidden");
-    }
+      showCrossQuickTagsForInput(event.target);
+      return;
+  　}
+    hideCrossQuickTags();
   });
-  container.addEventListener("focusout", () => {
+  container.addEventListener("focusout", (event) => {
+    if (!event.target.matches("#crossTable .remark-input")) return;
     setTimeout(() => {
       const focused = document.activeElement;
-      if (!focused || (!focused.closest("#crossTable") && !focused.closest("#crossQuickTags"))) {
-        quickTags?.classList.add("is-hidden");
+      if (!focused || !focused.closest("#crossQuickTags")) {
+        hideCrossQuickTags();
       }
     }, 0);
+  });
+  document.addEventListener("focusin", (event) => {
+    if (!event.target.closest("#cross")) hideCrossQuickTags();
   });
   const dirInput = document.getElementById("direction");
   if (dirInput?.value) setCrossDirection(dirInput.value);
