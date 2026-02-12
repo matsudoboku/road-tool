@@ -1199,7 +1199,8 @@ function clearLong() {
 function addPavementRow() {
   const tbody = document.querySelector('#pavementTable tbody');
   const row = tbody.insertRow();
-  // 順番を「測点｜舗装種類｜単距｜追距｜幅員｜平均幅員｜面積」
+  // 順番を「測点｜舗装種類｜単距｜追距｜幅員｜平均幅員｜面積」にする
+  row.insertCell().innerHTML =  `<input type="text" list="pointList">`;    // 測点
   row.insertCell().innerHTML = `
     <select onchange="propagatePavementType(this)">
       <option value="As">As</option>
@@ -1208,7 +1209,6 @@ function addPavementRow() {
       <option value="As+Con">As+Con</option>
     </select>
   `;
-  row.insertCell().innerHTML =  `<input type="text" list="pointList">`;    // 測点
   row.insertCell().innerHTML = `<input type="number">`; // 単距
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
