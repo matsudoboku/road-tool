@@ -360,9 +360,14 @@ function getCrossSelection() {
   const dir = document.getElementById("direction")?.value || "左";
   return { point, dir, key: point ? `${point}__${dir}` : "" };
 }
-function saveCurrentCrossRecord() {
+function parseCrossSelectionKey(key) {
+  if (!key) return { point: "", dir: "左", key: "" };
+  const [point, dir = "左"] = key.split("__");
+  return { point, dir, key };
+}
+function saveCurrentCrossRecord(selection = getCrossSelection()) {
   if (!activeProject) return;
-  const { point, dir } = getCrossSelection();
+  const { point, dir } = selection;
   if (!point) return;
   const rowData = getCrossRowDataFromTable();
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
