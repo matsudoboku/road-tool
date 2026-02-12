@@ -322,10 +322,19 @@ function switchTab(tabId) {
 function addCrossRow() {
   const tbody = document.querySelector("#crossTable tbody");
   const row = tbody.insertRow();
+  const stationCell = row.insertCell();
+  stationCell.classList.add("station-col", "station-cell");
+  stationCell.textContent = document.getElementById("pointSel")?.value?.trim() || "-";
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
   scheduleDraftSave();
+}
+function updateCrossStationColumn(point = document.getElementById("pointSel")?.value?.trim() || "") {
+  const station = point || "-";
+  document.querySelectorAll("#crossTable tbody .station-cell").forEach((cell) => {
+    cell.textContent = station;
+  });
 }
 function initializeCrossTable() {
   const tbody = document.querySelector("#crossTable tbody");
@@ -407,6 +416,7 @@ function handleCrossSelectionChange() {
     saveCurrentCrossRecord();
   }
   loadCrossRecordBySelection();
+  updateCrossStationColumn(next.point);
   activeCrossRecordKey = next.key;
   saveDraftInputs();
 }
@@ -1189,7 +1199,7 @@ function clearLong() {
 function addPavementRow() {
   const tbody = document.querySelector('#pavementTable tbody');
   const row = tbody.insertRow();
-  // 順番を「舗装種類｜測点｜単距｜追距｜幅員｜平均幅員｜面積」にする
+  // 順番を「測点｜舗装種類｜単距｜追距｜幅員｜平均幅員｜面積」
   row.insertCell().innerHTML = `
     <select onchange="propagatePavementType(this)">
       <option value="As">As</option>
@@ -1210,7 +1220,7 @@ function addPavementRow() {
   let c5 = row.insertCell();
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
-    const inputs = row.querySelectorAll('input');
+  const inputs = row.querySelectorAll('input');
   ['input', 'change'].forEach((eventName) => {
     inputs[0].addEventListener(eventName, () => {
       applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], updatePavementTable);
