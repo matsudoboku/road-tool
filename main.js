@@ -65,6 +65,9 @@ function scheduleDraftSave() {
 function saveDraftInputs() {
   const store = getDraftStore();
   const key = draftKey();
+  const currentSelection = getCrossSelection();
+  const existingCrossDraft = store[key]?.cross || {};
+  const rowsBySelection = { ...(existingCrossDraft.rowsBySelection || {}) };
   const crossRows = Array.from(document.querySelectorAll("#crossTable tbody tr.cross-data-row")).map(row => {
     const inputs = row.querySelectorAll("input");
     return {
@@ -120,12 +123,15 @@ function saveDraftInputs() {
     vcl: document.getElementById("vcVCL")?.value || "",
     gh0: document.getElementById("vcGH0")?.value || ""
   };
+  if (currentSelection.key) {
+    rowsBySelection[currentSelection.key] = crossRows;
+  }
   store[key] = {
     project: { rows: pointRows },
     cross: {
-      point: document.getElementById("pointSel")?.value || "",
-      direction: document.getElementById("direction")?.value || "左",
-      rows: crossRows
+      point: currentSelection.point,
+      direction: currentSelection.dir,
+      rowsBySelection
     },
     long: { rows: longRows },
     pavement: { rows: pavementRows },
@@ -148,21 +154,13 @@ function loadDraftInputs() {
       crossDir.value = draft.cross.direction;
       setCrossDirection(crossDir.value);
     }
-    const crossRows = draft.cross.rows || [];
-    const crossBody = document.querySelector("#crossTable tbody");
-    if (crossBody) {
-      crossBody.innerHTML = "";
-      const rowCount = Math.max(10, crossRows.length);
-      for (let i = 0; i < rowCount; i++) addCrossRow();
-      const rows = crossBody.querySelectorAll("tr.cross-data-row");
-      crossRows.forEach((row, i) => {
-        const inputs = rows[i]?.querySelectorAll("input");
-        if (!inputs) return;
-        inputs[0].value = row.h || "";
-        inputs[1].value = row.v || "";
-        inputs[2].value = row.note || "";
-      });
+    const selection = getCrossSelection();
+    const hasSavedRecord = loadCrossRecordBySelection(selection);
+    if (!hasSavedRecord && draft.cross.rowsBySelection && selection.key) {
+      const draftRows = draft.cross.rowsBySelection[selection.key] || [];
+      fillCrossTableFromRowData(draftRows.map((row) => [row.h || "", row.v || "", row.note || ""]));
     }
+    activeCrossRecordKey = selection.key;
   }
   if (draft.project) {
     const rows = draft.project.rows || [];
@@ -309,6 +307,33 @@ function getCrossRowDataFromTable() {
     return Array.from(inputs).map(input => input.value.trim());
   }).filter(values => values.some(v => v));
 }
+function getCrossLogProjectStore(allLogs, projectKeyName) {
+  const raw = allLogs[projectKeyName];
+  if (!raw) {
+    allLogs[projectKeyName] = {};
+    return allLogs[projectKeyName];
+  }
+  if (Array.isArray(raw)) {
+    const migrated = {};
+    raw.forEach((log) => {
+      if (!log || !log.point) return;
+      const dir = log.dir || "左";
+      migrated[`${log.point}__${dir}`] = {
+        point: log.point,
+        dir,
+        rowData: Array.isArray(log.rowData) ? log.rowData : [],
+        time: log.time || ""
+      };
+    });
+    allLogs[projectKeyName] = migrated;
+    return migrated;
+  }
+  return raw;
+}
+function makeCrossSelectionKey(point, dir) {
+  if (!point) return "";
+  return `${point}__${dir || "左"}`;
+}
 function fillCrossTableFromRowData(rowData) {
   const tbody = document.querySelector("#crossTable tbody");
   if (!tbody) return;
@@ -326,6 +351,10 @@ function fillCrossTableFromRowData(rowData) {
   });
 }
 function getCrossSelection() {
+  const point = document.getElementById("pointSel")?.value.trim() || "";
+  const dir = document.getElementById("direction")?.value || "左";
+  return { point, dir, key: makeCrossSelectionKey(point, dir) };
+}
 function hideCrossQuickTags() {
   const quickTags = document.getElementById("crossQuickTags");
   if (quickTags) {
@@ -354,10 +383,6 @@ function showCrossQuickTagsForInput(input) {
   quickTags.classList.remove("is-hidden");
   quickTags.classList.add("is-floating");
 }
-  const point = document.getElementById("pointSel")?.value.trim() || "";
-  const dir = document.getElementById("direction")?.value || "左";
-  return { point, dir, key: point ? `${point}__${dir}` : "" };
-}
 function parseCrossSelectionKey(key) {
   if (!key) return { point: "", dir: "左", key: "" };
   const [point, dir = "左"] = key.split("__");
@@ -370,41 +395,42 @@ function saveCurrentCrossRecord(selection = getCrossSelection()) {
   const rowData = getCrossRowDataFromTable();
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const k = keyOfActive();
-  if (!allLogs[k]) allLogs[k] = [];
-  const index = allLogs[k].findIndex(log => log.point === point && log.dir === dir);
+  const projectLogs = getCrossLogProjectStore(allLogs, k);
+  const selectionKey = makeCrossSelectionKey(point, dir);
   if (!rowData.length) {
-    if (index >= 0) {
-      allLogs[k].splice(index, 1);
+    if (projectLogs[selectionKey]) {
+      delete projectLogs[selectionKey];
       localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
       updateLogTab();
     }
     return;
   }
   const payload = { point, dir, rowData, time: new Date().toLocaleString() };
-  if (index >= 0) allLogs[k][index] = payload;
-  else allLogs[k].push(payload);
+  projectLogs[selectionKey] = payload;
   localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
   updateLogTab();
 }
-function loadCrossRecordBySelection() {
-  const { point, dir } = getCrossSelection();
+function loadCrossRecordBySelection(selection = getCrossSelection()) {
+  const { point, dir } = selection;
+  initializeCrossTable();
   if (!point || !activeProject) {
-    initializeCrossTable();
-    return;
+    return false;
   }
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const k = keyOfActive();
-  const logs = allLogs[k] || [];
-  const saved = logs.find(log => log.point === point && log.dir === dir);
-  fillCrossTableFromRowData(saved?.rowData || []);
+  const logs = getCrossLogProjectStore(allLogs, k);
+  const saved = logs[makeCrossSelectionKey(point, dir)];
+  if (!saved) return false;
+  fillCrossTableFromRowData(saved.rowData || []);
+  return true;
 }
 function handleCrossSelectionChange() {
   const prevKey = activeCrossRecordKey;
   const next = getCrossSelection();
   if (prevKey && prevKey !== next.key) {
-    saveCurrentCrossRecord();
+    saveCurrentCrossRecord(parseCrossSelectionKey(prevKey));
   }
-  loadCrossRecordBySelection();
+  loadCrossRecordBySelection(next);
   activeCrossRecordKey = next.key;
   saveDraftInputs();
 }
@@ -1174,10 +1200,11 @@ function updateLogTab(){
   const p = projects.find(x=>x.id===prjId);
   const k = p ? projectKey(p) : "";
   const crossLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
-  let logsArr = crossLogs[k] || [];
+  const crossEntry = crossLogs[k] || {};
+  let logsArr = Array.isArray(crossEntry) ? crossEntry : Object.values(crossEntry);
   let htmlCross = `<h3>横断測量</h3><hr>`;
   logsArr.forEach(log => {
-    const text = crossRowText(log.rowData);
+    const text = crossRowText(log.rowData || []);
     htmlCross += `<div class="section"><b>測点 ${log.point} ${log.dir}</b> ${text}</div>`;
   });
   document.getElementById("logCross").innerHTML = htmlCross;
