@@ -322,19 +322,10 @@ function switchTab(tabId) {
 function addCrossRow() {
   const tbody = document.querySelector("#crossTable tbody");
   const row = tbody.insertRow();
-  const stationCell = row.insertCell();
-  stationCell.classList.add("station-col", "station-cell");
-  stationCell.textContent = document.getElementById("pointSel")?.value?.trim() || "-";
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
   scheduleDraftSave();
-}
-function updateCrossStationColumn(point = document.getElementById("pointSel")?.value?.trim() || "") {
-  const station = point || "-";
-  document.querySelectorAll("#crossTable tbody .station-cell").forEach((cell) => {
-    cell.textContent = station;
-  });
 }
 function initializeCrossTable() {
   const tbody = document.querySelector("#crossTable tbody");
@@ -416,7 +407,6 @@ function handleCrossSelectionChange() {
     saveCurrentCrossRecord();
   }
   loadCrossRecordBySelection();
-  updateCrossStationColumn(next.point);
   activeCrossRecordKey = next.key;
   saveDraftInputs();
 }
