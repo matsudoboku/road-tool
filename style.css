@@ -378,6 +378,22 @@ input[readonly] {
   color: var(--text-main);
 }
 
+#pavementTable th:first-child,
+#pavementTable td:first-child {
+  min-width: 92px;
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: #fff;
+}
+#pavementTable thead th:first-child {
+  background-color: #f8f9fa;
+  z-index: 6;
+}
+#pavementTable tbody td:first-child {
+  z-index: 5;
+}
+
 .survey-table th {
   background-color: #f8f9fa;
   color: var(--text-sub);
