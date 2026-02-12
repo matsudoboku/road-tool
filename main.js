@@ -30,11 +30,6 @@ function ensureProjectPoints(project) {
     project.points = [];
   }
 }
-function ensureProjectTestCrossData(project) {
-  if (project && !Array.isArray(project.testCrossData)) {
-    project.testCrossData = [];
-  }
-}
 function migratePointSettings() {
   const legacy = safeParseJSON(localStorage.getItem("pointSettings3"), {});
   let changed = false;
@@ -49,11 +44,7 @@ function migratePointSettings() {
 migratePointSettings();
 let draftReady = false;
 const DRAFT_STORAGE_KEY = "draftInputs3";
-const TEST_CROSS_STORAGE_KEY = "testCrossData3";
 function draftKey() {
-  return keyOfActive() || "__global__";
-}
-function testCrossKey() {
   return keyOfActive() || "__global__";
 }
 function getDraftStore() {
@@ -62,21 +53,9 @@ function getDraftStore() {
 function setDraftStore(store) {
   localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(store));
 }
-function getTestCrossStore() {
-  return safeParseJSON(localStorage.getItem(TEST_CROSS_STORAGE_KEY), {});
-}
-function setTestCrossStore(store) {
-  localStorage.setItem(TEST_CROSS_STORAGE_KEY, JSON.stringify(store));
-}
 let draftSaveTimer = null;
-let testCrossData = [];
 let activeCrossRecordKey = "";
 let activeCrossRemarkInput = null;
-let testCrossState = {
-  direction: "right",
-  slope: 0.3,
-  slopeLabel: "3分(0.3)"
-};
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -140,10 +119,6 @@ function saveDraftInputs() {
     vcl: document.getElementById("vcVCL")?.value || "",
     gh0: document.getElementById("vcGH0")?.value || ""
   };
-  const massChordDraft = {
-    c: document.getElementById("massChordC")?.value || "",
-    r: document.getElementById("massChordR")?.value || ""
-  };
   store[key] = {
     project: { rows: pointRows },
     cross: {
@@ -156,7 +131,6 @@ function saveDraftInputs() {
     memo: memoText,
     curve: curveDraft,
     vcurve: vcurveDraft,
-    massChord: massChordDraft
   };
   setDraftStore(store);
 }
@@ -278,13 +252,6 @@ function loadDraftInputs() {
       calculateVCurve();
     }
   }
-  if (draft.massChord) {
-    const c = document.getElementById("massChordC");
-    const r = document.getElementById("massChordR");
-    if (c) c.value = draft.massChord.c || "";
-    if (r) r.value = draft.massChord.r || "";
-    if (draft.massChord.c && draft.massChord.r) calculateMassChord();
-  }
 }
 function clearDraftForProject(projectName) {
   const store = getDraftStore();
@@ -301,7 +268,6 @@ function sidebarSwitchProject() {
   renderProjectSelects();
   loadPointSettings();
   updatePointSelect();
-  loadTestCrossData();
   updateLogTab();
   loadDraftInputs();
   draftReady = true;
@@ -483,257 +449,6 @@ function clearCross() {
     saveCurrentCrossRecord();
     saveDraftInputs();
   }
-}
-
-// --- テスト横断（ポール横断） ---
-function loadTestCrossData() {
-  const project = getActiveProject();
-  if (!project) {
-    testCrossData = [];
-    renderTestCrossList();
-    drawTestCrossCanvas();
-    updateTestCrossStatus();
-    return;
-  }
-  ensureProjectTestCrossData(project);
-  if (!project.testCrossData.length) {
-    const store = getTestCrossStore();
-    const legacy = store[testCrossKey()] || [];
-    if (legacy.length) {
-      let prev = { x: 0, y: 0 };
-      project.testCrossData = legacy.map(point => {
-        const dx = point.x - prev.x;
-        const dy = point.y - prev.y;
-        prev = { x: point.x, y: point.y };
-        return {
-          side: dx >= 0 ? "right" : "left",
-          h: dx,
-          v: dy,
-          absH: point.x,
-          absV: point.y,
-          memo: point.note || ""
-        };
-      });
-      save();
-    }
-  }
-  testCrossData = project.testCrossData;
-  renderTestCrossList();
-  drawTestCrossCanvas();
-  updateTestCrossStatus();
-}
-function saveTestCrossData() {
-  const project = getActiveProject();
-  if (!project) return;
-  ensureProjectTestCrossData(project);
-  project.testCrossData = testCrossData;
-  save();
-}
-function setTestCrossDirection(direction) {
-  testCrossState.direction = direction;
-  const buttons = document.querySelectorAll("#testCross [data-direction]");
-  buttons.forEach(button => {
-    button.classList.toggle("active", button.dataset.direction === direction);
-  });
-}
-function setTestCrossSlope(slope, label) {
-  testCrossState.slope = slope;
-  testCrossState.slopeLabel = label;
-  const buttons = document.querySelectorAll("#testCross .preset-btn");
-  buttons.forEach(button => {
-    button.classList.toggle("active", Number(button.dataset.slope) === slope);
-  });
-  const labelEl = document.getElementById("testCrossSlopeLabel");
-  if (labelEl) labelEl.textContent = `選択中勾配: ${label}`;
-}
-function addTestCrossPoint(h, v, memo, side) {
-  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { absH: 0, absV: 0 };
-  const absH = last.absH + h;
-  const absV = last.absV + v;
-  testCrossData.push({
-    side: side || (h >= 0 ? "right" : "left"),
-    h,
-    v,
-    absH,
-    absV,
-    memo: memo || ""
-  });
-  saveTestCrossData();
-  renderTestCrossList();
-  drawTestCrossCanvas();
-  updateTestCrossStatus();
-}
-function renderTestCrossList() {
-  const tbody = document.getElementById("testCrossList");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  testCrossData.forEach(point => {
-    const row = document.createElement("tr");
-    const distCell = document.createElement("td");
-    distCell.textContent = formatDistance(point.absH);
-    const elevCell = document.createElement("td");
-    elevCell.textContent = formatDistance(point.absV);
-    const noteCell = document.createElement("td");
-    noteCell.textContent = point.memo || "";
-    row.appendChild(distCell);
-    row.appendChild(elevCell);
-    row.appendChild(noteCell);
-    tbody.appendChild(row);
-  });
-}
-function drawTestCrossCanvas() {
-  const canvas = document.getElementById("testCrossCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const width = canvas.width;
-  const height = canvas.height;
-  const centerX = width / 2;
-  const centerY = height / 2;
-  ctx.clearRect(0, 0, width, height);
-
-  ctx.strokeStyle = "#d0d7de";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, centerY);
-  ctx.lineTo(width, centerY);
-  ctx.moveTo(centerX, 0);
-  ctx.lineTo(centerX, height);
-  ctx.stroke();
-
-  let maxX = 0;
-  let maxY = 0;
-  testCrossData.forEach(point => {
-    maxX = Math.max(maxX, Math.abs(point.absH));
-    maxY = Math.max(maxY, Math.abs(point.absV));
-  });
-  const padding = 20;
-  const scaleX = maxX ? (width / 2 - padding) / maxX : 1;
-  const scaleY = maxY ? (height / 2 - padding) / maxY : 1;
-  let scale = Math.min(scaleX, scaleY);
-  if (!Number.isFinite(scale) || scale <= 0) scale = 20;
-
-  ctx.fillStyle = "#1976d2";
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (!testCrossData.length) return;
-  ctx.strokeStyle = "#1976d2";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(centerX, centerY);
-  testCrossData.forEach(point => {
-    const px = centerX + point.absH * scale;
-    const py = centerY - point.absV * scale;
-    ctx.lineTo(px, py);
-  });
-  ctx.stroke();
-
-  ctx.fillStyle = "#1b5e20";
-  testCrossData.forEach(point => {
-    const px = centerX + point.absH * scale;
-    const py = centerY - point.absV * scale;
-    ctx.beginPath();
-    ctx.arc(px, py, 3, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-function updateTestCrossStatus() {
-  const hEl = document.getElementById("testCrossAbsH");
-  const vEl = document.getElementById("testCrossAbsV");
-  const last = testCrossData.length ? testCrossData[testCrossData.length - 1] : { absH: 0, absV: 0 };
-  if (hEl) hEl.textContent = formatDistance(last.absH);
-  if (vEl) vEl.textContent = formatDistance(last.absV);
-}
-function applyTestCrossSlopeFromSL() {
-  const slInput = document.getElementById("testCrossSL");
-  const hInput = document.getElementById("testCrossH");
-  const vInput = document.getElementById("testCrossV");
-  if (!slInput || !hInput || !vInput) return;
-  const sl = Number(slInput.value);
-  if (!Number.isFinite(sl)) return;
-  const n = testCrossState.slope;
-  const v = sl / Math.sqrt(1 + n * n);
-  const h = v * n;
-  hInput.value = Number.isFinite(h) ? h.toFixed(3) : "";
-  vInput.value = Number.isFinite(v) ? v.toFixed(3) : "";
-}
-function handleTestCrossAction(action) {
-  const hInput = document.getElementById("testCrossH");
-  const vInput = document.getElementById("testCrossV");
-  const slInput = document.getElementById("testCrossSL");
-  const memoInput = document.getElementById("testCrossMemo");
-  if (!hInput || !vInput || !memoInput) return;
-  if (action === "clear") {
-    hInput.value = "";
-    vInput.value = "";
-    if (slInput) slInput.value = "";
-    memoInput.value = "";
-    return;
-  }
-  if (action !== "add") return;
-  const rawH = hInput.value === "" ? NaN : Number(hInput.value);
-  const rawV = vInput.value === "" ? NaN : Number(vInput.value);
-  if (!Number.isFinite(rawH) && !Number.isFinite(rawV)) {
-    alert("水平距離(H)か高低差(V)を入力してください");
-    return;
-  }
-  const directionSign = testCrossState.direction === "right" ? 1 : -1;
-  const h = (Number.isFinite(rawH) ? rawH : 0) * directionSign;
-  const v = Number.isFinite(rawV) ? rawV : 0;
-  addTestCrossPoint(h, v, memoInput.value.trim(), testCrossState.direction);
-  hInput.value = "";
-  vInput.value = "";
-  if (slInput) slInput.value = "";
-}
-function appendTestCrossTag(tag) {
-  const memoInput = document.getElementById("testCrossMemo");
-  if (!memoInput) return;
-  if (!memoInput.value) {
-    memoInput.value = tag;
-    return;
-  }
-  memoInput.value = `${memoInput.value} ${tag}`;
-}
-function initTestCrossControls() {
-  const container = document.getElementById("testCross");
-  if (!container) return;
-  container.querySelectorAll("[data-direction]").forEach(button => {
-    button.addEventListener("click", () => setTestCrossDirection(button.dataset.direction));
-  });
-  container.querySelectorAll("[data-action]").forEach(button => {
-    button.addEventListener("click", () => handleTestCrossAction(button.dataset.action));
-  });
-  container.querySelectorAll(".preset-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      const slope = Number(button.dataset.slope);
-      const label = button.dataset.label || button.textContent.trim();
-      setTestCrossSlope(slope, label);
-      applyTestCrossSlopeFromSL();
-    });
-  });
-  container.querySelectorAll("[data-tag]").forEach(button => {
-    button.addEventListener("click", () => appendTestCrossTag(button.dataset.tag));
-  });
-  const hInput = document.getElementById("testCrossH");
-  const vInput = document.getElementById("testCrossV");
-  const slInput = document.getElementById("testCrossSL");
-  if (hInput && slInput) {
-    hInput.addEventListener("input", () => {
-      slInput.value = "";
-    });
-  }
-  if (vInput && slInput) {
-    vInput.addEventListener("input", () => {
-      slInput.value = "";
-    });
-  }
-  if (slInput) {
-    slInput.addEventListener("input", applyTestCrossSlopeFromSL);
-  }
-  setTestCrossDirection(testCrossState.direction);
-  setTestCrossSlope(testCrossState.slope, testCrossState.slopeLabel);
-  loadTestCrossData();
 }
 
 // --- 測点設定 ---
@@ -1340,95 +1055,6 @@ function exportPavementExcel() {
   URL.revokeObjectURL(url);
 }
 
-// --- 土方カーブ計算 ---
-function addMassRow() {
-  const tbody = document.querySelector('#massTable tbody');
-  const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input" oninput="updateMassTable()">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input" oninput="updateMassTable()">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
-  updateMassTable();
-}
-function updateMassTable() {
-  const rows = document.querySelectorAll('#massTable tbody tr');
-  let cum = 0;
-  rows.forEach((row,i)=>{
-    const inputs = row.querySelectorAll('input');
-    inputs[3].value = ''; inputs[4].value = '';
-    if(i===0) return;
-    const prev = rows[i-1].querySelectorAll('input');
-    const st = parseFloat(inputs[0].value);
-    const pst = parseFloat(prev[0].value);
-    if(isNaN(st) || isNaN(pst)) return;
-    const dist = st - pst;
-    const cut1 = parseFloat(prev[1].value)||0;
-    const fill1 = parseFloat(prev[2].value)||0;
-    const cut2 = parseFloat(inputs[1].value)||0;
-    const fill2 = parseFloat(inputs[2].value)||0;
-    const net1 = fill1 - cut1;
-    const net2 = fill2 - cut2;
-    const interval = (net1 + net2)/2 * dist;
-    cum += interval;
-    inputs[3].value = interval.toFixed(2);
-    inputs[4].value = cum.toFixed(2);
-  });
-}
-function clearMassTable(){
-  document.querySelector('#massTable tbody').innerHTML='';
-  for(let i=0;i<10;i++) addMassRow();
-}
-function clearMass(){
-  if(confirm('土方カーブのすべてのデータを削除します。よろしいですか？')){
-    clearMassTable();
-    saveDraftInputs();
-}
-}
-function registerMass(){
-  if(!activeProject){ alert('工事を選択してください'); return; }
-  const rows = document.querySelectorAll('#massTable tbody tr');
-  let massLogs = safeParseJSON(localStorage.getItem('massLogs3'), {});
-  let tableRows = [];
-  rows.forEach(row=>{
-    const inputs = row.querySelectorAll('input');
-    const station = inputs[0].value;
-    const cut = inputs[1].value;
-    const fill = inputs[2].value;
-    const interval = inputs[3].value;
-    const cumulative = inputs[4].value;
-    if(station || cut || fill || interval || cumulative){
-      tableRows.push({station, cut, fill, interval, cumulative});
-    }
-  });
-  if(tableRows.length>0){
-    const k = keyOfActive();
-    if(!massLogs[k]) massLogs[k]=[];
-    massLogs[k].push({tableRows, time: new Date().toLocaleString()});
-    localStorage.setItem('massLogs3', JSON.stringify(massLogs));
-  }
-  updateLogTab();
-  saveDraftInputs();
-}
-
-function calculateMassChord(){
-  const c = parseFloat(document.getElementById('massChordC').value);
-  const r = parseFloat(document.getElementById('massChordR').value);
-  if(isNaN(c) || isNaN(r) || r === 0){
-    document.getElementById('massChordResult').textContent = '数値を確認してください';
-    return;
-  }
-  // 本式
-  // 中央縦距M1（C/2地点）・1/4点縦距M2（C/4地点）
-  const m1 = r - Math.sqrt(r*r - Math.pow(c/2,2));
-  const m2 = r - Math.sqrt(r*r - Math.pow(c/4,2));
-  document.getElementById('massChordResult').innerHTML = `
-    <table class="survey-table">
-      <tr><th>中央縦距M1</th><th>1/4点縦距M2</th></tr>
-    <tr><td>${m1.toFixed(3)}</td><td>${m2.toFixed(3)}</td></tr>
-    </table>`;
-}
-
 function calculateVCurve(){
   const ip   = parseFloat(document.getElementById('vcIP').value);
   const g1p  = parseFloat(document.getElementById('vcG1').value);
@@ -1598,17 +1224,6 @@ function updateLogTab(){
     </table></div>`;
   });
   document.getElementById("logCurve").innerHTML = htmlCurve;
-  const massLogs = safeParseJSON(localStorage.getItem("massLogs3"), {});
-  let mArr = massLogs[k] || [];
-  let htmlMass = `<h3>土方カーブ</h3><hr>`;
-  mArr.forEach(log => {
-    htmlMass += `<div class="section"><table class="survey-table"><tr><th>測点</th><th>切土面積</th><th>盛土面積</th><th>区間体積</th><th>累計体積</th></tr>`;
-    log.tableRows.forEach(r => {
-      htmlMass += `<tr><td>${r.station}</td><td>${r.cut}</td><td>${r.fill}</td><td>${r.interval}</td><td>${r.cumulative}</td></tr>`;
-    });
-    htmlMass += `</table>日時:${log.time}</div>`;
-  });
-  document.getElementById("logMass").innerHTML = htmlMass;
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
   document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
@@ -1618,9 +1233,9 @@ function clearCategory(cat) {
   const p = projects.find(x=>x.id===prjId);
   if(!p) return;
   const k = projectKey(p);
-  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", mass: "massLogs3", memo: "memoLogs3"};
+  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3"};
   if(!keyMap[cat]) return;
-  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",mass:"土方カーブ",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
+  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
   let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
   if(all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
@@ -1631,7 +1246,7 @@ function addProject() {
   if(!name) return alert("工事名を入力してください");
   if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
   const id = Date.now().toString();
-  projects.push({id, name, points: [], testCrossData: []});
+  projects.push({id, name, points: []});
   save();
   activeProject = id;
   localStorage.setItem("activeProject3", activeProject);
@@ -1664,7 +1279,7 @@ function deleteProject() {
   projects = projects.filter(x=>x.id !== activeProject);
   save();
   const k = projectKey(p);
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3"].forEach(key=>{
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
     let all = safeParseJSON(localStorage.getItem(key), {});
     if(all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
@@ -1681,7 +1296,7 @@ function clearAllProjects() {
   if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "massLogs3", "memoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k)); 
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k)); 
   localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
@@ -1728,7 +1343,6 @@ function importBackup() {
         "longLogs3",
         "pavementLogs3",
         "curveLogs3",
-        "massLogs3",
         "memoLogs3",
         "drawingLogs3",
         DRAFT_STORAGE_KEY
@@ -1783,12 +1397,12 @@ function loadMemo() {
   }
 }
 document.addEventListener("input", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #memo")) {
     scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #mass, #memo")) {
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #memo")) {
     scheduleDraftSave();
   }
 });
@@ -1802,15 +1416,12 @@ window.onload = () => {
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
-  clearMassTable();
   setupAutoAppendRow("#pointTable", addPointRow);
   setupAutoAppendRow("#crossTable", addCrossRow);
   setupAutoAppendRow("#longTable", addLongRow);
   setupAutoAppendRow("#pavementTable", addPavementRow);
-  setupAutoAppendRow("#massTable", addMassRow);
   updateLogTab();
   initCrossDirectionControls();
-  initTestCrossControls();
   switchTab('project');
   setPointMode("manual");
   loadDraftInputs();
