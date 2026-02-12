@@ -358,27 +358,20 @@ input[readonly] {
 #pavementTable th, #pavementTable td {
   min-width: 75px;
 }
-#crossTable th.station-col,
-#crossTable td.station-col,
-#pavementTable th.station-col,
-#pavementTable td.station-col {
+#longTable th:first-child,
+#longTable td:first-child {
   min-width: 92px;
   position: sticky;
   left: 0;
   z-index: 4;
   background: #fff;
 }
-#crossTable thead th.station-col,
-#pavementTable thead th.station-col {
+#longTable thead th:first-child {
   background-color: #f8f9fa;
   z-index: 6;
 }
-#crossTable tbody .station-col,
-#pavementTable tbody .station-col {
+#longTable tbody td:first-child {
   z-index: 5;
-}
-#crossTable td.station-col,
-#pavementTable td.station-col {
   padding: 0 8px;
   white-space: nowrap;
   font-weight: 600;
