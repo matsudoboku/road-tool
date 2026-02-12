@@ -442,6 +442,30 @@ tfoot td {
   color: var(--primary-color);
 }
 
+#pavementTable tfoot td {
+  height: 42px;
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+#pavementTable tfoot td.text-right {
+  text-align: right;
+  padding-right: 16px;
+  color: var(--text-sub);
+}
+
+#pavementTable tfoot .result-cell {
+  min-width: 130px;
+  padding: 8px 14px;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#pavementTable tfoot .total-row td {
+  background: #e3f2fd;
+  font-size: 1rem;
+}
+
 /* -----------------------------
    ボタン
 ----------------------------- */
