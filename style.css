@@ -575,6 +575,14 @@ tfoot td {
   gap: 6px;
 }
 
+#cross .input-wrapper:last-child {
+  flex: 0 0 auto;
+}
+
+.cross-direction-toggle .btn-toggle {
+  white-space: nowrap;
+}
+
 .btn-toggle.active {
   background-color: var(--accent-color);
   border-color: var(--accent-color);
