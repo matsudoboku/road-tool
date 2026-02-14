@@ -56,7 +56,6 @@ function setDraftStore(store) {
 let draftSaveTimer = null;
 let activeCrossRecordKey = "";
 let activeCrossRemarkInput = null;
-let crossQuickTagsAnchorRow = null;
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -361,25 +360,11 @@ function hideCrossQuickTags() {
     quickTags.classList.add("is-hidden");
     quickTags.classList.remove("is-floating");
   }
-  if (crossQuickTagsAnchorRow?.parentNode) {
-    crossQuickTagsAnchorRow.remove();
-  }
-  crossQuickTagsAnchorRow = null;
   activeCrossRemarkInput = null;
 }
 function showCrossQuickTagsForInput(input) {
   const quickTags = document.getElementById("crossQuickTags");
-  const targetRow = input?.closest("tr.cross-data-row");
-  if (!quickTags || !targetRow) return;
-  if (!crossQuickTagsAnchorRow) {
-    crossQuickTagsAnchorRow = document.createElement("tr");
-    crossQuickTagsAnchorRow.className = "cross-quick-tags-anchor";
-    const td = document.createElement("td");
-    td.colSpan = 3;
-    crossQuickTagsAnchorRow.appendChild(td);
-  }
-  crossQuickTagsAnchorRow.firstElementChild?.appendChild(quickTags);
-  targetRow.parentNode.insertBefore(crossQuickTagsAnchorRow, targetRow);
+  if (!quickTags || !input?.matches("#crossTable .remark-input")) return;
   quickTags.classList.remove("is-hidden");
   quickTags.classList.add("is-floating");
 }
@@ -480,7 +465,7 @@ function initCrossDirectionControls() {
       activeCrossRemarkInput = event.target;
       showCrossQuickTagsForInput(event.target);
       return;
-  　}
+    }
     hideCrossQuickTags();
   });
   container.addEventListener("focusout", (event) => {
