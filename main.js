@@ -56,6 +56,7 @@ function setDraftStore(store) {
 let draftSaveTimer = null;
 let activeCrossRecordKey = "";
 let activeCrossRemarkInput = null;
+let crossQuickTagsHome = null;
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -356,17 +357,40 @@ function getCrossSelection() {
 }
 function hideCrossQuickTags() {
   const quickTags = document.getElementById("crossQuickTags");
+  const inlineRow = document.querySelector("#crossTable tbody tr.cross-quick-tags-row");
+  if (inlineRow) inlineRow.remove();
   if (quickTags) {
+    if (crossQuickTagsHome?.parent) {
+      const { parent, nextSibling } = crossQuickTagsHome;
+      parent.insertBefore(quickTags, nextSibling && nextSibling.parentNode === parent ? nextSibling : null);
+    }
     quickTags.classList.add("is-hidden");
     quickTags.classList.remove("is-floating");
+    quickTags.classList.remove("is-inline");
   }
   activeCrossRemarkInput = null;
 }
 function showCrossQuickTagsForInput(input) {
   const quickTags = document.getElementById("crossQuickTags");
-  if (!quickTags || !input?.matches("#crossTable .remark-input")) return;
+  const targetRow = input?.closest?.("#crossTable tbody tr.cross-data-row");
+  if (!quickTags || !targetRow) return;
+  const tbody = targetRow.closest("tbody");
+  if (!tbody) return;
+
+  const currentInlineRow = document.querySelector("#crossTable tbody tr.cross-quick-tags-row");
+  if (currentInlineRow) currentInlineRow.remove();
+
+  const quickTagsRow = document.createElement("tr");
+  quickTagsRow.className = "cross-quick-tags-row";
+  const quickTagsCell = document.createElement("td");
+  quickTagsCell.colSpan = 3;
+  quickTagsCell.appendChild(quickTags);
+  quickTagsRow.appendChild(quickTagsCell);
+  tbody.insertBefore(quickTagsRow, targetRow);
+
   quickTags.classList.remove("is-hidden");
   quickTags.classList.add("is-floating");
+  quickTags.classList.add("is-inline");
 }
 function syncCrossQuickTagsByTarget(target) {
   if (target?.closest?.("#crossQuickTags") && activeCrossRemarkInput) {
@@ -444,6 +468,10 @@ function setCrossDirection(direction) {
 function initCrossDirectionControls() {
   const container = document.getElementById("cross");
   if (!container) return;
+  const quickTags = document.getElementById("crossQuickTags");
+  if (quickTags) {
+    crossQuickTagsHome = { parent: quickTags.parentElement, nextSibling: quickTags.nextSibling };
+  }
   container.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => {
       setCrossDirection(button.dataset.direction);
@@ -457,7 +485,6 @@ function initCrossDirectionControls() {
       if (event.key === "Enter") handleCrossSelectionChange();
     });
   }
-  const quickTags = document.getElementById("crossQuickTags");
   if (quickTags) {
     quickTags.addEventListener("click", (event) => {
       const tagButton = event.target.closest("[data-tag]");
