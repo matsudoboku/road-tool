@@ -559,7 +559,7 @@ function formatStationName(distance) {
   const abs = Math.abs(distance);
   const no = Math.floor(abs / 100);
   const offset = abs - no * 100;
-  return `${sign}No.${no} + ${offset.toFixed(3)}`;
+  return `${sign}No.${no} + ${offset.toFixed(1)}`;
 }
 function parseMajorPointsInput(text) {
   if (!text) return [];
