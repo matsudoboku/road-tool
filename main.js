@@ -761,13 +761,19 @@ function updatePointSelect(){
   }
   ensureProjectPoints(project);
   let arr = project.points || [];
+  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
+    .map((input) => String(input.value || "").trim())
+    .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
   const crossPoints = Object.values(projectLogs)
     .map(log => String(log?.point || "").trim())
     .filter(Boolean);
-  const options = [...new Set([...arr.map(p => String(p.point || "").trim()), ...crossPoints])];
-  list.innerHTML = '';
+  const options = [...new Set([
+    ...arr.map(p => String(p.point || "").trim()),
+    ...editingPoints,
+    ...crossPoints,
+  ])];  list.innerHTML = '';
   options.forEach(point => { list.innerHTML += `<option value="${point}">`; });
 }
 function ensurePointRegistered(pointName) {
