@@ -551,6 +551,21 @@ tfoot td {
 }
 .btn-secondary:active { background-color: #f5f5f5; }
 
+.direction-toggle {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.btn-toggle.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+
+.btn-toggle.active:active {
+  background-color: #1565c0;
+}
+
 .btn-success {
   background-color: var(--success-color);
   color: white;
