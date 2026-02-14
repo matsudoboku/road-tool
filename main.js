@@ -794,7 +794,8 @@ function updatePointSelect(){
       .filter(Boolean)
   );
   　const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))    .map((input) => String(input.value || "").trim())
-    .filter(Boolean);
+     .map((input) => String(input.value || "").trim())
+     .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
   const crossPoints = Object.values(projectLogs)
