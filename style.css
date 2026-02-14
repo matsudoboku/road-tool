@@ -470,6 +470,18 @@ input[readonly] {
 .cross-quick-tags.is-floating {
   display: flex;
 }
+.cross-quick-tags.is-inline {
+  position: static;
+  top: auto;
+  border-radius: 8px;
+  margin: 4px 0;
+  box-shadow: none;
+}
+
+#crossTable .cross-quick-tags-row td {
+  padding: 0;
+  border-bottom: none;
+}
 
 /* 数字入力は右寄せ（UX） */
 .survey-table input[type="number"] {
