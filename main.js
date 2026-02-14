@@ -468,6 +468,12 @@ function initCrossDirectionControls() {
     }
     hideCrossQuickTags();
   });
+  container.addEventListener("click", (event) => {
+    const remarkInput = event.target.closest("#crossTable .remark-input");
+    if (!remarkInput) return;
+    activeCrossRemarkInput = remarkInput;
+    showCrossQuickTagsForInput(remarkInput);
+  });
   container.addEventListener("focusout", (event) => {
     if (!event.target.matches("#crossTable .remark-input")) return;
     setTimeout(() => {
@@ -488,6 +494,8 @@ function registerCross() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const point = document.getElementById("pointSel").value.trim();
   if (!point) return alert("測点を入力してください");
+  ensurePointRegistered(point);
+  updatePointSelect();
   saveCurrentCrossRecord();
   alert("入力内容を保存しました");
   saveDraftInputs();
@@ -748,8 +756,27 @@ function updatePointSelect(){
   }
   ensureProjectPoints(project);
   let arr = project.points || [];
+  const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
+  const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
+  const crossPoints = Object.values(projectLogs)
+    .map(log => String(log?.point || "").trim())
+    .filter(Boolean);
+  const options = [...new Set([...arr.map(p => String(p.point || "").trim()), ...crossPoints])];
   list.innerHTML = '';
-  arr.forEach(p=>{ list.innerHTML += `<option value="${p.point}">`; });
+  options.forEach(point => { list.innerHTML += `<option value="${point}">`; });
+}
+function ensurePointRegistered(pointName) {
+  const name = String(pointName || "").trim();
+  if (!name) return;
+  const project = getActiveProject();
+  if (!project) return;
+  ensureProjectPoints(project);
+  const points = project.points || [];
+  const exists = points.some((row) => String(row.point || "").trim() === name);
+  if (exists) return;
+  points.push({ point: name, tankyo: "", tsuikyo: "", note: "" });
+  project.points = points;
+  save();
 }
 function findRegisteredPoint(pointName) {
   const name = String(pointName || "").trim();
