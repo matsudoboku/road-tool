@@ -368,6 +368,19 @@ function showCrossQuickTagsForInput(input) {
   quickTags.classList.remove("is-hidden");
   quickTags.classList.add("is-floating");
 }
+function syncCrossQuickTagsByTarget(target) {
+  if (target?.closest?.("#crossQuickTags") && activeCrossRemarkInput) {
+    showCrossQuickTagsForInput(activeCrossRemarkInput);
+    return;
+  }
+  const remarkInput = target?.closest?.("#crossTable .remark-input");
+  if (!remarkInput) {
+    hideCrossQuickTags();
+    return;
+  }
+  activeCrossRemarkInput = remarkInput;
+  showCrossQuickTagsForInput(remarkInput);
+}
 function parseCrossSelectionKey(key) {
   if (!key) return { point: "", dir: "左", key: "" };
   const [point, dir = "左"] = key.split("__");
@@ -461,18 +474,10 @@ function initCrossDirectionControls() {
     });
   }
   container.addEventListener("focusin", (event) => {
-    if (event.target.matches("#crossTable .remark-input")) {
-      activeCrossRemarkInput = event.target;
-      showCrossQuickTagsForInput(event.target);
-      return;
-    }
-    hideCrossQuickTags();
+    syncCrossQuickTagsByTarget(event.target);
   });
   container.addEventListener("click", (event) => {
-    const remarkInput = event.target.closest("#crossTable .remark-input");
-    if (!remarkInput) return;
-    activeCrossRemarkInput = remarkInput;
-    showCrossQuickTagsForInput(remarkInput);
+    syncCrossQuickTagsByTarget(event.target);
   });
   container.addEventListener("focusout", (event) => {
     if (!event.target.matches("#crossTable .remark-input")) return;
