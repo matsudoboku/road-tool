@@ -788,8 +788,12 @@ function updatePointSelect(){
   }
   ensureProjectPoints(project);
   const arr = project.points || [];
-  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
-    .map((input) => String(input.value || "").trim())
+  const registeredTsuikyo = new Set(
+    arr
+      .map((row) => String(row?.tsuikyo || "").trim())
+      .filter(Boolean)
+  );
+  　const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))    .map((input) => String(input.value || "").trim())
     .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
@@ -800,7 +804,7 @@ function updatePointSelect(){
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
     ...crossPoints,
-  ])];
+  ])].filter((point) => !registeredTsuikyo.has(point));
   list.innerHTML = '';
   options.forEach((point) => {
     const option = document.createElement('option');
