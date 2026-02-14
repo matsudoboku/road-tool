@@ -432,15 +432,21 @@ input[readonly] {
 }
 
 
-.cross-quick-tags-anchor td {
-  padding: 6px;
-  background: #eef5ff;
-}
-
 .cross-quick-tags {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 20px));
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #c5d9ff;
+  background: rgba(238, 245, 255, 0.97);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 20;
 }
 
 .cross-quick-tags .btn {
@@ -449,9 +455,7 @@ input[readonly] {
 }
 
 .cross-quick-tags.is-floating {
-  position: sticky;
-  top: 0;
-  z-index: 8;
+  display: flex;
 }
 
 /* 数字入力は右寄せ（UX） */
