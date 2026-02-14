@@ -829,7 +829,9 @@ function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterU
   const registered = findRegisteredPoint(pointInput.value);
   if (!registered) return;
   if (registered.tankyo !== undefined) tankyoInput.value = registered.tankyo || "";
-  if (registered.tsuikyo !== undefined) tsuikyoInput.value = registered.tsuikyo || "";
+  if (!tsuikyoInput.readOnly && registered.tsuikyo !== undefined) {
+    tsuikyoInput.value = registered.tsuikyo || "";
+  }
   if (typeof afterUpdate === "function") afterUpdate();
 }
 function runAutoFill() {
