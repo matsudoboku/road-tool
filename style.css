@@ -288,6 +288,7 @@ input[readonly] {
 #cross #pointSel {
   min-height: 42px;
   font-size: 1.05rem;
+  max-width: 16ch;
 }
 .input-wrapper label {
   display: block;
