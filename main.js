@@ -787,8 +787,13 @@ function updatePointSelect(){
     return;
   }
   ensureProjectPoints(project);
-  let arr = project.points || [];
-  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
+  const arr = project.points || [];
+  const registeredTsuikyo = new Set(
+    arr
+      .map((row) => String(row?.tsuikyo || "").trim())
+      .filter(Boolean)
+  );
+  　const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
     .map((input) => String(input.value || "").trim())
     .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
@@ -797,11 +802,16 @@ function updatePointSelect(){
     .map(log => String(log?.point || "").trim())
     .filter(Boolean);
   const options = [...new Set([
-    ...arr.map(p => String(p.point || "").trim()),
+    ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
     ...crossPoints,
-  ])];  list.innerHTML = '';
-  options.forEach(point => { list.innerHTML += `<option value="${point}">`; });
+  ])].filter((point) => !registeredTsuikyo.has(point));
+  list.innerHTML = '';
+  options.forEach((point) => {
+    const option = document.createElement('option');
+    option.value = point;
+    list.appendChild(option);
+  });
 }
 function ensurePointRegistered(pointName) {
   const name = String(pointName || "").trim();
