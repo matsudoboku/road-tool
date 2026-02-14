@@ -275,6 +275,20 @@ input[readonly] {
 .input-wrapper {
   flex: 1;
 }
+
+#cross .form-inline-group {
+  align-items: flex-end;
+}
+
+#cross .input-wrapper:first-child {
+  flex: 1.7;
+  min-width: 180px;
+}
+
+#cross #pointSel {
+  min-height: 42px;
+  font-size: 1.05rem;
+}
 .input-wrapper label {
   display: block;
   font-size: 0.8rem;
