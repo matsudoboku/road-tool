@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d47a1">
@@ -13,24 +14,41 @@
   <!-- 視認性向上のためGoogle Fonts (Noto Sans JP) を利用（任意） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
-  
+
   <!-- 上部固定ヘッダー -->
   <header class="app-header">
     <div class="project-selector">
       <label for="sidebarProjectSel">工事:</label>
-      <input
-        type="search"
-        id="projectSearchInput"
-        class="project-search-input"
-        placeholder="工事名で検索"
-        oninput="filterProjectSelects(this.value)">
       <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
+      <button class="btn-search-toggle" onclick="toggleProjectSearch()" aria-label="検索">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </button>
+    </div>
+    <div id="projectSearchBar" class="project-search-bar is-hidden">
+      <input type="search" id="projectSearchInput" placeholder="工事名で検索..." oninput="filterProjectSelects(this.value)">
     </div>
     <button id="calcCallBtn" class="btn-icon" onclick="openCalcModal()" aria-label="電卓">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="16" y1="18" x2="16" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="14" x2="8" y2="14"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="16" y1="14" x2="16" y2="14" />
+        <line x1="16" y1="18" x2="16" y2="18" />
+        <line x1="12" y1="18" x2="12" y2="18" />
+        <line x1="8" y1="18" x2="8" y2="18" />
+        <line x1="12" y1="14" x2="12" y2="14" />
+        <line x1="8" y1="14" x2="8" y2="14" />
+      </svg>
       電卓
     </button>
   </header>
@@ -41,7 +59,7 @@
       <button class="tab active" data-tab="project" onclick="switchTab('project')">工事設定</button>
       <button class="tab" data-tab="point-tab" onclick="switchTab('point-tab')">測点</button>
       <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
-<button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
+      <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
       <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
       <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
       <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
@@ -54,7 +72,7 @@
   </nav>
 
   <main class="main-content">
-    
+
     <!-- 工事設定 -->
     <div id="project" class="container active">
       <!-- 工事情報カード -->
@@ -63,7 +81,7 @@
           <h2>工事情報の登録・切替</h2>
         </div>
         <div class="card-body">
-         <div class="form-group-row project-config-row">
+          <div class="form-group-row project-config-row">
             <label class="input-label">工事名</label>
             <input type="text" id="projectName" placeholder="工事名を入力">
             <div class="btn-group project-actions">
@@ -107,7 +125,12 @@
             <div class="table-wrapper">
               <table id="pointTable" class="survey-table">
                 <thead>
-                  <tr><th>測点</th><th>単距</th><th>追距</th><th>備考</th></tr>
+                  <tr>
+                    <th>測点</th>
+                    <th>単距</th>
+                    <th>追距</th>
+                    <th>備考</th>
+                  </tr>
                 </thead>
                 <tbody></tbody>
               </table>
@@ -459,7 +482,7 @@
           </div>
           <div id="logCross" class="card-body log-content"></div>
         </div>
-        
+
         <!-- 縦断測量 -->
         <div class="card">
           <div class="card-header flex-between">
@@ -481,8 +504,8 @@
         <!-- 道路曲線 -->
         <div class="card">
           <div class="card-header flex-between">
-             <h3>道路曲線</h3>
-             <button class="btn btn-danger-text" onclick="clearCategory('curve')">削除</button>
+            <h3>道路曲線</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('curve')">削除</button>
           </div>
           <div id="logCurve" class="card-body log-content"></div>
         </div>
@@ -490,8 +513,8 @@
         <!-- メモ -->
         <div class="card">
           <div class="card-header flex-between">
-             <h3>メモ</h3>
-             <button class="btn btn-danger-text" onclick="clearCategory('memo')">削除</button>
+            <h3>メモ</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('memo')">削除</button>
           </div>
           <div id="logMemo" class="card-body log-content"></div>
         </div>
@@ -524,17 +547,17 @@
           <button onclick="appendCalc('8')">8</button>
           <button onclick="appendCalc('9')">9</button>
           <button class="op" onclick="appendCalc('/')">÷</button>
-          
+
           <button onclick="appendCalc('4')">4</button>
           <button onclick="appendCalc('5')">5</button>
           <button onclick="appendCalc('6')">6</button>
           <button class="op" onclick="appendCalc('*')">×</button>
-          
+
           <button onclick="appendCalc('1')">1</button>
           <button onclick="appendCalc('2')">2</button>
           <button onclick="appendCalc('3')">3</button>
           <button class="op" onclick="appendCalc('-')">−</button>
-          
+
           <button onclick="appendCalc('0')">0</button>
           <button onclick="appendCalc('.')">.</button>
           <button class="func" onclick="copyCalc()">Copy</button>
@@ -556,9 +579,5 @@
 
   <script src="main.js"></script>
 </body>
+
 </html>
-
-
-
-
-
