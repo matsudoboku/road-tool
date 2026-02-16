@@ -111,6 +111,7 @@ function saveDraftInputs() {
     };
   });
   const memoText = document.getElementById("memoText")?.value || "";
+  const todoDraft = document.getElementById("todoInput")?.value || "";
   const curveDraft = {
     ipno: document.getElementById("ipno")?.value || "",
     ia: document.getElementById("ia")?.value || "",
@@ -136,6 +137,7 @@ function saveDraftInputs() {
     long: { rows: longRows },
     pavement: { rows: pavementRows },
     memo: memoText,
+    todo: { input: todoDraft },
     curve: curveDraft,
     vcurve: vcurveDraft,
   };
@@ -228,6 +230,10 @@ function loadDraftInputs() {
     const memo = document.getElementById("memoText");
     if (memo) memo.value = draft.memo;
   }
+  if (draft.todo) {
+    const todoInput = document.getElementById("todoInput");
+    if (todoInput) todoInput.value = draft.todo.input || "";
+  }
   if (draft.curve) {
     const ipno = document.getElementById("ipno");
     const ia = document.getElementById("ia");
@@ -270,6 +276,7 @@ function sidebarSwitchProject() {
   updatePointSelect();
   updateLogTab();
   loadDraftInputs();
+  loadTodoList();
   draftReady = true;
 }
 function switchTab(tabId) {
@@ -283,6 +290,7 @@ function switchTab(tabId) {
   if(tabCont) tabCont.classList.add("active");
   if(tabId === "log") updateLogTab();
   if(tabId === "memo") loadMemo();
+  if(tabId === "todo-tab") loadTodoList();
 }
 
 function addCrossRow() {
@@ -1423,7 +1431,7 @@ function clearAllProjects() {
   if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k)); 
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "todoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k));  
   localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
@@ -1471,6 +1479,7 @@ function importBackup() {
         "pavementLogs3",
         "curveLogs3",
         "memoLogs3",
+        "todoLogs3",
         "drawingLogs3",
         DRAFT_STORAGE_KEY
       ];
@@ -1488,6 +1497,7 @@ function importBackup() {
       updatePointSelect();
       updateLogTab();
       loadDraftInputs();
+      loadTodoList();
       draftReady = true;
       if (status) status.textContent = "インポートが完了しました";
       input.value = "";
@@ -1501,6 +1511,89 @@ function importBackup() {
   };
   reader.readAsText(file);
 }
+function getTodoStore() {
+  return safeParseJSON(localStorage.getItem("todoLogs3"), {});
+}
+function saveTodoStore(store) {
+  localStorage.setItem("todoLogs3", JSON.stringify(store));
+}
+function getActiveTodoItems() {
+  const k = keyOfActive();
+  const allTodos = getTodoStore();
+  if (!Array.isArray(allTodos[k])) allTodos[k] = [];
+  return { allTodos, key: k, items: allTodos[k] };
+}
+function renderTodoList(items) {
+  const list = document.getElementById("todoList");
+  const empty = document.getElementById("todoEmpty");
+  if (!list || !empty) return;
+  list.innerHTML = "";
+  if (!Array.isArray(items) || items.length === 0) {
+    empty.classList.remove("is-hidden");
+    return;
+  }
+  empty.classList.add("is-hidden");
+  items.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = `todo-item${item.done ? " is-done" : ""}`;
+    li.innerHTML = `
+      <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleTodoItem(${index})">
+      <span class="todo-item-label"></span>
+      <button class="todo-delete-btn" onclick="deleteTodoItem(${index})">削除</button>
+    `;
+    li.querySelector(".todo-item-label").textContent = item.text || "";
+    list.appendChild(li);
+  });
+}
+function loadTodoList() {
+  if (!activeProject) {
+    renderTodoList([]);
+    return;
+  }
+  const { items } = getActiveTodoItems();
+  renderTodoList(items);
+}
+function addTodoItem() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const input = document.getElementById("todoInput");
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const { allTodos, key, items } = getActiveTodoItems();
+  items.unshift({ text, done: false, createdAt: Date.now() });
+  allTodos[key] = items;
+  saveTodoStore(allTodos);
+  input.value = "";
+  renderTodoList(items);
+  scheduleDraftSave();
+}
+function toggleTodoItem(index) {
+  if(!activeProject) return;
+  const { allTodos, key, items } = getActiveTodoItems();
+  if (!items[index]) return;
+  items[index].done = !items[index].done;
+  allTodos[key] = items;
+  saveTodoStore(allTodos);
+  renderTodoList(items);
+}
+function deleteTodoItem(index) {
+  if(!activeProject) return;
+  const { allTodos, key, items } = getActiveTodoItems();
+  if (!items[index]) return;
+  items.splice(index, 1);
+  allTodos[key] = items;
+  saveTodoStore(allTodos);
+  renderTodoList(items);
+}
+function clearCompletedTodos() {
+  if(!activeProject){ alert("工事を選択してください"); return; }
+  const { allTodos, key, items } = getActiveTodoItems();
+  const filtered = items.filter((item) => !item.done);
+  allTodos[key] = filtered;
+  saveTodoStore(allTodos);
+  renderTodoList(filtered);
+}
+
 function saveMemo() {
   if(!activeProject){ alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
@@ -1524,13 +1617,12 @@ function loadMemo() {
   }
 }
 document.addEventListener("input", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #memo")) {
-    scheduleDraftSave();
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {    scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #memo")) {
-    scheduleDraftSave();
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {
+   scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
@@ -1552,6 +1644,7 @@ window.onload = () => {
   switchTab('project');
   setPointMode("manual");
   loadDraftInputs();
+  loadTodoList();
   draftReady = true;
 };
 // --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
