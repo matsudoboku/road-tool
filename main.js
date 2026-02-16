@@ -14,6 +14,7 @@ function safeParseJSON(raw, fallback){
     }
 let projects = safeParseJSON(localStorage.getItem("projects3"), []);
 let activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
+let projectSearchQuery = "";
 function projectKey(p) { return p.name; }
 function keyOfActive() {
   const p = projects.find(x=>x.id===activeProject);
@@ -1390,14 +1391,57 @@ function addProject() {
   updatePointSelect();
   alert("工事を追加・切替しました");
 }
+function filterProjectSelects(query = "") {
+  projectSearchQuery = query;
+  renderProjectSelects();
+  updateLogTab();
+}
+
+function getFilteredProjects() {
+  const keyword = (projectSearchQuery || "").trim().toLowerCase();
+  if (!keyword) return projects;
+  return projects.filter((p) => p.name.toLowerCase().includes(keyword));
+}
+
 function renderProjectSelects() {
   const sbs = document.getElementById("sidebarProjectSel");
   const lgs = document.getElementById("logProjectSel");
-  sbs.innerHTML = lgs.innerHTML = "";
-  projects.forEach(p => {
-    const sel = `<option value="${p.id}" ${p.id===activeProject?"selected":""}>${p.name}</option>`;
-    sbs.innerHTML += sel; lgs.innerHTML += sel;
+  const searchInput = document.getElementById("projectSearchInput");
+  const filteredProjects = getFilteredProjects();
+
+  sbs.innerHTML = "";
+  lgs.innerHTML = "";
+
+  if (searchInput && searchInput.value !== projectSearchQuery) {
+    searchInput.value = projectSearchQuery;
+  }
+
+  filteredProjects.forEach((p) => {
+    const optionSidebar = document.createElement("option");
+    optionSidebar.value = p.id;
+    optionSidebar.textContent = p.name;
+    if (p.id === activeProject) optionSidebar.selected = true;
+    sbs.appendChild(optionSidebar);
+
+    const optionLog = document.createElement("option");
+    optionLog.value = p.id;
+    optionLog.textContent = p.name;
+    if (p.id === activeProject) optionLog.selected = true;
+    lgs.appendChild(optionLog);
   });
+  
+  const hasMatchedProject = filteredProjects.length > 0;
+  sbs.disabled = !hasMatchedProject;
+  lgs.disabled = !hasMatchedProject;
+
+  if (!hasMatchedProject) {
+    sbs.add(new Option("該当する工事がありません", ""));
+    lgs.add(new Option("該当する工事がありません", ""));
+  } else if (!filteredProjects.some((p) => p.id === activeProject)) {
+    sbs.value = filteredProjects[0].id;
+    lgs.value = filteredProjects[0].id;
+  }
+
   let txt = "";
   projects.forEach((p,i) => {
     txt += `・${i+1}（${p.name}）<br>`;
@@ -1406,6 +1450,7 @@ function renderProjectSelects() {
   loadPointSettings();
   updatePointSelect();
 }
+
 function deleteProject() {
   if(!activeProject) return;
   const p = projects.find(x=>x.id===activeProject);
