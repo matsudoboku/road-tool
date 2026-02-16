@@ -39,7 +39,8 @@
       <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
       <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
       <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
-<button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
+      <button class="tab" data-tab="todo-tab" onclick="switchTab('todo-tab')">ToDo</button>
+      <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
       <button class="tab" data-tab="memo" onclick="switchTab('memo')">メモ</button>
       <button class="tab" data-tab="log" onclick="switchTab('log')">記録</button>
       <button class="tab" data-tab="disclaimer" onclick="switchTab('disclaimer')">情報</button>
@@ -354,6 +355,26 @@
     </div>
 
     <!-- メモ -->
+    <div id="todo-tab" class="container">
+      <div class="card">
+        <div class="card-header">
+          <h2>ToDoリスト</h2>
+        </div>
+        <div class="card-body">
+          <div class="todo-entry-row">
+            <input type="text" id="todoInput" placeholder="やることを入力..." maxlength="100">
+            <button class="btn btn-primary" onclick="addTodoItem()">追加</button>
+          </div>
+          <ul id="todoList" class="todo-list"></ul>
+          <div id="todoEmpty" class="text-muted text-sm">ToDoはまだありません。</div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-warning full-width" onclick="clearCompletedTodos()">完了済みを削除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- メモ -->
     <div id="memo" class="container">
       <div class="card">
         <div class="card-header">
@@ -530,5 +551,6 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
 
