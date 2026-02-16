@@ -78,8 +78,8 @@ html, body {
   white-space: nowrap;
 }
 
+.project-search-input,
 .project-selector select {
-  max-width: 200px;
   padding: 6px 10px;
   border-radius: var(--radius-sm);
   border: none;
@@ -87,6 +87,14 @@ html, body {
   color: var(--text-main);
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+.project-search-input {
+  width: 180px;
+}
+
+.project-selector select {
+  max-width: 200px;
 }
 
 .btn-icon {
@@ -990,5 +998,16 @@ tfoot td {
   #calc.modal-mode {
     position: static;
     width: 95%;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .project-search-input {
+    width: 120px;
+  }
+
+  .project-selector select {
+    max-width: 140px;
   }
 }
