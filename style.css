@@ -742,6 +742,53 @@ tfoot td {
   cursor: pointer;
 }
 
+.todo-entry-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.todo-entry-row .btn {
+  min-width: 88px;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.todo-item-label {
+  flex: 1;
+  word-break: break-word;
+}
+
+.todo-item.is-done .todo-item-label {
+  text-decoration: line-through;
+  color: var(--text-sub);
+}
+
+.todo-delete-btn {
+  border: 1px solid var(--border-color);
+  background: white;
+  color: var(--danger-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
 .draw-controls {
   display: flex;
   justify-content: center;
