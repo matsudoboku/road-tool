@@ -1,23 +1,23 @@
-function safeParseJSON(raw, fallback){
-  try{
+function safeParseJSON(raw, fallback) {
+  try {
     return raw ? JSON.parse(raw) : fallback;
-  }catch(e){
+  } catch (e) {
     console.error("Failed to parse JSON", e, raw);
     return fallback;
   }
 }
 
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function() {
-        navigator.serviceWorker.register("service-worker.js");
-      });
-    }
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("service-worker.js");
+  });
+}
 let projects = safeParseJSON(localStorage.getItem("projects3"), []);
 let activeProject = localStorage.getItem("activeProject3") || (projects[0] ? projects[0].id : null);
 let projectSearchQuery = "";
 function projectKey(p) { return p.name; }
 function keyOfActive() {
-  const p = projects.find(x=>x.id===activeProject);
+  const p = projects.find(x => x.id === activeProject);
   return p ? projectKey(p) : "";
 }
 function save() {
@@ -287,11 +287,11 @@ function switchTab(tabId) {
   // data-tab属性がtabIdと一致するものをactive
   const tabBtn = document.querySelector(`.tab[data-tab="${tabId}"]`);
   const tabCont = document.getElementById(tabId);
-  if(tabBtn) tabBtn.classList.add("active");
-  if(tabCont) tabCont.classList.add("active");
-  if(tabId === "log") updateLogTab();
-  if(tabId === "memo") loadMemo();
-  if(tabId === "todo-tab") loadTodoList();
+  if (tabBtn) tabBtn.classList.add("active");
+  if (tabCont) tabCont.classList.add("active");
+  if (tabId === "log") updateLogTab();
+  if (tabId === "memo") loadMemo();
+  if (tabId === "todo-tab") loadTodoList();
 }
 
 function addCrossRow() {
@@ -532,7 +532,7 @@ function initCrossDirectionControls() {
   handleCrossSelectionChange();
 }
 function registerCross() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const point = document.getElementById("pointSel").value.trim();
   if (!point) return alert("測点を入力してください");
   ensurePointRegistered(point);
@@ -550,10 +550,10 @@ function clearCross() {
 }
 
 // --- 測点設定 ---
-function addPointRow(){
+function addPointRow() {
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML =`<input type="text" inputmode="decimal">`;
+  row.insertCell().innerHTML = `<input type="text" inputmode="decimal">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="number" class="mid-input">`;
   const c2 = row.insertCell();
@@ -690,7 +690,7 @@ function setPointMode(mode) {
   if (manualActions) manualActions.classList.toggle("is-hidden", mode !== "manual");
   if (autoActions) autoActions.classList.toggle("is-hidden", mode !== "auto");
 }
-function updatePointTable(changed){
+function updatePointTable(changed) {
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
   rows.forEach((row, i) => {
@@ -701,43 +701,44 @@ function updatePointTable(changed){
     let tsuikyo = tsuikyoInput.valueAsNumber;
 
     // When user clears one field, don't restore previous value
-    if(changed === tankyoInput && tankyoInput.value === ''){
-      if(tsuikyoInput.value !== '') tsuikyoInput.value = '';
+    if (changed === tankyoInput && tankyoInput.value === '') {
+      if (tsuikyoInput.value !== '') tsuikyoInput.value = '';
       tankyo = NaN; tsuikyo = NaN;
-    } else if(changed === tsuikyoInput && tsuikyoInput.value === ''){
-      if(tankyoInput.value !== '') tankyoInput.value = '';
+    } else if (changed === tsuikyoInput && tsuikyoInput.value === '') {
+      if (tankyoInput.value !== '') tankyoInput.value = '';
       tankyo = NaN; tsuikyo = NaN;
-    } else if(changed === tankyoInput && !isNaN(tankyo)){      const newTsui = (i===0)? tankyo : prevTsui + tankyo;
+    } else if (changed === tankyoInput && !isNaN(tankyo)) {
+      const newTsui = (i === 0) ? tankyo : prevTsui + tankyo;
       const cur = tsuikyoInput.valueAsNumber;
-      if(isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
+      if (isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
       tsuikyo = newTsui;
-    } else if(changed === tsuikyoInput && !isNaN(tsuikyo)){
+    } else if (changed === tsuikyoInput && !isNaN(tsuikyo)) {
       const newTankyo = tsuikyo - prevTsui;
       const cur = tankyoInput.valueAsNumber;
-      if(isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
+      if (isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
       tankyo = newTankyo;
     } else {
-      if(!isNaN(tankyo)){
-        const newTsui = (i===0)? tankyo : prevTsui + tankyo;
+      if (!isNaN(tankyo)) {
+        const newTsui = (i === 0) ? tankyo : prevTsui + tankyo;
         const cur = tsuikyoInput.valueAsNumber;
-        if(isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
+        if (isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
         tsuikyo = newTsui;
-      } else if(!isNaN(tsuikyo)){
+      } else if (!isNaN(tsuikyo)) {
         const newTankyo = tsuikyo - prevTsui;
         const cur = tankyoInput.valueAsNumber;
-        if(isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
+        if (isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
         tankyo = newTankyo;
       } else {
-        if(tankyoInput.value !== '') tankyoInput.value = '';
-        if(tsuikyoInput.value !== '') tsuikyoInput.value = '';
+        if (tankyoInput.value !== '') tankyoInput.value = '';
+        if (tsuikyoInput.value !== '') tsuikyoInput.value = '';
       }
     }
 
     prevTsui = !isNaN(tsuikyo) ? tsuikyo : prevTsui;
   });
 }
-function savePointSettings(){
-  if(!activeProject){ alert('工事を選択してください'); return; }
+function savePointSettings() {
+  if (!activeProject) { alert('工事を選択してください'); return; }
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let data = [];
   rows.forEach(row => {
@@ -746,8 +747,8 @@ function savePointSettings(){
     const tankyo = inputs[1].value;
     const tsuikyo = inputs[2].value;
     const note = inputs[3].value;
-    if(point || tankyo || tsuikyo || note){
-      data.push({point, tankyo, tsuikyo, note});
+    if (point || tankyo || tsuikyo || note) {
+      data.push({ point, tankyo, tsuikyo, note });
     }
   });
   const project = getActiveProject();
@@ -768,17 +769,17 @@ function clearPointSettings() {
   updatePointSelect();
   saveDraftInputs();
 }
-function loadPointSettings(){
+function loadPointSettings() {
   const tbody = document.querySelector('#pointTable tbody');
-  if(!tbody) return;
+  if (!tbody) return;
   tbody.innerHTML = '';
   const project = getActiveProject();
   if (!project) return;
   ensureProjectPoints(project);
   let arr = project.points || [];
   const rowCount = Math.max(arr.length, 4);
-  for(let i=0;i<rowCount;i++) addPointRow();
-  arr.forEach((obj,i)=>{
+  for (let i = 0; i < rowCount; i++) addPointRow();
+  arr.forEach((obj, i) => {
     const inputs = tbody.rows[i].querySelectorAll('input');
     inputs[0].value = obj.point || '';
     inputs[1].value = obj.tankyo || '';
@@ -787,9 +788,9 @@ function loadPointSettings(){
   });
   updatePointTable();
 }
-function updatePointSelect(){
+function updatePointSelect() {
   const list = document.getElementById('pointList');
-  if(!list) return;
+  if (!list) return;
   const project = getActiveProject();
   if (!project) {
     list.innerHTML = '';
@@ -797,14 +798,9 @@ function updatePointSelect(){
   }
   ensureProjectPoints(project);
   const arr = project.points || [];
-  const registeredTsuikyo = new Set(
-    arr
-      .map((row) => String(row?.tsuikyo || "").trim())
-      .filter(Boolean)
-  );
-  　const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))    .map((input) => String(input.value || "").trim())
-     .map((input) => String(input.value || "").trim())
-     .filter(Boolean);
+  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
+    .map((input) => String(input.value || "").trim())
+    .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
   const crossPoints = Object.values(projectLogs)
@@ -814,7 +810,7 @@ function updatePointSelect(){
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
     ...crossPoints,
-  ])].filter((point) => !registeredTsuikyo.has(point));
+  ])].filter(Boolean);
   list.innerHTML = '';
   options.forEach((point) => {
     const option = document.createElement('option');
@@ -854,7 +850,7 @@ function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterU
   if (typeof afterUpdate === "function") afterUpdate();
 }
 function runAutoFill() {
-  if(!activeProject){ alert('工事を選択してください'); return; }
+  if (!activeProject) { alert('工事を選択してください'); return; }
   const start = parseFloat(document.getElementById("autoStart").value);
   const end = parseFloat(document.getElementById("autoEnd").value);
   const pitch = parseFloat(document.getElementById("autoPitch").value);
@@ -905,22 +901,22 @@ function addLongRow() {
   });
   inputs[1].addEventListener("input", () => calculateLong());
   inputs[3].addEventListener("input", () => {
-    if(inputs[3].value !== ""){
+    if (inputs[3].value !== "") {
       inputs[4].value = "";
       inputs[4].setAttribute("readonly", true);
       inputs[4].parentElement.classList.add('readonly-cell');
-    }else{
+    } else {
       inputs[4].removeAttribute("readonly");
       inputs[4].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
   inputs[4].addEventListener("input", () => {
-    if(inputs[4].value !== ""){
+    if (inputs[4].value !== "") {
       inputs[3].value = "";
       inputs[3].setAttribute("readonly", true);
       inputs[3].parentElement.classList.add('readonly-cell');
-    }else{
+    } else {
       inputs[3].removeAttribute("readonly");
       inputs[3].parentElement.classList.remove('readonly-cell');
     }
@@ -974,7 +970,7 @@ function calculateLong(skipPrompt = false) {
       cells[5].value = delta.toFixed(2);
       prevDelta = delta;
     } else {
-      let prevRow = rows[i-1];
+      let prevRow = rows[i - 1];
       let prevGHfromRow = parseFloat(prevRow.querySelectorAll("input")[6].value);
       let delta = prevDelta;
       if (!isNaN(bs) && !isNaN(prevGHfromRow)) {
@@ -993,7 +989,7 @@ function calculateLong(skipPrompt = false) {
   });
 }
 function registerLong() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const rows = document.querySelectorAll("#longTable tbody tr");
   let allLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
   let tableRows = [];
@@ -1012,10 +1008,10 @@ function registerLong() {
   });
   if (tableRows.length > 0) {
     const k = keyOfActive();
-    if(!allLogs[k]) allLogs[k]=[];
+    if (!allLogs[k]) allLogs[k] = [];
     // check for duplicate based on identical row contents
     const exists = allLogs[k].some(log => JSON.stringify(log.tableRows) === JSON.stringify(tableRows));
-    if(exists){
+    if (exists) {
       alert("既に同じ内容が登録されています");
       return;
     }
@@ -1040,7 +1036,7 @@ function addPavementRow() {
   const tbody = document.querySelector('#pavementTable tbody');
   const row = tbody.insertRow();
   // 順番を「測点｜舗装種類｜単距｜追距｜幅員｜平均幅員｜面積」にする
-  row.insertCell().innerHTML =  `<input type="text" list="pointList">`;    // 測点
+  row.insertCell().innerHTML = `<input type="text" list="pointList">`;    // 測点
   row.insertCell().innerHTML = `
     <select onchange="propagatePavementType(this)">
       <option value="As">As</option>
@@ -1071,13 +1067,13 @@ function addPavementRow() {
   updatePavementTable();
   scheduleDraftSave();
 }
-  function propagatePavementType(sel){
+function propagatePavementType(sel) {
   const rows = document.querySelectorAll("#pavementTable tbody tr");
   const currentRow = sel.closest("tr");
   const index = Array.from(rows).indexOf(currentRow);
-  for(let i=index+1;i<rows.length;i++){
+  for (let i = index + 1; i < rows.length; i++) {
     const s = rows[i].querySelector("select");
-    if(s) s.value = sel.value;
+    if (s) s.value = sel.value;
   }
   updatePavementTable();
 }
@@ -1085,7 +1081,7 @@ function addPavementRow() {
 function updatePavementTable() {
   const rows = document.querySelectorAll('#pavementTable tbody tr');
   let prevTsuikyo = 0, prevHani = 0, areaTotal = 0;
-  let areaMap = { 'As':0, 'Con':0, 'OL':0, 'As+Con':0 }; 
+  let areaMap = { 'As': 0, 'Con': 0, 'OL': 0, 'As+Con': 0 };
   rows.forEach((row, i) => {
     const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
@@ -1103,7 +1099,7 @@ function updatePavementTable() {
     let area = (tankyo && avgHani) ? (tankyo * avgHani) : '';
     inputs[5].value = area ? area.toFixed(2) : '';    // 面積
     areaTotal += parseFloat(inputs[5].value) || 0;
-    if(area){
+    if (area) {
       areaMap[select.value] += parseFloat(area);
     }
   });
@@ -1115,7 +1111,7 @@ function updatePavementTable() {
 }
 function clearPavementTable() {
   document.querySelector('#pavementTable tbody').innerHTML = '';
-  for(let i=0;i<10;i++) addPavementRow();
+  for (let i = 0; i < 10; i++) addPavementRow();
   updatePavementTable();
 
 }
@@ -1126,30 +1122,30 @@ function clearPavement() {
   }
 }
 function registerPavement() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const rows = document.querySelectorAll("#pavementTable tbody tr");
   let pavementLogs = safeParseJSON(localStorage.getItem("pavementLogs3"), {});
   let tableRows = [];
-  let areaMap = { 'アスファルト':0, 'コンクリート':0, 'オーバーレイ':0 };
+  let areaMap = { 'アスファルト': 0, 'コンクリート': 0, 'オーバーレイ': 0 };
   rows.forEach(row => {
     const select = row.querySelector('select');
     const inputs = row.querySelectorAll('input');
     const type = select.value;
-    const point   = inputs[0].value;
-    const tankyo  = inputs[1].value;
+    const point = inputs[0].value;
+    const tankyo = inputs[1].value;
     const tsuikyo = inputs[2].value;
-    const hani    = inputs[3].value;
+    const hani = inputs[3].value;
     const avgHani = inputs[4].value;
-    const area    = inputs[5].value;
-    if(type || point || tankyo || tsuikyo || hani || avgHani || area){
-      tableRows.push({type, point, tankyo, tsuikyo, hani, avgHani, area});
+    const area = inputs[5].value;
+    if (type || point || tankyo || tsuikyo || hani || avgHani || area) {
+      tableRows.push({ type, point, tankyo, tsuikyo, hani, avgHani, area });
       areaMap[type] += parseFloat(area) || 0;
     }
   });
   let areaTotal = document.getElementById('areaTotalCell').textContent;
   if (tableRows.length > 0) {
     const k = keyOfActive();
-    if(!pavementLogs[k]) pavementLogs[k]=[];
+    if (!pavementLogs[k]) pavementLogs[k] = [];
     pavementLogs[k].push({ tableRows, areaTotal, areaMap, time: new Date().toLocaleString() });
     localStorage.setItem("pavementLogs3", JSON.stringify(pavementLogs));
   }
@@ -1165,7 +1161,7 @@ function exportPavementExcel() {
     const sel = row.querySelector('select').value;
     const inputs = row.querySelectorAll('input');
     const vals = [inputs[0].value, inputs[1].value, inputs[2].value, inputs[3].value, inputs[4].value, inputs[5].value];
-    if(sel || vals.some(v => v)) {
+    if (sel || vals.some(v => v)) {
       csv += [sel, ...vals].join(',') + '\n';
     }
   });
@@ -1179,7 +1175,7 @@ function exportPavementExcel() {
   csv += `OL計,,,,,,${overlay}\n`;
   csv += `As+Con計,,,,,,${asCon}\n`;
   csv += `合計,,,,,,${total}\n`;
-  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv'});
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -1190,50 +1186,50 @@ function exportPavementExcel() {
   URL.revokeObjectURL(url);
 }
 
-function calculateVCurve(){
-  const ip   = parseFloat(document.getElementById('vcIP').value);
-  const g1p  = parseFloat(document.getElementById('vcG1').value);
-  const g2p  = parseFloat(document.getElementById('vcG2').value);
-  const vcl  = parseFloat(document.getElementById('vcVCL').value);
-  const gh0  = parseFloat(document.getElementById('vcGH0').value);
-  const out  = document.getElementById('vcurveResult');
-  if([ip,g1p,g2p,vcl,gh0].some(x=>isNaN(x)) || vcl===0 || g1p===g2p){
+function calculateVCurve() {
+  const ip = parseFloat(document.getElementById('vcIP').value);
+  const g1p = parseFloat(document.getElementById('vcG1').value);
+  const g2p = parseFloat(document.getElementById('vcG2').value);
+  const vcl = parseFloat(document.getElementById('vcVCL').value);
+  const gh0 = parseFloat(document.getElementById('vcGH0').value);
+  const out = document.getElementById('vcurveResult');
+  if ([ip, g1p, g2p, vcl, gh0].some(x => isNaN(x)) || vcl === 0 || g1p === g2p) {
     out.textContent = '数値を確認してください';
     return;
   }
-  const g1 = g1p/100; const g2 = g2p/100;
-  const start = ip - vcl/2;
-  const a = (g1 - g2) / (2*vcl);
+  const g1 = g1p / 100; const g2 = g2p / 100;
+  const start = ip - vcl / 2;
+  const a = (g1 - g2) / (2 * vcl);
   let html = '';
-  const xm = (g1 * vcl)/(g1 - g2);
+  const xm = (g1 * vcl) / (g1 - g2);
   const minSt = start + xm;
-  const ghm = gh0 + g1*xm - a*xm*xm;
+  const ghm = gh0 + g1 * xm - a * xm * xm;
   const vcr = vcl / (g1 - g2);
   const label = (g1 - g2) > 0 ? '最高地点' : '最低地点';
   html += `${label}：${minSt.toFixed(2)}m GH：${ghm.toFixed(2)}<br>`;
-  html += `VCR：${vcr.toFixed(2)}<br>`;  html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>y</th><th>⊿</th></tr>';
+  html += `VCR：${vcr.toFixed(2)}<br>`; html += '<table class="survey-table"><tr><th>測点</th><th>GH</th><th>y</th><th>⊿</th></tr>';
   const xs = [];
-  for(let i=0;i<=Math.floor(vcl);i++) xs.push(i);
-  const ipOffset = vcl/2;
-  if(!xs.some(x=>Math.abs(x-ipOffset)<1e-9)) xs.push(ipOffset);
-  if(!xs.some(x=>Math.abs(x-vcl)<1e-9)) xs.push(vcl);
-  xs.sort((a,b)=>a-b);
+  for (let i = 0; i <= Math.floor(vcl); i++) xs.push(i);
+  const ipOffset = vcl / 2;
+  if (!xs.some(x => Math.abs(x - ipOffset) < 1e-9)) xs.push(ipOffset);
+  if (!xs.some(x => Math.abs(x - vcl) < 1e-9)) xs.push(vcl);
+  xs.sort((a, b) => a - b);
   let prev = null;
   xs.forEach(x => {
     const st = start + x;
     const y = Math.abs(a) * x * x;
-    const gh = gh0 + g1*x + (a < 0 ? y : -y);
+    const gh = gh0 + g1 * x + (a < 0 ? y : -y);
     let d = '—';
-    if(prev!==null){
+    if (prev !== null) {
       const diff = gh - prev;
-      d = (diff>=0?'+':'') + diff.toFixed(2);
+      d = (diff >= 0 ? '+' : '') + diff.toFixed(2);
     }
     let label = '';
-    if(Math.abs(x) < 1e-9){
+    if (Math.abs(x) < 1e-9) {
       label = '(始点)';
-    } else if(Math.abs(x - ipOffset) < 0.01){
+    } else if (Math.abs(x - ipOffset) < 0.01) {
       label = '(IP点)';
-    } else if(Math.abs(x - vcl) < 0.01){
+    } else if (Math.abs(x - vcl) < 0.01) {
       label = '(終点)';
     }
     html += `<tr><td>${st.toFixed(2)}${label}</td><td>${gh.toFixed(2)}</td><td>${y.toFixed(2)}</td><td>${d}</td></tr>`;
@@ -1243,32 +1239,32 @@ function calculateVCurve(){
   out.innerHTML = html;
 }
 
-function crossRowText(rows){
+function crossRowText(rows) {
   return rows.map(r => {
     const h = r[0];
     const v = r[1];
     const note = r[2];
     let txt = "";
-    if(h && v){
+    if (h && v) {
       txt = `${h}/${v}`;
-    }else if(h){
+    } else if (h) {
       txt = `${h}/L`;
-    }else if(v){
+    } else if (v) {
       txt = `${v}`;
-    }else if(note){
+    } else if (note) {
       // 横・縦が空でも備考がある場合は備考のみ返す
       return note;
-    }else{
+    } else {
       return "";
     }
-    if(note) txt += `(${note})`;
+    if (note) txt += `(${note})`;
     return txt;
   }).filter(Boolean).join(" ");
 }
 
-function updateLogTab(){
+function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
-  const p = projects.find(x=>x.id===prjId);
+  const p = projects.find(x => x.id === prjId);
   const k = p ? projectKey(p) : "";
   const crossLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const crossEntry = crossLogs[k] || {};
@@ -1362,27 +1358,27 @@ function updateLogTab(){
   document.getElementById("logCurve").innerHTML = htmlCurve;
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
-  document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g,"<br>")}</div>`;
+  document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g, "<br>")}</div>`;
 }
 function clearCategory(cat) {
   const prjId = document.getElementById("logProjectSel").value;
-  const p = projects.find(x=>x.id===prjId);
-  if(!p) return;
+  const p = projects.find(x => x.id === prjId);
+  if (!p) return;
   const k = projectKey(p);
-  let keyMap = {cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3"};
-  if(!keyMap[cat]) return;
-  if(!confirm("本当にこの工事の「"+{cross:"横断測量",long:"縦断測量",pavement:"舗装計算",curve:"道路曲線計算",memo:"メモ"}[cat]+"」記録を削除しますか？")) return;
+  let keyMap = { cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3" };
+  if (!keyMap[cat]) return;
+  if (!confirm("本当にこの工事の「" + { cross: "横断測量", long: "縦断測量", pavement: "舗装計算", curve: "道路曲線計算", memo: "メモ" }[cat] + "」記録を削除しますか？")) return;
   let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
-  if(all[k]) delete all[k];
+  if (all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
   updateLogTab();
 }
 function addProject() {
   const name = document.getElementById('projectName').value.trim();
-  if(!name) return alert("工事名を入力してください");
-  if(projects.some(x=>x.name === name)) return alert("同じ工事名は登録できません");
+  if (!name) return alert("工事名を入力してください");
+  if (projects.some(x => x.name === name)) return alert("同じ工事名は登録できません");
   const id = Date.now().toString();
-  projects.push({id, name, points: []});
+  projects.push({ id, name, points: [] });
   save();
   activeProject = id;
   localStorage.setItem("activeProject3", activeProject);
@@ -1391,60 +1387,82 @@ function addProject() {
   updatePointSelect();
   alert("工事を追加・切替しました");
 }
+function toggleProjectSearch() {
+  const bar = document.getElementById("projectSearchBar");
+  const btn = document.querySelector(".btn-search-toggle");
+  const input = document.getElementById("projectSearchInput");
+  if (bar.classList.contains("is-hidden")) {
+    bar.classList.remove("is-hidden");
+    if (btn) btn.classList.add("is-active");
+    input.value = "";
+    input.focus();
+  } else {
+    bar.classList.add("is-hidden");
+    if (btn) btn.classList.remove("is-active");
+    input.value = "";
+    projectSearchQuery = "";
+    renderProjectSelects();
+  }
+}
 function filterProjectSelects(query = "") {
   projectSearchQuery = query;
-  renderProjectSelects();
-  updateLogTab();
-}
+  const keyword = query.trim().toLowerCase();
+  const sbs = document.getElementById("sidebarProjectSel");
+  const lgs = document.getElementById("logProjectSel");
 
-function getFilteredProjects() {
-  const keyword = (projectSearchQuery || "").trim().toLowerCase();
-  if (!keyword) return projects;
-  return projects.filter((p) => p.name.toLowerCase().includes(keyword));
+  sbs.innerHTML = "";
+  lgs.innerHTML = "";
+
+  const filtered = keyword
+    ? projects.filter(p => p.name.toLowerCase().includes(keyword))
+    : projects;
+
+  if (filtered.length === 0) {
+    sbs.add(new Option("該当する工事がありません", ""));
+    lgs.add(new Option("該当する工事がありません", ""));
+    sbs.disabled = true;
+    lgs.disabled = true;
+    return;
+  }
+
+  sbs.disabled = false;
+  lgs.disabled = false;
+
+  filtered.forEach(p => {
+    const o1 = new Option(p.name, p.id);
+    const o2 = new Option(p.name, p.id);
+    if (p.id === activeProject) { o1.selected = true; o2.selected = true; }
+    sbs.add(o1);
+    lgs.add(o2);
+  });
+
+  if (!filtered.some(p => p.id === activeProject)) {
+    sbs.value = filtered[0].id;
+    lgs.value = filtered[0].id;
+    sidebarSwitchProject();
+  }
 }
 
 function renderProjectSelects() {
   const sbs = document.getElementById("sidebarProjectSel");
   const lgs = document.getElementById("logProjectSel");
-  const searchInput = document.getElementById("projectSearchInput");
-  const filteredProjects = getFilteredProjects();
 
   sbs.innerHTML = "";
   lgs.innerHTML = "";
+  sbs.disabled = false;
+  lgs.disabled = false;
 
-  if (searchInput && searchInput.value !== projectSearchQuery) {
-    searchInput.value = projectSearchQuery;
-  }
-
-  filteredProjects.forEach((p) => {
-    const optionSidebar = document.createElement("option");
-    optionSidebar.value = p.id;
-    optionSidebar.textContent = p.name;
-    if (p.id === activeProject) optionSidebar.selected = true;
-    sbs.appendChild(optionSidebar);
-
-    const optionLog = document.createElement("option");
-    optionLog.value = p.id;
-    optionLog.textContent = p.name;
-    if (p.id === activeProject) optionLog.selected = true;
-    lgs.appendChild(optionLog);
+  projects.forEach(p => {
+    const o1 = new Option(p.name, p.id);
+    const o2 = new Option(p.name, p.id);
+    if (p.id === activeProject) { o1.selected = true; o2.selected = true; }
+    sbs.add(o1);
+    lgs.add(o2);
   });
-  
-  const hasMatchedProject = filteredProjects.length > 0;
-  sbs.disabled = !hasMatchedProject;
-  lgs.disabled = !hasMatchedProject;
-
-  if (!hasMatchedProject) {
-    sbs.add(new Option("該当する工事がありません", ""));
-    lgs.add(new Option("該当する工事がありません", ""));
-  } else if (!filteredProjects.some((p) => p.id === activeProject)) {
-    sbs.value = filteredProjects[0].id;
-    lgs.value = filteredProjects[0].id;
-  }
 
   let txt = "";
-  projects.forEach((p,i) => {
-    txt += `・${i+1}（${p.name}）<br>`;
+  projects.forEach((p, i) => {
+    txt += `・${i + 1}（${p.name}）<br>`;
   });
   document.getElementById("prjList").innerHTML = txt;
   loadPointSettings();
@@ -1452,16 +1470,16 @@ function renderProjectSelects() {
 }
 
 function deleteProject() {
-  if(!activeProject) return;
-  const p = projects.find(x=>x.id===activeProject);
-  if(!p) return;
-  if(!confirm("この工事（"+p.name+"）と記録を完全削除します。よろしいですか？")) return;
-  projects = projects.filter(x=>x.id !== activeProject);
+  if (!activeProject) return;
+  const p = projects.find(x => x.id === activeProject);
+  if (!p) return;
+  if (!confirm("この工事（" + p.name + "）と記録を完全削除します。よろしいですか？")) return;
+  projects = projects.filter(x => x.id !== activeProject);
   save();
   const k = projectKey(p);
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key=>{
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key => {
     let all = safeParseJSON(localStorage.getItem(key), {});
-    if(all[k]) delete all[k];
+    if (all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
   });
   clearDraftForProject(k);
@@ -1473,10 +1491,10 @@ function deleteProject() {
   updateLogTab();
 }
 function clearAllProjects() {
-  if(!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
+  if (!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "todoLogs3", "pointSettings3"].forEach(k=>localStorage.removeItem(k));  
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "todoLogs3", "pointSettings3"].forEach(k => localStorage.removeItem(k));
   localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
@@ -1599,7 +1617,7 @@ function loadTodoList() {
   renderTodoList(items);
 }
 function addTodoItem() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const input = document.getElementById("todoInput");
   if (!input) return;
   const text = input.value.trim();
@@ -1613,7 +1631,7 @@ function addTodoItem() {
   scheduleDraftSave();
 }
 function toggleTodoItem(index) {
-  if(!activeProject) return;
+  if (!activeProject) return;
   const { allTodos, key, items } = getActiveTodoItems();
   if (!items[index]) return;
   items[index].done = !items[index].done;
@@ -1622,7 +1640,7 @@ function toggleTodoItem(index) {
   renderTodoList(items);
 }
 function deleteTodoItem(index) {
-  if(!activeProject) return;
+  if (!activeProject) return;
   const { allTodos, key, items } = getActiveTodoItems();
   if (!items[index]) return;
   items.splice(index, 1);
@@ -1631,7 +1649,7 @@ function deleteTodoItem(index) {
   renderTodoList(items);
 }
 function clearCompletedTodos() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const { allTodos, key, items } = getActiveTodoItems();
   const filtered = items.filter((item) => !item.done);
   allTodos[key] = filtered;
@@ -1640,13 +1658,13 @@ function clearCompletedTodos() {
 }
 
 function saveMemo() {
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
-  if(!memo) return;
+  if (!memo) return;
 
   let allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   const k = keyOfActive();
-  if(allMemos[k]) allMemos[k] += "\n" + memo; else allMemos[k] = memo;
+  if (allMemos[k]) allMemos[k] += "\n" + memo; else allMemos[k] = memo;
   localStorage.setItem("memoLogs3", JSON.stringify(allMemos));
   document.getElementById("memoText").value = "";
   document.getElementById("memoSaved").textContent = "保存しました";
@@ -1662,12 +1680,13 @@ function loadMemo() {
   }
 }
 document.addEventListener("input", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {    scheduleDraftSave();
+  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {
+    scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
   if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {
-   scheduleDraftSave();
+    scheduleDraftSave();
   }
 });
 document.addEventListener("change", (event) => {
@@ -1710,7 +1729,7 @@ function setDrawMode(mode) {
   drawing = false;
   document.querySelectorAll('.draw-mode-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
-  });  const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
+  }); const labels = { line: '線', text: 'テキスト', number: '数字', freehand: 'フリーハンド' };
   document.getElementById("drawModeLabel").textContent = `モード: ${labels[mode] || mode}`;
   const controls = document.querySelector('.draw-controls');
   if (controls) controls.style.display = (mode === 'line') ? 'flex' : 'none';
@@ -1726,83 +1745,83 @@ function clearCanvas() {
   getCanvasCtx();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
-function clearDrawing(){
+function clearDrawing() {
   drawObjects = [];
   clearCanvas();
   currentX = null;
   currentY = null;
   redoStack = [];
 }
-function undoDrawing(){
-  if(drawObjects.length===0) return;
+function undoDrawing() {
+  if (drawObjects.length === 0) return;
   const obj = drawObjects.pop();
   redoStack.push(obj);
   redraw();
 }
-function redoDrawing(){
-  if(redoStack.length===0) return;
+function redoDrawing() {
+  if (redoStack.length === 0) return;
   const obj = redoStack.pop();
   drawObjects.push(obj);
   redraw();
 }
-function drawMarker(x,y){
+function drawMarker(x, y) {
   ctx.beginPath();
-  ctx.arc(x,y,4,0,Math.PI*2);
-  ctx.fillStyle='#ff4444';
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff4444';
   ctx.fill();
 }
-function redraw(){
+function redraw() {
   clearCanvas();
-  drawObjects.forEach(obj=>{
-    if(obj.type==='line'){
+  drawObjects.forEach(obj => {
+    if (obj.type === 'line') {
       ctx.beginPath();
       ctx.moveTo(obj.x1, obj.y1);
       ctx.lineTo(obj.x2, obj.y2);
-      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.strokeStyle = "#1c1c1c"; ctx.lineWidth = 2;
       ctx.stroke();
-      drawMarker(obj.x1,obj.y1);
-      drawMarker(obj.x2,obj.y2);
-      drawMarker((obj.x1+obj.x2)/2,(obj.y1+obj.y2)/2);
-    }else if(obj.type==='text'){
-      ctx.font="20px sans-serif";
-      ctx.fillStyle="#ca6b00";
+      drawMarker(obj.x1, obj.y1);
+      drawMarker(obj.x2, obj.y2);
+      drawMarker((obj.x1 + obj.x2) / 2, (obj.y1 + obj.y2) / 2);
+    } else if (obj.type === 'text') {
+      ctx.font = "20px sans-serif";
+      ctx.fillStyle = "#ca6b00";
       ctx.fillText(obj.text, obj.x, obj.y);
-      }else if(obj.type==='freehand'){
-      if(obj.points.length>1){
+    } else if (obj.type === 'freehand') {
+      if (obj.points.length > 1) {
         ctx.beginPath();
         ctx.moveTo(obj.points[0].x, obj.points[0].y);
-        for(let i=1;i<obj.points.length;i++){
+        for (let i = 1; i < obj.points.length; i++) {
           ctx.lineTo(obj.points[i].x, obj.points[i].y);
         }
-        ctx.strokeStyle="#1c1c1c";
-        ctx.lineWidth=2;
+        ctx.strokeStyle = "#1c1c1c";
+        ctx.lineWidth = 2;
         ctx.stroke();
       }
     }
   });
 }
-function ensureCurrentPoint(){
+function ensureCurrentPoint() {
   getCanvasCtx();
-  if(currentX===null || currentY===null){
-    currentX = canvas.width/2;
-    currentY = canvas.height/2;
+  if (currentX === null || currentY === null) {
+    currentX = canvas.width / 2;
+    currentY = canvas.height / 2;
   }
 }
-function addRelativeLine(){
+function addRelativeLine() {
   ensureCurrentPoint();
   const dxRaw = document.getElementById('inputDX').value;
   const dyRaw = document.getElementById('inputDY').value;
   const dx = parseFloat(dxRaw);
   const dy = parseFloat(dyRaw);
-  if(isNaN(dx) && isNaN(dy)){
+  if (isNaN(dx) && isNaN(dy)) {
     alert('xまたはyを入力してください');
     return;
   }
   const x1 = currentX;
   const y1 = currentY;
-  const x2 = x1 + (isNaN(dx)?0:dx) * scale;
-  const y2 = y1 - (isNaN(dy)?0:dy) * scale;
-  drawObjects.push({type:'line', x1, y1, x2, y2});
+  const x2 = x1 + (isNaN(dx) ? 0 : dx) * scale;
+  const y2 = y1 - (isNaN(dy) ? 0 : dy) * scale;
+  drawObjects.push({ type: 'line', x1, y1, x2, y2 });
   redoStack = [];
   currentX = x2;
   currentY = y2;
@@ -1811,56 +1830,56 @@ function addRelativeLine(){
   redraw();
 }
 
-function addAxisLine(axis,val){
-  if(isNaN(val)) return;
+function addAxisLine(axis, val) {
+  if (isNaN(val)) return;
   ensureCurrentPoint();
   const x1 = currentX;
   const y1 = currentY;
-  const dx = axis==='x' ? val*scale : 0;
-  const dy = axis==='y' ? val*scale : 0;
+  const dx = axis === 'x' ? val * scale : 0;
+  const dy = axis === 'y' ? val * scale : 0;
   const x2 = x1 + dx;
   const y2 = y1 - dy;
-  drawObjects.push({type:'line', x1, y1, x2, y2});
+  drawObjects.push({ type: 'line', x1, y1, x2, y2 });
   redoStack = [];
   currentX = x2;
   currentY = y2;
   redraw();
 }
-function distToSegment(px,py,x1,y1,x2,y2){
-  const A=px-x1, B=py-y1, C=x2-x1, D=y2-y1;
-  const dot=A*C+B*D;
-  const lenSq=C*C+D*D;
-  let param= lenSq? dot/lenSq : -1;
-  let xx,yy;
-  if(param<0){ xx=x1; yy=y1; }
-  else if(param>1){ xx=x2; yy=y2; }
-  else{ xx=x1+param*C; yy=y1+param*D; }
-  const dx=px-xx, dy=py-yy;
-  return Math.sqrt(dx*dx+dy*dy);
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+  let param = lenSq ? dot / lenSq : -1;
+  let xx, yy;
+  if (param < 0) { xx = x1; yy = y1; }
+  else if (param > 1) { xx = x2; yy = y2; }
+  else { xx = x1 + param * C; yy = y1 + param * D; }
+  const dx = px - xx, dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
 }
-function findObjectAt(x,y){
+function findObjectAt(x, y) {
   getCanvasCtx();
-  for(let i=drawObjects.length-1;i>=0;i--){
-    const obj=drawObjects[i];
-    if(obj.type==='line'){
-      const handles=[
-        {x:obj.x1,y:obj.y1},
-        {x:obj.x2,y:obj.y2},
-        {x:(obj.x1+obj.x2)/2,y:(obj.y1+obj.y2)/2}
+  for (let i = drawObjects.length - 1; i >= 0; i--) {
+    const obj = drawObjects[i];
+    if (obj.type === 'line') {
+      const handles = [
+        { x: obj.x1, y: obj.y1 },
+        { x: obj.x2, y: obj.y2 },
+        { x: (obj.x1 + obj.x2) / 2, y: (obj.y1 + obj.y2) / 2 }
       ];
-      for(const h of handles){
-        if(Math.hypot(x-h.x,y-h.y)<=8) return obj;
+      for (const h of handles) {
+        if (Math.hypot(x - h.x, y - h.y) <= 8) return obj;
       }
-      if(distToSegment(x,y,obj.x1,obj.y1,obj.x2,obj.y2)<=6) return obj;
-    }else if(obj.type==='text'){
-      ctx.font="20px sans-serif";
-      const w=ctx.measureText(obj.text).width;
-      const h=20;
-      if(x>=obj.x && x<=obj.x+w && y<=obj.y && y>=obj.y-h) return obj;
-      }else if(obj.type==='freehand'){
-      for(let j=0;j<obj.points.length-1;j++){
-        const p1=obj.points[j], p2=obj.points[j+1];
-        if(distToSegment(x,y,p1.x,p1.y,p2.x,p2.y)<=6) return obj;
+      if (distToSegment(x, y, obj.x1, obj.y1, obj.x2, obj.y2) <= 6) return obj;
+    } else if (obj.type === 'text') {
+      ctx.font = "20px sans-serif";
+      const w = ctx.measureText(obj.text).width;
+      const h = 20;
+      if (x >= obj.x && x <= obj.x + w && y <= obj.y && y >= obj.y - h) return obj;
+    } else if (obj.type === 'freehand') {
+      for (let j = 0; j < obj.points.length - 1; j++) {
+        const p1 = obj.points[j], p2 = obj.points[j + 1];
+        if (distToSegment(x, y, p1.x, p1.y, p2.x, p2.y) <= 6) return obj;
       }
     }
   }
@@ -1868,19 +1887,19 @@ function findObjectAt(x,y){
 }
 function saveDrawing() {
   getCanvasCtx();
-  if(!activeProject){ alert("工事を選択してください"); return; }
+  if (!activeProject) { alert("工事を選択してください"); return; }
   const k = keyOfActive();
   // PNG形式で保存
   let img = canvas.toDataURL("image/png");
-  if(!savedDrawings[k]) savedDrawings[k]=[];
-  savedDrawings[k].push({img, time: new Date().toLocaleString()});
+  if (!savedDrawings[k]) savedDrawings[k] = [];
+  savedDrawings[k].push({ img, time: new Date().toLocaleString() });
   localStorage.setItem("drawingLogs3", JSON.stringify(savedDrawings));
   showDrawingLog();
   clearDrawing();
   alert("記録しました");
 }
 function showDrawingLog() {
-  if(!activeProject) return;
+  if (!activeProject) return;
   const k = keyOfActive();
   let arr = savedDrawings[k] || [];
   let html = `<h3>図形記録</h3>`;
@@ -1893,11 +1912,11 @@ function showDrawingLog() {
 // --- キャンバス描画イベント処理 ---
 function setupDrawingCanvas() {
   getCanvasCtx();
-  if(!inputsInitialized){
+  if (!inputsInitialized) {
     const dxEl = document.getElementById('inputDX');
     const dyEl = document.getElementById('inputDY');
-    const handleX = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('x', parseFloat(dxEl.value)); dxEl.value=''; };
-    const handleY = e => { if(e.type==='keydown' && e.key!=='Enter') return; addAxisLine('y', parseFloat(dyEl.value)); dyEl.value=''; };
+    const handleX = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; addAxisLine('x', parseFloat(dxEl.value)); dxEl.value = ''; };
+    const handleY = e => { if (e.type === 'keydown' && e.key !== 'Enter') return; addAxisLine('y', parseFloat(dyEl.value)); dyEl.value = ''; };
     dxEl.addEventListener('keydown', handleX);
     dyEl.addEventListener('keydown', handleY);
     inputsInitialized = true;
@@ -1906,42 +1925,42 @@ function setupDrawingCanvas() {
   function xy(e) {
     const rect = canvas.getBoundingClientRect();
 
-    if(e.touches){ // タッチ端末
+    if (e.touches) { // タッチ端末
       let t = e.touches[0] || e.changedTouches[0];
-      return {x: t.clientX - rect.left, y: t.clientY - rect.top};
-    }else{
-      return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+      return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+    } else {
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
   }
-  canvas.onmousedown = function(e){
+  canvas.onmousedown = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand'){
+    if (drawMode === 'freehand') {
       drawing = true;
-      freehandPoints = [{x: pos.x, y: pos.y}];
+      freehandPoints = [{ x: pos.x, y: pos.y }];
       console.log('freehand start', freehandPoints[0]);
     }
   };
-  canvas.onmousemove = function(e){
+  canvas.onmousemove = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand' && drawing){
-      freehandPoints.push({x: pos.x, y: pos.y});
+    if (drawMode === 'freehand' && drawing) {
+      freehandPoints.push({ x: pos.x, y: pos.y });
       console.log('freehand move', freehandPoints.length);
       redraw();
       ctx.beginPath();
       ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
-      for(let i=1;i<freehandPoints.length;i++){
+      for (let i = 1; i < freehandPoints.length; i++) {
         ctx.lineTo(freehandPoints[i].x, freehandPoints[i].y);
       }
-      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.strokeStyle = "#1c1c1c"; ctx.lineWidth = 2;
       ctx.stroke();
     }
   };
-  canvas.onmouseup = function(e){
+  canvas.onmouseup = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand' && drawing){
-      freehandPoints.push({x: pos.x, y: pos.y});
+    if (drawMode === 'freehand' && drawing) {
+      freehandPoints.push({ x: pos.x, y: pos.y });
       console.log('freehand end', freehandPoints.length);
-      drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      drawObjects.push({ type: 'freehand', points: freehandPoints.slice() });
       redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
@@ -1950,13 +1969,13 @@ function setupDrawingCanvas() {
       redraw();
     }
   };
-  canvas.onmouseleave = function(){
-    if(drawing){
-      if(drawMode === 'freehand' && freehandPoints.length > 1){
-        drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+  canvas.onmouseleave = function () {
+    if (drawing) {
+      if (drawMode === 'freehand' && freehandPoints.length > 1) {
+        drawObjects.push({ type: 'freehand', points: freehandPoints.slice() });
         redoStack = [];
-        currentX = freehandPoints[freehandPoints.length-1].x;
-        currentY = freehandPoints[freehandPoints.length-1].y;
+        currentX = freehandPoints[freehandPoints.length - 1].x;
+        currentY = freehandPoints[freehandPoints.length - 1].y;
         console.log('freehand cancel', freehandPoints.length);
       }
       drawing = false;
@@ -1964,76 +1983,76 @@ function setupDrawingCanvas() {
       redraw();
     }
   };
-  canvas.ontouchstart = function(e){
+  canvas.ontouchstart = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand'){
+    if (drawMode === 'freehand') {
       drawing = true;
-      freehandPoints = [{x: pos.x, y: pos.y}];
+      freehandPoints = [{ x: pos.x, y: pos.y }];
       console.log('freehand start', freehandPoints[0]);
     }
     e.preventDefault();
   };
-  canvas.ontouchmove = function(e){
+  canvas.ontouchmove = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand' && drawing){
-      freehandPoints.push({x: pos.x, y: pos.y});
+    if (drawMode === 'freehand' && drawing) {
+      freehandPoints.push({ x: pos.x, y: pos.y });
       console.log('freehand move', freehandPoints.length);
       redraw();
       ctx.beginPath();
       ctx.moveTo(freehandPoints[0].x, freehandPoints[0].y);
-      for(let i=1;i<freehandPoints.length;i++){
+      for (let i = 1; i < freehandPoints.length; i++) {
         ctx.lineTo(freehandPoints[i].x, freehandPoints[i].y);
       }
-      ctx.strokeStyle="#1c1c1c"; ctx.lineWidth=2;
+      ctx.strokeStyle = "#1c1c1c"; ctx.lineWidth = 2;
       ctx.stroke();
     }
     e.preventDefault();
   };
-  canvas.ontouchend = function(e){
+  canvas.ontouchend = function (e) {
     let pos = xy(e);
-    if(drawMode==='freehand' && drawing){
-      freehandPoints.push({x: pos.x, y: pos.y});
+    if (drawMode === 'freehand' && drawing) {
+      freehandPoints.push({ x: pos.x, y: pos.y });
       console.log('freehand end', freehandPoints.length);
-      drawObjects.push({type:'freehand', points: freehandPoints.slice()});
+      drawObjects.push({ type: 'freehand', points: freehandPoints.slice() });
       redoStack = [];
       currentX = pos.x;
       currentY = pos.y;
       drawing = false;
       freehandPoints = [];
       redraw();
-    }else if(drawMode === 'text' || drawMode === 'number'){
+    } else if (drawMode === 'text' || drawMode === 'number') {
       let txt = prompt('入力してください（最大8文字）');
-      if(txt){
-        txt = txt.substring(0,8);
+      if (txt) {
+        txt = txt.substring(0, 8);
         drawObjects.push({ type: 'text', x: pos.x, y: pos.y, text: txt });
         redoStack = [];
         redraw();
       }
-    }else if(drawMode === 'line'){
+    } else if (drawMode === 'line') {
       let snapped = false;
       const obj = findObjectAt(pos.x, pos.y);
-      if(obj && obj.type === 'line'){
+      if (obj && obj.type === 'line') {
         const handles = [
-          {x: obj.x1, y: obj.y1},
-          {x: obj.x2, y: obj.y2},
-          {x: (obj.x1 + obj.x2)/2, y: (obj.y1 + obj.y2)/2}
+          { x: obj.x1, y: obj.y1 },
+          { x: obj.x2, y: obj.y2 },
+          { x: (obj.x1 + obj.x2) / 2, y: (obj.y1 + obj.y2) / 2 }
         ];
         let nearest = null;
         let minDist = Infinity;
-        for(const h of handles){
+        for (const h of handles) {
           const d = Math.hypot(pos.x - h.x, pos.y - h.y);
-          if(d < minDist){
+          if (d < minDist) {
             minDist = d;
             nearest = h;
           }
         }
-        if(minDist <= 8){
+        if (minDist <= 8) {
           currentX = nearest.x;
           currentY = nearest.y;
           snapped = true;
         }
       }
-      if(!snapped){
+      if (!snapped) {
         currentX = pos.x;
         currentY = pos.y;
       }
@@ -2041,43 +2060,44 @@ function setupDrawingCanvas() {
     }
     e.preventDefault();
   };
-  if(!isTouchDevice){
-    canvas.onclick = function(e){
-      if(drawing) return;
+  if (!isTouchDevice) {
+    canvas.onclick = function (e) {
+      if (drawing) return;
       let pos = xy(e);
-      if(drawMode==='line'){
+      if (drawMode === 'line') {
         let snapped = false;
         const obj = findObjectAt(pos.x, pos.y);
-        if(obj && obj.type === 'line'){
+        if (obj && obj.type === 'line') {
           const handles = [
-            {x: obj.x1, y: obj.y1},
-            {x: obj.x2, y: obj.y2},
-            {x: (obj.x1 + obj.x2)/2, y: (obj.y1 + obj.y2)/2}
+            { x: obj.x1, y: obj.y1 },
+            { x: obj.x2, y: obj.y2 },
+            { x: (obj.x1 + obj.x2) / 2, y: (obj.y1 + obj.y2) / 2 }
           ];
           let nearest = null;
           let minDist = Infinity;
-          for(const h of handles){
+          for (const h of handles) {
             const d = Math.hypot(pos.x - h.x, pos.y - h.y);
-            if(d < minDist){
+            if (d < minDist) {
               minDist = d;
               nearest = h;
             }
           }
-          if(minDist <= 8){
+          if (minDist <= 8) {
             currentX = nearest.x;
             currentY = nearest.y;
             snapped = true;
           }
         }
-        if(!snapped){
+        if (!snapped) {
           currentX = pos.x;
           currentY = pos.y;
         }
         redraw();
-      } else if(drawMode==='text' || drawMode==='number'){        let txt = prompt("入力してください（最大8文字）");
-        if(!txt) return;
-        txt = txt.substring(0,8);
-        drawObjects.push({type:'text', x:pos.x, y:pos.y, text:txt});
+      } else if (drawMode === 'text' || drawMode === 'number') {
+        let txt = prompt("入力してください（最大8文字）");
+        if (!txt) return;
+        txt = txt.substring(0, 8);
+        drawObjects.push({ type: 'text', x: pos.x, y: pos.y, text: txt });
         redoStack = [];
         redraw();
       }
@@ -2088,9 +2108,9 @@ function setupDrawingCanvas() {
 }
 // 図形タブを開いた時だけキャンバス初期化＆記録表示
 const _oldSwitchTab = switchTab;
-switchTab = function(tabId){
+switchTab = function (tabId) {
   _oldSwitchTab(tabId);
-  if(tabId==="drawing"){
+  if (tabId === "drawing") {
     setDrawMode("line");
     drawObjects = [];
     currentX = null;
@@ -2133,7 +2153,7 @@ function calculateCurve() {
 
   const mcDMS = decimalToDMS((180 - iaDecimal) / 2);                       // MC（角度で返す）
 
-    const buildCurveRow = (radius, label) => {
+  const buildCurveRow = (radius, label) => {
     if (!radius || radius <= 0 || isNaN(radius)) {
       return {
         label,
@@ -2216,7 +2236,7 @@ function registerCurve() {
   let allLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
   const k = keyOfActive();
   if (!allLogs[k]) allLogs[k] = [];
-  allLogs[k].push({...curveResultObj, time: new Date().toLocaleString()});
+  allLogs[k].push({ ...curveResultObj, time: new Date().toLocaleString() });
   localStorage.setItem("curveLogs3", JSON.stringify(allLogs));
   curveResultObj = null;
   document.getElementById('curveResult').innerHTML = "登録しました。";
@@ -2228,37 +2248,37 @@ function registerCurve() {
 }
 
 // --- 電卓機能 --- //
-function appendCalc(v){
+function appendCalc(v) {
   document.getElementById('calcDisplay').value += v;
 }
-function clearCalc(){
+function clearCalc() {
   document.getElementById('calcDisplay').value = '';
 }
-function backspaceCalc(){
+function backspaceCalc() {
   const display = document.getElementById('calcDisplay');
   display.value = display.value.slice(0, -1);
 }
-function evaluateCalc(){
+function evaluateCalc() {
   const display = document.getElementById('calcDisplay');
   const msg = document.getElementById('calcMsg');
   const expr = display.value;
-  msg.textContent = '';  try{
+  msg.textContent = ''; try {
     const parser = new CalcParser(expr);
     const result = parser.parse();
     display.value = result;
     return result;
-  }catch(e){
+  } catch (e) {
     display.value = 'Error';
     msg.textContent = '無効な式です';
     return null;
   }
 }
 
-function copyCalc(){
+function copyCalc() {
   const text = document.getElementById('calcDisplay').value;
   const msg = document.getElementById('calcMsg');
-  if(!text){ msg.textContent = 'コピー対象がありません'; return; }
-  if(navigator.clipboard && navigator.clipboard.writeText){
+  if (!text) { msg.textContent = 'コピー対象がありません'; return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch(() => {
       msg.textContent = 'コピーできませんでした';
     });
@@ -2267,105 +2287,106 @@ function copyCalc(){
     input.value = text;
     document.body.appendChild(input);
     input.select();
-    try{
+    try {
       document.execCommand('copy');
-    }catch(e){
+    } catch (e) {
       msg.textContent = 'コピーできませんでした';
     }
     document.body.removeChild(input);
   }
 }
 
-class CalcParser{
-  constructor(str){
+class CalcParser {
+  constructor(str) {
     this.str = str;
     this.pos = 0;
   }
-  peek(){
+  peek() {
     return this.str[this.pos];
   }
-  skip(){
-    while(this.pos < this.str.length && /\s/.test(this.str[this.pos])) this.pos++; 
+  skip() {
+    while (this.pos < this.str.length && /\s/.test(this.str[this.pos])) this.pos++;
   }
-  parse(){
+  parse() {
     const val = this.parseExpression();
     this.skip();
-    if(this.pos !== this.str.length) throw new Error('invalid');
+    if (this.pos !== this.str.length) throw new Error('invalid');
     return val;
   }
-  parseExpression(){
+  parseExpression() {
     let val = this.parseTerm();
-    while(true){
+    while (true) {
       this.skip();
       const ch = this.peek();
-      if(ch === '+' || ch === '-'){
+      if (ch === '+' || ch === '-') {
         this.pos++;
         const right = this.parseTerm();
         val = ch === '+' ? val + right : val - right;
-      }else break;
+      } else break;
     }
     return val;
   }
-  parseTerm(){
+  parseTerm() {
     let val = this.parseFactor();
-    while(true){
+    while (true) {
       this.skip();
       const ch = this.peek();
-      if(ch === '*' || ch === '/' || ch === '%'){
+      if (ch === '*' || ch === '/' || ch === '%') {
         this.pos++;
         const right = this.parseFactor();
-        if(ch === '*') val = val * right;
-        else if(ch === '/') val = val / right;
-        else val = val % right;      }else break;
+        if (ch === '*') val = val * right;
+        else if (ch === '/') val = val / right;
+        else val = val % right;
+      } else break;
     }
     return val;
   }
-  parseFactor(){
+  parseFactor() {
     this.skip();
     let ch = this.peek();
-    if(ch === '+' || ch === '-'){
+    if (ch === '+' || ch === '-') {
       this.pos++;
       const val = this.parseFactor();
       return ch === '-' ? -val : val;
     }
-    if(ch === '('){
+    if (ch === '(') {
       this.pos++;
       const val = this.parseExpression();
       this.skip();
-      if(this.peek() !== ')') throw new Error('missing )');
+      if (this.peek() !== ')') throw new Error('missing )');
       this.pos++;
       return val;
     }
     return this.parseNumber();
   }
-  parseNumber(){
+  parseNumber() {
     this.skip();
     let start = this.pos;
-    if(this.peek() === '.') this.pos++; 
-    while(/\d/.test(this.peek())) this.pos++;
-    if(this.peek() === '.'){ this.pos++; while(/\d/.test(this.peek())) this.pos++; }
+    if (this.peek() === '.') this.pos++;
+    while (/\d/.test(this.peek())) this.pos++;
+    if (this.peek() === '.') { this.pos++; while (/\d/.test(this.peek())) this.pos++; }
     const substr = this.str.slice(start, this.pos);
-    if(!substr || /^\.?$/.test(substr)) throw new Error('number');
+    if (!substr || /^\.?$/.test(substr)) throw new Error('number');
     return parseFloat(substr);
   }
 }
 
 // --- Calculator modal management ---
 let calcParent = null;
-function openCalcModal(){
+function openCalcModal() {
   const calc = document.getElementById('calc');
   const overlay = document.getElementById('calcOverlay');
-  if(!calcParent) calcParent = calc.parentElement;
+  if (!calcParent) calcParent = calc.parentElement;
   overlay.style.display = 'flex';
   overlay.appendChild(calc);
   calc.classList.add('modal-mode');
   calc.onclick = e => e.stopPropagation();
 }
-function closeCalcModal(){
+function closeCalcModal() {
   const calc = document.getElementById('calc');
   const overlay = document.getElementById('calcOverlay');
   overlay.style.display = 'none';
   calc.classList.remove('modal-mode');
   calc.onclick = null;
-  if(calcParent) calcParent.appendChild(calc);
+  if (calcParent) calcParent.appendChild(calc);
 }
