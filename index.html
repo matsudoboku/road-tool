@@ -21,6 +21,12 @@
   <header class="app-header">
     <div class="project-selector">
       <label for="sidebarProjectSel">工事:</label>
+      <input
+        type="search"
+        id="projectSearchInput"
+        class="project-search-input"
+        placeholder="工事名で検索"
+        oninput="filterProjectSelects(this.value)">
       <select id="sidebarProjectSel" onchange="sidebarSwitchProject()"></select>
     </div>
     <button id="calcCallBtn" class="btn-icon" onclick="openCalcModal()" aria-label="電卓">
@@ -551,6 +557,7 @@
   <script src="main.js"></script>
 </body>
 </html>
+
 
 
 
