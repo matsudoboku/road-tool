@@ -2213,18 +2213,14 @@ function calculateCurve() {
   const baseRow = buildCurveRow(r, "R");
   const minusRow = buildCurveRow(r - 5, "R-5");
   const plusRow = buildCurveRow(r + 5, "R+5");
+  const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
 
   const iaStr = decimalToDMS(iaDecimal);
 
   curveResultObj = {
     ipNo: ipNo ? ipNo : "",
     iaStr,
-    r: baseRow.r,
-    tl: baseRow.tl,
-    sl: baseRow.sl,
-    cl: baseRow.cl,
-    cl2: baseRow.cl2,
-    mc: baseRow.mc
+    candidates: rowCandidates
   };
   // 結果表示
   document.getElementById("curveResult").innerHTML = `
@@ -2233,8 +2229,9 @@ function calculateCurve() {
       <tr><th>IA</th><td>${curveResultObj.iaStr}</td></tr>
     </table>
     <table class="survey-table">
-      <tr><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+      <tr><th>登録</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
       <tr>
+          <td><input type="radio" name="curveRow" value="${minusRow.label}" ${minusRow.tl === "—" ? "disabled" : ""}></td>
         <td>${minusRow.label} (${minusRow.r})</td>
         <td>${minusRow.tl}</td>
         <td>${minusRow.sl}</td>
@@ -2243,6 +2240,7 @@ function calculateCurve() {
         <td>${minusRow.mc}</td>
       </tr>
       <tr>
+        <td><input type="radio" name="curveRow" value="${baseRow.label}" checked></td>
         <td>${baseRow.label} (${baseRow.r})</td>
         <td>${baseRow.tl}</td>
         <td>${baseRow.sl}</td>
@@ -2251,6 +2249,7 @@ function calculateCurve() {
         <td>${baseRow.mc}</td>
       </tr>
       <tr>
+        <td><input type="radio" name="curveRow" value="${plusRow.label}" ${plusRow.tl === "—" ? "disabled" : ""}></td>
         <td>${plusRow.label} (${plusRow.r})</td>
         <td>${plusRow.tl}</td>
         <td>${plusRow.sl}</td>
@@ -2263,10 +2262,23 @@ function calculateCurve() {
 function registerCurve() {
   if (!curveResultObj) { alert("まず「計算する」を押してください"); return; }
   if (!activeProject) { alert("工事を選択してください"); return; }
+  const selectedLabel = document.querySelector('input[name="curveRow"]:checked')?.value;
+  const selectedResult = curveResultObj.candidates.find((row) => row.label === selectedLabel);
+  if (!selectedResult) { alert("登録するRを選択してください"); return; }
   let allLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
   const k = keyOfActive();
   if (!allLogs[k]) allLogs[k] = [];
-  allLogs[k].push({ ...curveResultObj, time: new Date().toLocaleString() });
+  allLogs[k].push({
+    ipNo: curveResultObj.ipNo,
+    iaStr: curveResultObj.iaStr,
+    r: selectedResult.r,
+    tl: selectedResult.tl,
+    sl: selectedResult.sl,
+    cl: selectedResult.cl,
+    cl2: selectedResult.cl2,
+    mc: selectedResult.mc,
+    time: new Date().toLocaleString()
+  });
   localStorage.setItem("curveLogs3", JSON.stringify(allLogs));
   curveResultObj = null;
   document.getElementById('curveResult').innerHTML = "登録しました。";
