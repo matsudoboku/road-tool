@@ -584,111 +584,6 @@ function setupAutoAppendRow(tableSelector, addRowFn) {
   tbody.addEventListener("input", handler);
   tbody.addEventListener("change", handler);
 }
-function formatDistance(value) {
-  if (!Number.isFinite(value)) return "";
-  return value.toFixed(3);
-}
-function formatStationName(distance) {
-  if (!Number.isFinite(distance)) return "";
-  const sign = distance < 0 ? "-" : "";
-  const abs = Math.abs(distance);
-  const no = Math.floor(abs / 100);
-  const offset = abs - no * 100;
-  return `${sign}No.${no} + ${offset.toFixed(1)}`;
-}
-function parseMajorPointsInput(text) {
-  if (!text) return [];
-  return text
-    .split(/\n|;/)
-    .map(line => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const parts = line.split(",").map(part => part.trim()).filter(Boolean);
-      if (parts.length === 0) return null;
-      let label = "";
-      let distance = NaN;
-      if (parts.length === 1) {
-        distance = parseFloat(parts[0]);
-      } else {
-        const first = parseFloat(parts[0]);
-        const second = parseFloat(parts[1]);
-        if (!isNaN(first) && isNaN(second)) {
-          distance = first;
-          label = parts[1] || "";
-        } else if (!isNaN(second)) {
-          distance = second;
-          label = parts[0] || "";
-        }
-      }
-      if (isNaN(distance)) return null;
-      return { label, distance };
-    })
-    .filter(Boolean);
-}
-function generateStations(start, end, pitch, majorPoints) {
-  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(pitch)) return [];
-  if (pitch <= 0) return [];
-  const round = (value) => Math.round(value * 1000) / 1000;
-  const map = new Map();
-  for (let dist = start; dist <= end + 1e-6; dist += pitch) {
-    const key = round(dist);
-    if (!map.has(key)) map.set(key, { distance: key, notes: [] });
-  }
-  (majorPoints || []).forEach((mp) => {
-    const key = round(mp.distance);
-    if (!map.has(key)) map.set(key, { distance: key, notes: [] });
-    if (mp.label) map.get(key).notes.push(mp.label);
-  });
-  const sorted = Array.from(map.values()).sort((a, b) => a.distance - b.distance);
-  let prev = null;
-  return sorted.map((entry) => {
-    const tsuikyo = round(entry.distance);
-    const tankyo = prev === null ? tsuikyo : round(tsuikyo - prev);
-    prev = tsuikyo;
-    return {
-      point: formatStationName(tsuikyo),
-      tankyo: formatDistance(tankyo),
-      tsuikyo: formatDistance(tsuikyo),
-      note: entry.notes.join("/")
-    };
-  });
-}
-function mergePoints(existing, generated) {
-  const round = (value) => Math.round(value * 1000) / 1000;
-  const map = new Map();
-  existing.forEach((row) => {
-    const dist = parseFloat(row.tsuikyo);
-    if (!isNaN(dist)) {
-      map.set(round(dist), { ...row });
-    }
-  });
-  generated.forEach((row) => {
-    const dist = parseFloat(row.tsuikyo);
-    if (isNaN(dist)) return;
-    const key = round(dist);
-    if (map.has(key)) {
-      const prev = map.get(key);
-      map.set(key, { ...prev, ...row, note: row.note || prev.note || "" });
-    } else {
-      map.set(key, { ...row });
-    }
-  });
-  const merged = [
-    ...existing.filter((row) => isNaN(parseFloat(row.tsuikyo))),
-    ...Array.from(map.entries()).sort((a, b) => a[0] - b[0]).map(([, row]) => row)
-  ];
-  return merged;
-}
-function setPointMode(mode) {
-  const manual = document.getElementById("point-mode-manual");
-  const auto = document.getElementById("point-mode-auto");
-  const manualActions = document.getElementById("point-manual-actions");
-  const autoActions = document.getElementById("point-auto-actions");
-  if (manual) manual.classList.toggle("is-hidden", mode !== "manual");
-  if (auto) auto.classList.toggle("is-hidden", mode !== "auto");
-  if (manualActions) manualActions.classList.toggle("is-hidden", mode !== "manual");
-  if (autoActions) autoActions.classList.toggle("is-hidden", mode !== "auto");
-}
 function updatePointTable(changed) {
   const rows = document.querySelectorAll('#pointTable tbody tr');
   let prevTsui = 0;
@@ -772,6 +667,11 @@ function loadPointSettings() {
   const tbody = document.querySelector('#pointTable tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
+  const curveInfo = document.getElementById("pointCurveInfo");
+  if (curveInfo) {
+    curveInfo.innerHTML = "";
+    curveInfo.classList.add("is-hidden");
+  }
   const project = getActiveProject();
   if (!project) return;
   ensureProjectPoints(project);
@@ -839,6 +739,41 @@ function findRegisteredPoint(pointName) {
   ensureProjectPoints(project);
   return (project.points || []).find((row) => String(row.point || "").trim() === name) || null;
 }
+function showRegisteredCurvesFromPointTab() {
+  if (!activeProject) { alert("工事を選択してください"); return; }
+  const area = document.getElementById("pointCurveInfo");
+  if (!area) return;
+  const allLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
+  const logs = allLogs[keyOfActive()] || [];
+  if (!Array.isArray(logs) || logs.length === 0) {
+    area.innerHTML = "登録済みの道路曲線情報はありません。";
+    area.classList.remove("is-hidden");
+    return;
+  }
+  const rows = logs.map((log, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${log.ipNo || "-"}</td>
+        <td>${log.iaStr || "-"}</td>
+        <td>${log.r ?? "-"}</td>
+        <td>${log.tl ?? "-"}</td>
+        <td>${log.cl ?? "-"}</td>
+        <td>${log.mc || "-"}</td>
+      </tr>`).join("");
+  area.innerHTML = `
+    <h3>登録済み道路曲線情報（${logs.length}件）</h3>
+    <div class="table-wrapper mt-2">
+      <table class="survey-table">
+        <thead>
+          <tr><th>No</th><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>CL</th><th>MC</th></tr>
+        </thead>
+        <tbody>${rows}
+        </tbody>
+      </table>
+    </div>`;
+  area.classList.remove("is-hidden");
+}
+
 function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterUpdate) {
   if (!pointInput || !tankyoInput || !tsuikyoInput) return;
   const registered = findRegisteredPoint(pointInput.value);
@@ -848,34 +783,6 @@ function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterU
     tsuikyoInput.value = registered.tsuikyo || "";
   }
   if (typeof afterUpdate === "function") afterUpdate();
-}
-function runAutoFill() {
-  if (!activeProject) { alert('工事を選択してください'); return; }
-  const start = parseFloat(document.getElementById("autoStart").value);
-  const end = parseFloat(document.getElementById("autoEnd").value);
-  const pitch = parseFloat(document.getElementById("autoPitch").value);
-  if (!Number.isFinite(start) || !Number.isFinite(end) || !Number.isFinite(pitch)) {
-    alert("開始単距・終了単距・ピッチを入力してください");
-    return;
-  }
-  if (end < start) {
-    alert("終了単距は開始単距以上を指定してください");
-    return;
-  }
-  const majorText = document.getElementById("autoMajorPoints").value;
-  const majorPoints = parseMajorPointsInput(majorText);
-  const generated = generateStations(start, end, pitch, majorPoints);
-  if (generated.length === 0) {
-    alert("測点を生成できませんでした");
-    return;
-  }
-  const project = getActiveProject();
-  if (!project) return;
-  ensureProjectPoints(project);
-  project.points = mergePoints(project.points || [], generated);
-  save();
-  loadPointSettings();
-  updatePointSelect();
 }
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
@@ -1721,11 +1628,7 @@ document.addEventListener("input", (event) => {
     scheduleDraftSave();
   }
 });
-document.addEventListener("change", (event) => {
-  if (event.target.closest("#project, #point-tab, #cross, #long, #pavement, #curve, #vcurve, #todo-tab, #memo")) {
-    scheduleDraftSave();
-  }
-});
+
 document.addEventListener("change", (event) => {
   if (event.target && event.target.name === "pointMode") {
     setPointMode(event.target.value);
@@ -1750,7 +1653,6 @@ window.onload = () => {
   updateLogTab();
   initCrossDirectionControls();
   switchTab('project');
-  setPointMode("manual");
   loadDraftInputs();
   loadTodoList();
   initializeQuickMemo();
