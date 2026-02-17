@@ -228,8 +228,7 @@ function loadDraftInputs() {
     }
   }
   if (typeof draft.memo === "string") {
-    const memo = document.getElementById("memoText");
-    if (memo) memo.value = draft.memo;
+    setMemoFieldValue(draft.memo);
   }
   if (draft.todo) {
     const todoInput = document.getElementById("todoInput");
@@ -1658,6 +1657,36 @@ function clearCompletedTodos() {
   renderTodoList(filtered);
 }
 
+function setMemoFieldValue(value) {
+  const memo = document.getElementById("memoText");
+  const quickMemo = document.getElementById("quickMemoText");
+  if (memo && memo.value !== value) memo.value = value;
+  if (quickMemo && quickMemo.value !== value) quickMemo.value = value;
+}
+function toggleQuickMemo(forceOpen) {
+  const panel = document.getElementById("quickMemoPanel");
+  const fab = document.getElementById("quickMemoFab");
+  if (!panel || !fab) return;
+  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !panel.classList.contains("is-open");
+  panel.classList.toggle("is-open", shouldOpen);
+  fab.classList.toggle("is-active", shouldOpen);
+  panel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  fab.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+}
+function initializeQuickMemo() {
+  const quickMemo = document.getElementById("quickMemoText");
+  if (!quickMemo) return;
+  quickMemo.addEventListener("input", () => {
+    setMemoFieldValue(quickMemo.value);
+    scheduleDraftSave();
+  });
+  setMemoFieldValue(document.getElementById("memoText")?.value || "");
+}
+function saveQuickMemo() {
+  saveMemo();
+  setMemoFieldValue(document.getElementById("memoText")?.value || "");
+}
+
 function saveMemo() {
   if (!activeProject) { alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
@@ -1675,9 +1704,8 @@ function saveMemo() {
 function loadMemo() {
   document.getElementById("memoSaved").textContent = "";
   const draft = getDraftStore()[draftKey()];
-  const memoText = document.getElementById("memoText");
-  if (memoText && draft && typeof draft.memo === "string") {
-    memoText.value = draft.memo;
+  if (draft && typeof draft.memo === "string") {
+    setMemoFieldValue(draft.memo);
   }
 }
 document.addEventListener("input", (event) => {
@@ -1710,6 +1738,7 @@ window.onload = () => {
   setPointMode("manual");
   loadDraftInputs();
   loadTodoList();
+  initializeQuickMemo();
   draftReady = true;
 };
 // --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
