@@ -1185,9 +1185,11 @@ tfoot td {
 
 .quick-memo-panel {
   position: fixed;
-  right: 16px;
-  bottom: 86px;
-  width: min(360px, calc(100vw - 24px));
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 24px));
+  max-height: calc(100vh - 32px);
   background: #fff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -1209,6 +1211,7 @@ tfoot td {
 #quickMemoText {
   width: 100%;
   min-height: 130px;
+  max-height: min(45vh, 320px);
   resize: vertical;
   margin-bottom: 8px;
 }
