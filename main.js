@@ -2229,8 +2229,7 @@ function calculateCurve() {
   const minusRow = buildCurveRow(r - 5, "R-5");
   const plusRow = buildCurveRow(r + 5, "R+5");
   const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
-  const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
-
+  
   const iaStr = decimalToDMS(iaDecimal);
 
   curveResultObj = {
