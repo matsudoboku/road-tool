@@ -577,8 +577,20 @@
 
   <div id="calcOverlay" class="calc-overlay" onclick="closeCalcModal()"></div>
 
+  <button id="quickMemoFab" class="quick-memo-fab" onclick="toggleQuickMemo()" aria-label="クイックメモ" aria-expanded="false">
+    📝
+  </button>
+
+  <div id="quickMemoPanel" class="quick-memo-panel" aria-hidden="true">
+    <div class="quick-memo-header">クイックメモ</div>
+    <textarea id="quickMemoText" rows="6" placeholder="どのページからでもメモを入力できます..."></textarea>
+    <div class="quick-memo-actions">
+      <button class="btn btn-success" onclick="saveQuickMemo()">保存</button>
+      <button class="btn btn-secondary" onclick="toggleQuickMemo(false)">閉じる</button>
+    </div>
+  </div>
+
   <script src="main.js"></script>
 </body>
 
 </html>
-
