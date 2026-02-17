@@ -1672,6 +1672,9 @@ function toggleQuickMemo(forceOpen) {
   fab.classList.toggle("is-active", shouldOpen);
   panel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
   fab.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+  if (shouldOpen) {
+    document.getElementById("quickMemoText")?.focus();
+  }
 }
 function initializeQuickMemo() {
   const quickMemo = document.getElementById("quickMemoText");
@@ -1686,7 +1689,12 @@ function saveQuickMemo() {
   saveMemo();
   setMemoFieldValue(document.getElementById("memoText")?.value || "");
 }
-
+function clearQuickMemo() {
+  setMemoFieldValue("");
+  const saved = document.getElementById("memoSaved");
+  if (saved) saved.textContent = "";
+  scheduleDraftSave();
+}
 function saveMemo() {
   if (!activeProject) { alert("工事を選択してください"); return; }
   const memo = document.getElementById("memoText").value.trim();
@@ -1722,6 +1730,13 @@ document.addEventListener("change", (event) => {
   if (event.target && event.target.name === "pointMode") {
     setPointMode(event.target.value);
   }
+});
+document.addEventListener("click", (event) => {
+  const panel = document.getElementById("quickMemoPanel");
+  const fab = document.getElementById("quickMemoFab");
+  if (!panel || !fab || !panel.classList.contains("is-open")) return;
+  if (panel.contains(event.target) || fab.contains(event.target)) return;
+  toggleQuickMemo(false);
 });
 window.onload = () => {
   renderProjectSelects();
@@ -2213,6 +2228,7 @@ function calculateCurve() {
   const baseRow = buildCurveRow(r, "R");
   const minusRow = buildCurveRow(r - 5, "R-5");
   const plusRow = buildCurveRow(r + 5, "R+5");
+  const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
   const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
 
   const iaStr = decimalToDMS(iaDecimal);
