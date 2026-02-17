@@ -2239,40 +2239,44 @@ function calculateCurve() {
   };
   // 結果表示
   document.getElementById("curveResult").innerHTML = `
-    <table class="survey-table">
-      <tr><th>IP No</th><td>${curveResultObj.ipNo}</td></tr>
-      <tr><th>IA</th><td>${curveResultObj.iaStr}</td></tr>
-    </table>
-    <table class="survey-table">
-      <tr><th>登録</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
-      <tr>
-          <td><input type="radio" name="curveRow" value="${minusRow.label}" ${minusRow.tl === "—" ? "disabled" : ""}></td>
-        <td>${minusRow.label} (${minusRow.r})</td>
-        <td>${minusRow.tl}</td>
-        <td>${minusRow.sl}</td>
-        <td>${minusRow.cl}</td>
-        <td>${minusRow.cl2}</td>
-        <td>${minusRow.mc}</td>
-      </tr>
-      <tr>
-        <td><input type="radio" name="curveRow" value="${baseRow.label}" checked></td>
-        <td>${baseRow.label} (${baseRow.r})</td>
-        <td>${baseRow.tl}</td>
-        <td>${baseRow.sl}</td>
-        <td>${baseRow.cl}</td>
-        <td>${baseRow.cl2}</td>
-        <td>${baseRow.mc}</td>
-      </tr>
-      <tr>
-        <td><input type="radio" name="curveRow" value="${plusRow.label}" ${plusRow.tl === "—" ? "disabled" : ""}></td>
-        <td>${plusRow.label} (${plusRow.r})</td>
-        <td>${plusRow.tl}</td>
-        <td>${plusRow.sl}</td>
-        <td>${plusRow.cl}</td>
-        <td>${plusRow.cl2}</td>
-        <td>${plusRow.mc}</td>
-      </tr>
-    </table>`;
+    <div class="curve-result-summary table-wrapper">
+      <table class="survey-table curve-result-table curve-result-table-summary">
+        <tr><th>IP No</th><td>${curveResultObj.ipNo}</td></tr>
+        <tr><th>IA</th><td>${curveResultObj.iaStr}</td></tr>
+      </table>
+    </div>
+    <div class="table-wrapper curve-result-table-wrapper">
+      <table class="survey-table curve-result-table">
+        <tr><th>登録</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+        <tr>
+            <td><input type="radio" name="curveRow" value="${minusRow.label}" ${minusRow.tl === "—" ? "disabled" : ""}></td>
+          <td>${minusRow.label} (${minusRow.r})</td>
+          <td>${minusRow.tl}</td>
+          <td>${minusRow.sl}</td>
+          <td>${minusRow.cl}</td>
+          <td>${minusRow.cl2}</td>
+          <td>${minusRow.mc}</td>
+        </tr>
+        <tr>
+          <td><input type="radio" name="curveRow" value="${baseRow.label}" checked></td>
+          <td>${baseRow.label} (${baseRow.r})</td>
+          <td>${baseRow.tl}</td>
+          <td>${baseRow.sl}</td>
+          <td>${baseRow.cl}</td>
+          <td>${baseRow.cl2}</td>
+          <td>${baseRow.mc}</td>
+        </tr>
+        <tr>
+          <td><input type="radio" name="curveRow" value="${plusRow.label}" ${plusRow.tl === "—" ? "disabled" : ""}></td>
+          <td>${plusRow.label} (${plusRow.r})</td>
+          <td>${plusRow.tl}</td>
+          <td>${plusRow.sl}</td>
+          <td>${plusRow.cl}</td>
+          <td>${plusRow.cl2}</td>
+          <td>${plusRow.mc}</td>
+        </tr>
+      </table>
+    </div>`;
 }
 function registerCurve() {
   if (!curveResultObj) { alert("まず「計算する」を押してください"); return; }
