@@ -801,8 +801,13 @@ tfoot td {
 .btn-group-center {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 16px;
   margin: 16px 0;
+}
+
+#curve .btn-group-center .btn {
+  min-width: 130px;
 }
 
 .full-width {
@@ -990,6 +995,36 @@ tfoot td {
   border: 1px solid #fff9c4;
   border-radius: var(--radius-sm);
   text-align: center;
+}
+
+.curve-result-summary {
+  margin-bottom: 8px;
+}
+
+.curve-result-table {
+  table-layout: auto;
+  min-width: 640px;
+}
+
+.curve-result-table th,
+.curve-result-table td {
+  padding: 8px 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+.curve-result-table th {
+  font-family: var(--font-family);
+}
+
+.curve-result-table-summary {
+  min-width: 100%;
+}
+
+.curve-result-table-summary th,
+.curve-result-table-summary td {
+  white-space: normal;
 }
 
 .text-center-container {
@@ -1244,7 +1279,35 @@ tfoot td {
   .btn-group-right button {
     flex: 1;
   }
+  #curve .btn-group-center {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 
+  #curve .btn-group-center .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #curve .result-area {
+    padding: 10px 8px;
+  }
+
+  .curve-result-table {
+    min-width: 580px;
+  }
+
+  .curve-result-table th,
+  .curve-result-table td {
+    padding: 8px 6px;
+    font-size: 0.82rem;
+  }
+
+  .curve-result-table td input[type="radio"] {
+    transform: scale(1.1);
+  }
+  
   /* 横断測量の表ヘッダー固定 */
   .sticky-controls {
     position: sticky;
