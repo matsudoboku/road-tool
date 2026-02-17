@@ -1161,6 +1161,64 @@ tfoot td {
   margin-top: 8px;
 }
 
+
+.quick-memo-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-color);
+  background: #fff;
+  color: var(--accent-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1600;
+  box-shadow: var(--shadow-md);
+}
+
+.quick-memo-fab.is-active {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+.quick-memo-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 86px;
+  width: min(360px, calc(100vw - 24px));
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 12px;
+  z-index: 1590;
+  display: none;
+}
+
+.quick-memo-panel.is-open {
+  display: block;
+}
+
+.quick-memo-header {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+#quickMemoText {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.quick-memo-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 /* -----------------------------
    レスポンシブ調整
 ----------------------------- */
