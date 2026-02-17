@@ -806,11 +806,12 @@ function updatePointSelect() {
   const crossPoints = Object.values(projectLogs)
     .map(log => String(log?.point || "").trim())
     .filter(Boolean);
+  const numericOnly = /^-?\d+(?:\.\d+)?$/;
   const options = [...new Set([
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
     ...crossPoints,
-  ])].filter(Boolean);
+  ])].filter((point) => point && !numericOnly.test(point));
   list.innerHTML = '';
   options.forEach((point) => {
     const option = document.createElement('option');
@@ -880,7 +881,7 @@ function runAutoFill() {
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList">`;
+  row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList" autocomplete="off">`; 
   row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
