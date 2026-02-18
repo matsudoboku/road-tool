@@ -1328,7 +1328,7 @@ tfoot td {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  padding: 44px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(13, 71, 161, 0.95);
   backdrop-filter: blur(4px);
   box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.2);
@@ -1341,22 +1341,52 @@ tfoot td {
   transform: translateY(0);
 }
 
+.mobile-numeric-close {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #0d47a1;
+  background: #fff;
+  font-weight: 700;
+}
+
 .mobile-numeric-keypad-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
   max-width: 620px;
   margin: 0 auto;
 }
 
 .mobile-numeric-keypad-grid button {
   border: none;
-  border-radius: 10px;
-  min-height: 42px;
-  font-size: 1.05rem;
+  border-radius: 12px;
+  min-height: 50px;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #0d47a1;
   background: #fff;
+  transition: background-color 0.08s ease, color 0.08s ease, transform 0.08s ease;
+}
+
+.mobile-numeric-keypad-grid button:active,
+.mobile-numeric-keypad-grid button.is-pressed,
+.mobile-numeric-close:active,
+.mobile-numeric-close.is-pressed {
+  background: #ffca28;
+  color: #18326e;
+  transform: scale(0.97);
+}
+
+body.mobile-keypad-visible .quick-memo-fab,
+body.mobile-keypad-visible .quick-memo-panel {
+  display: none !important;
 }
 
 @media (min-width: 769px) {
