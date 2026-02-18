@@ -919,10 +919,9 @@ function addLongRow() {
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="text" class="narrow-input" readonly tabindex="-1">`;
   let c6 = row.insertCell();
-  c6.classList.add('readonly-cell');
-  c6.innerHTML = `<input type="text" class="wide-input" readonly tabindex="-1">`;
+  c6.innerHTML = `<input type="text" class="wide-input">`;
   const inputs = row.querySelectorAll("input");
-  [inputs[1], inputs[3], inputs[4]].forEach(markForMobileNumericKeypad);
+  [inputs[1], inputs[3], inputs[4], inputs[6]].forEach(markForMobileNumericKeypad);
   ["input", "change"].forEach((eventName) => {
     inputs[0].addEventListener(eventName, () => {
       applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], () => calculateLong(true));
