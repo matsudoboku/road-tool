@@ -1337,6 +1337,29 @@ tfoot td {
   z-index: 1200;
 }
 
+.mobile-keypad-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin: 0 auto 10px;
+  max-width: 620px;
+}
+
+.mobile-keypad-mode-toggle button {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  min-height: 34px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0d47a1;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.mobile-keypad-mode-toggle button.is-active {
+  background: #ffca28;
+  color: #18326e;
+}
+
 @media (max-width: 768px) {
   .mobile-numeric-keypad {
     bottom: calc(12px + env(safe-area-inset-bottom));
@@ -1370,6 +1393,18 @@ tfoot td {
   margin: 0 auto;
 }
 
+.mobile-alphabet-keypad-grid {
+  display: none;
+}
+
+.mobile-numeric-keypad[data-keypad-mode="alphabet"] [data-keypad-grid="numeric"] {
+  display: none;
+}
+
+.mobile-numeric-keypad[data-keypad-mode="alphabet"] [data-keypad-grid="alphabet"] {
+  display: grid;
+}
+
 .mobile-numeric-keypad-grid button {
   border: none;
   border-radius: 12px;
@@ -1395,7 +1430,9 @@ tfoot td {
 .mobile-numeric-keypad-grid button:active,
 .mobile-numeric-keypad-grid button.is-pressed,
 .mobile-numeric-close:active,
-.mobile-numeric-close.is-pressed {
+.mobile-numeric-close.is-pressed,
+.mobile-keypad-mode-toggle button:active,
+.mobile-keypad-mode-toggle button.is-pressed {
   background: #ffca28;
   color: #18326e;
   transform: scale(0.97);
