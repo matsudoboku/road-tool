@@ -140,7 +140,16 @@ function initializeMobileNumericKeypad() {
   mobileKeypadRoot.addEventListener("pointerdown", (event) => {
     const key = event.target.closest("button[data-key]");
     if (!key) return;
+    event.preventDefault();
+    if (mobileKeypadTarget && document.activeElement !== mobileKeypadTarget) {
+      mobileKeypadTarget.focus({ preventScroll: true });
+    }
     key.classList.add("is-pressed");
+  });
+ mobileKeypadRoot.addEventListener("dblclick", (event) => {
+    if (event.target.closest("button[data-key]")) {
+      event.preventDefault();
+    }
   });
   const releasePressedState = () => {
     mobileKeypadRoot.querySelectorAll("button.is-pressed").forEach((button) => {
