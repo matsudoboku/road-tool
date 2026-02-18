@@ -94,6 +94,19 @@
       </div>
 
       <!-- 測点設定カード -->
+      <div class="card">
+        <div class="card-header">
+          <h2>データ保存（バックアップ）</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-sm text-muted">現在のデータをJSONファイルとして保存します。</p>
+          <div class="form-stack mt-2">
+            <button class="btn btn-primary full-width" onclick="exportBackup()">バックアップを保存</button>
+          </div>
+          <div id="backupExportStatus" class="status-msg mt-2"></div>
+        </div>
+      </div>
+
       <!-- バックアップインポートカード -->
       <div class="card">
         <div class="card-header">
@@ -592,6 +605,7 @@
 </body>
 
 </html>
+
 
 
 
