@@ -97,14 +97,21 @@ function backspaceAtCursor(input) {
 }
 
 function hideMobileNumericKeypad() {
-  if (mobileKeypadRoot) mobileKeypadRoot.classList.remove("is-visible");
+  if (mobileKeypadRoot) {
+    mobileKeypadRoot.classList.remove("is-visible");
+    mobileKeypadRoot.setAttribute("aria-hidden", "true");
+  }
+  document.body.classList.remove("mobile-keypad-visible");
   mobileKeypadTarget = null;
 }
 
 function showMobileNumericKeypad(input) {
   if (!mobileKeypadRoot || !isMobileNumericTarget(input)) return;
   mobileKeypadTarget = input;
+  toggleQuickMemo(false);
   mobileKeypadRoot.classList.add("is-visible");
+  mobileKeypadRoot.setAttribute("aria-hidden", "false");
+  document.body.classList.add("mobile-keypad-visible");
 }
 
 function initializeMobileNumericKeypad() {
@@ -130,6 +137,19 @@ function initializeMobileNumericKeypad() {
     }
     insertAtCursor(mobileKeypadTarget, action);
   });
+  mobileKeypadRoot.addEventListener("pointerdown", (event) => {
+    const key = event.target.closest("button[data-key]");
+    if (!key) return;
+    key.classList.add("is-pressed");
+  });
+  const releasePressedState = () => {
+    mobileKeypadRoot.querySelectorAll("button.is-pressed").forEach((button) => {
+      button.classList.remove("is-pressed");
+    });
+  };
+  mobileKeypadRoot.addEventListener("pointerup", releasePressedState);
+  mobileKeypadRoot.addEventListener("pointercancel", releasePressedState);
+  mobileKeypadRoot.addEventListener("pointerleave", releasePressedState);
   document.addEventListener("focusin", (event) => {
     if (isMobileNumericTarget(event.target)) {
       showMobileNumericKeypad(event.target);
