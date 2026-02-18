@@ -1383,6 +1383,10 @@ tfoot td {
   user-select: none;
 }
 
+.mobile-numeric-keypad-grid button.mobile-numeric-keypad-wide {
+  grid-column: span 2;
+}
+
 .mobile-numeric-close {
   touch-action: manipulation;
   user-select: none;
