@@ -1539,7 +1539,8 @@ function renderProjectSelects() {
   projects.forEach((p, i) => {
     txt += `・${i + 1}（${p.name}）<br>`;
   });
-  document.getElementById("prjList").innerHTML = txt;
+  const projectList = document.getElementById("prjList");
+  if (projectList) projectList.innerHTML = txt;
   loadPointSettings();
   updatePointSelect();
 }
