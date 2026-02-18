@@ -1546,6 +1546,49 @@ function setStorageValue(key, value) {
   }
   localStorage.setItem(key, JSON.stringify(value));
 }
+function exportBackup() {
+  const status = document.getElementById("backupExportStatus");
+  try {
+    const storageKeys = [
+      "projects3",
+      "activeProject3",
+      "pointSettings3",
+      "crossLogs3",
+      "longLogs3",
+      "pavementLogs3",
+      "curveLogs3",
+      "memoLogs3",
+      "todoLogs3",
+      "drawingLogs3",
+      DRAFT_STORAGE_KEY
+    ];
+    const storage = {};
+    storageKeys.forEach((key) => {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return;
+      storage[key] = safeParseJSON(raw, raw);
+    });
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      storage
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `roadtool-backup-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (status) status.textContent = "バックアップを保存しました";
+  } catch (error) {
+    console.error("Export failed", error);
+    if (status) status.textContent = "バックアップの保存に失敗しました";
+  }
+}
 function importBackup() {
   const input = document.getElementById("backupFileInput");
   const status = document.getElementById("backupImportStatus");
