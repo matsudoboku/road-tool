@@ -60,6 +60,7 @@ let activeCrossRemarkInput = null;
 let crossQuickTagsHome = null;
 let mobileKeypadTarget = null;
 let mobileKeypadRoot = null;
+let mobileKeypadMode = "numeric";
 
 function markForMobileNumericKeypad(input) {
   if (!input) return;
@@ -68,8 +69,37 @@ function markForMobileNumericKeypad(input) {
   input.setAttribute("autocomplete", "off");
 }
 
+function markForMobileAlphabetKeypad(input) {
+  if (!input) return;
+  input.classList.add("mobile-alpha-keypad-target");
+  input.setAttribute("inputmode", "none");
+  input.setAttribute("autocomplete", "off");
+}
+
 function isMobileNumericTarget(element) {
   return !!(element && element.matches && element.matches("input.mobile-num-keypad-target") && !element.readOnly && !element.disabled);
+}
+
+function isMobileAlphabetTarget(element) {
+  return !!(element && element.matches && element.matches("input.mobile-alpha-keypad-target") && !element.readOnly && !element.disabled);
+}
+
+function isMobileKeypadTarget(element) {
+  return isMobileNumericTarget(element) || isMobileAlphabetTarget(element);
+}
+
+function setMobileKeypadMode(mode, force = false) {
+  if (!mobileKeypadRoot) return;
+  if (!force && mode === "alphabet" && !isMobileAlphabetTarget(mobileKeypadTarget)) {
+    mode = "numeric";
+  }
+  mobileKeypadMode = mode === "alphabet" ? "alphabet" : "numeric";
+  mobileKeypadRoot.setAttribute("data-keypad-mode", mobileKeypadMode);
+  mobileKeypadRoot.querySelectorAll("[data-keypad-mode]").forEach((button) => {
+    const active = button.dataset.keypadMode === mobileKeypadMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
 }
 
 function insertAtCursor(input, value) {
@@ -106,8 +136,10 @@ function hideMobileNumericKeypad() {
 }
 
 function showMobileNumericKeypad(input) {
-  if (!mobileKeypadRoot || !isMobileNumericTarget(input)) return;
+  if (!mobileKeypadRoot || !isMobileKeypadTarget(input)) return;
   mobileKeypadTarget = input;
+  const defaultMode = isMobileAlphabetTarget(input) ? mobileKeypadMode : "numeric";
+  setMobileKeypadMode(defaultMode, true);
   toggleQuickMemo(false);
   mobileKeypadRoot.classList.add("is-visible");
   mobileKeypadRoot.setAttribute("aria-hidden", "false");
@@ -117,7 +149,15 @@ function showMobileNumericKeypad(input) {
 function initializeMobileNumericKeypad() {
   mobileKeypadRoot = document.getElementById("mobileNumericKeypad");
   if (!mobileKeypadRoot) return;
+  setMobileKeypadMode("numeric", true);
+
   mobileKeypadRoot.addEventListener("click", (event) => {
+      const modeButton = event.target.closest("button[data-keypad-mode]");
+    if (modeButton) {
+      setMobileKeypadMode(modeButton.dataset.keypadMode);
+      return;
+    }
+
     const key = event.target.closest("button[data-key]");
     if (!key || !mobileKeypadTarget) return;
     const action = key.dataset.key;
@@ -137,8 +177,9 @@ function initializeMobileNumericKeypad() {
     }
     insertAtCursor(mobileKeypadTarget, action);
   });
+  
   mobileKeypadRoot.addEventListener("pointerdown", (event) => {
-    const key = event.target.closest("button[data-key]");
+    const key = event.target.closest("button[data-key], button[data-keypad-mode]");
     if (!key) return;
     event.preventDefault();
     if (mobileKeypadTarget && document.activeElement !== mobileKeypadTarget) {
@@ -146,11 +187,13 @@ function initializeMobileNumericKeypad() {
     }
     key.classList.add("is-pressed");
   });
- mobileKeypadRoot.addEventListener("dblclick", (event) => {
-    if (event.target.closest("button[data-key]")) {
+
+  mobileKeypadRoot.addEventListener("dblclick", (event) => {
+    if (event.target.closest("button[data-key], button[data-keypad-mode]")) {
       event.preventDefault();
     }
   });
+  
   const releasePressedState = () => {
     mobileKeypadRoot.querySelectorAll("button.is-pressed").forEach((button) => {
       button.classList.remove("is-pressed");
@@ -159,15 +202,17 @@ function initializeMobileNumericKeypad() {
   mobileKeypadRoot.addEventListener("pointerup", releasePressedState);
   mobileKeypadRoot.addEventListener("pointercancel", releasePressedState);
   mobileKeypadRoot.addEventListener("pointerleave", releasePressedState);
+  
   document.addEventListener("focusin", (event) => {
-    if (isMobileNumericTarget(event.target)) {
+    if (isMobileKeypadTarget(event.target)) {
       showMobileNumericKeypad(event.target);
     } else if (!event.target.closest("#mobileNumericKeypad")) {
       hideMobileNumericKeypad();
     }
   });
+  
   document.addEventListener("click", (event) => {
-    const isTarget = isMobileNumericTarget(event.target);
+    const isTarget = isMobileKeypadTarget(event.target);
     if (isTarget) {
       showMobileNumericKeypad(event.target);
       return;
@@ -671,15 +716,17 @@ function clearCross() {
 function addPointRow() {
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text" inputmode="decimal">`;
+  row.insertCell().innerHTML = `<input type="text" autocomplete="off">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="text" class="mid-input">`;
   const c2 = row.insertCell();
   c2.innerHTML = `<input type="text" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text">`;
 
+  const pointInput = row.cells[0].querySelector('input');
   const tankyoInput = c1.querySelector('input');
   const tsuikyoInput = c2.querySelector('input');
+  markForMobileAlphabetKeypad(pointInput);
   markForMobileNumericKeypad(tankyoInput);
   markForMobileNumericKeypad(tsuikyoInput);
   tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
