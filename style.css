@@ -1322,3 +1322,48 @@ tfoot td {
     width: 95%;
   }
 }
+
+.mobile-numeric-keypad {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(13, 71, 161, 0.95);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.2);
+  transform: translateY(110%);
+  transition: transform 0.2s ease;
+  z-index: 1200;
+}
+
+.mobile-numeric-keypad.is-visible {
+  transform: translateY(0);
+}
+
+.mobile-numeric-keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.mobile-numeric-keypad-grid button {
+  border: none;
+  border-radius: 10px;
+  min-height: 42px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0d47a1;
+  background: #fff;
+}
+
+@media (min-width: 769px) {
+  .mobile-numeric-keypad {
+    max-width: 520px;
+    left: auto;
+    right: 16px;
+    border-radius: 12px 12px 0 0;
+  }
+}
