@@ -532,8 +532,8 @@ input[readonly] {
   color: var(--text-main);
 }
 
-#pavementTable th:first-child,
-#pavementTable td:first-child {
+#pavementTable thead th:first-child,
+#pavementTable tbody td:first-child {
   min-width: 92px;
   position: sticky;
   left: 0;
