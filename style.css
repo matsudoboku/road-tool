@@ -1337,6 +1337,12 @@ tfoot td {
   z-index: 1200;
 }
 
+@media (max-width: 768px) {
+  .mobile-numeric-keypad {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
 .mobile-numeric-keypad.is-visible {
   transform: translateY(0);
 }
