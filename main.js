@@ -58,6 +58,95 @@ let draftSaveTimer = null;
 let activeCrossRecordKey = "";
 let activeCrossRemarkInput = null;
 let crossQuickTagsHome = null;
+let mobileKeypadTarget = null;
+let mobileKeypadRoot = null;
+
+function markForMobileNumericKeypad(input) {
+  if (!input) return;
+  input.classList.add("mobile-num-keypad-target");
+  input.setAttribute("inputmode", "none");
+  input.setAttribute("autocomplete", "off");
+}
+
+function isMobileNumericTarget(element) {
+  return !!(element && element.matches && element.matches("input.mobile-num-keypad-target") && !element.readOnly && !element.disabled);
+}
+
+function insertAtCursor(input, value) {
+  if (!input || typeof value !== "string") return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  input.value = `${input.value.slice(0, start)}${value}${input.value.slice(end)}`;
+  const nextPos = start + value.length;
+  input.setSelectionRange(nextPos, nextPos);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function backspaceAtCursor(input) {
+  if (!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  if (start !== end) {
+    input.value = `${input.value.slice(0, start)}${input.value.slice(end)}`;
+    input.setSelectionRange(start, start);
+  } else if (start > 0) {
+    input.value = `${input.value.slice(0, start - 1)}${input.value.slice(start)}`;
+    input.setSelectionRange(start - 1, start - 1);
+  }
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function hideMobileNumericKeypad() {
+  if (mobileKeypadRoot) mobileKeypadRoot.classList.remove("is-visible");
+  mobileKeypadTarget = null;
+}
+
+function showMobileNumericKeypad(input) {
+  if (!mobileKeypadRoot || !isMobileNumericTarget(input)) return;
+  mobileKeypadTarget = input;
+  mobileKeypadRoot.classList.add("is-visible");
+}
+
+function initializeMobileNumericKeypad() {
+  mobileKeypadRoot = document.getElementById("mobileNumericKeypad");
+  if (!mobileKeypadRoot) return;
+  mobileKeypadRoot.addEventListener("click", (event) => {
+    const key = event.target.closest("button[data-key]");
+    if (!key || !mobileKeypadTarget) return;
+    const action = key.dataset.key;
+    if (action === "close") {
+      hideMobileNumericKeypad();
+      mobileKeypadTarget.blur();
+      return;
+    }
+    if (action === "backspace") {
+      backspaceAtCursor(mobileKeypadTarget);
+      return;
+    }
+    if (action === "clear") {
+      mobileKeypadTarget.value = "";
+      mobileKeypadTarget.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+    insertAtCursor(mobileKeypadTarget, action);
+  });
+  document.addEventListener("focusin", (event) => {
+    if (isMobileNumericTarget(event.target)) {
+      showMobileNumericKeypad(event.target);
+    } else if (!event.target.closest("#mobileNumericKeypad")) {
+      hideMobileNumericKeypad();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    const isTarget = isMobileNumericTarget(event.target);
+    if (isTarget) {
+      showMobileNumericKeypad(event.target);
+      return;
+    }
+    if (!event.target.closest("#mobileNumericKeypad")) hideMobileNumericKeypad();
+  });
+}
+
 function scheduleDraftSave() {
   if (!draftReady) return;
   if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -297,9 +386,10 @@ function addCrossRow() {
   const tbody = document.querySelector("#crossTable tbody");
   const row = tbody.insertRow();
   row.classList.add("cross-data-row");
-  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
+  row.querySelectorAll("input.mid-input").forEach(markForMobileNumericKeypad);
   scheduleDraftSave();
 }
 function initializeCrossTable() {
@@ -554,13 +644,15 @@ function addPointRow() {
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text" inputmode="decimal">`;
   const c1 = row.insertCell();
-  c1.innerHTML = `<input type="number" class="mid-input">`;
+  c1.innerHTML = `<input type="text" class="mid-input">`;
   const c2 = row.insertCell();
-  c2.innerHTML = `<input type="number" class="mid-input">`;
+  c2.innerHTML = `<input type="text" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text">`;
 
   const tankyoInput = c1.querySelector('input');
   const tsuikyoInput = c2.querySelector('input');
+  markForMobileNumericKeypad(tankyoInput);
+  markForMobileNumericKeypad(tsuikyoInput);
   tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
   tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
   scheduleDraftSave();
@@ -591,8 +683,8 @@ function updatePointTable(changed) {
     const inputs = row.querySelectorAll('input');
     const tankyoInput = inputs[1];
     const tsuikyoInput = inputs[2];
-    let tankyo = tankyoInput.valueAsNumber;
-    let tsuikyo = tsuikyoInput.valueAsNumber;
+    let tankyo = parseFloat(tankyoInput.value);
+    let tsuikyo = parseFloat(tsuikyoInput.value);
 
     // When user clears one field, don't restore previous value
     if (changed === tankyoInput && tankyoInput.value === '') {
@@ -603,23 +695,23 @@ function updatePointTable(changed) {
       tankyo = NaN; tsuikyo = NaN;
     } else if (changed === tankyoInput && !isNaN(tankyo)) {
       const newTsui = (i === 0) ? tankyo : prevTsui + tankyo;
-      const cur = tsuikyoInput.valueAsNumber;
+      const cur = parseFloat(tsuikyoInput.value);
       if (isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
       tsuikyo = newTsui;
     } else if (changed === tsuikyoInput && !isNaN(tsuikyo)) {
       const newTankyo = tsuikyo - prevTsui;
-      const cur = tankyoInput.valueAsNumber;
+      const cur = parseFloat(tankyoInput.value);
       if (isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
       tankyo = newTankyo;
     } else {
       if (!isNaN(tankyo)) {
         const newTsui = (i === 0) ? tankyo : prevTsui + tankyo;
-        const cur = tsuikyoInput.valueAsNumber;
+        const cur = parseFloat(tsuikyoInput.value);
         if (isNaN(cur) || cur !== newTsui) tsuikyoInput.value = newTsui;
         tsuikyo = newTsui;
       } else if (!isNaN(tsuikyo)) {
         const newTankyo = tsuikyo - prevTsui;
-        const cur = tankyoInput.valueAsNumber;
+        const cur = parseFloat(tankyoInput.value);
         if (isNaN(cur) || cur !== newTankyo) tankyoInput.value = newTankyo;
         tankyo = newTankyo;
       } else {
@@ -788,19 +880,20 @@ function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList" autocomplete="off">`; 
-  row.insertCell().innerHTML = `<input type="number" class="mid-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
-  c2.innerHTML = `<input type="number" class="mid-input" readonly tabindex="-1">`;
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  c2.innerHTML = `<input type="text" class="mid-input" readonly tabindex="-1">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
   let c5 = row.insertCell();
   c5.classList.add('readonly-cell');
-  c5.innerHTML = `<input type="number" class="narrow-input" readonly tabindex="-1">`;
+  c5.innerHTML = `<input type="text" class="narrow-input" readonly tabindex="-1">`;
   let c6 = row.insertCell();
   c6.classList.add('readonly-cell');
-  c6.innerHTML = `<input type="number" class="wide-input" readonly tabindex="-1">`;
+  c6.innerHTML = `<input type="text" class="wide-input" readonly tabindex="-1">`;
   const inputs = row.querySelectorAll("input");
+  [inputs[1], inputs[3], inputs[4]].forEach(markForMobileNumericKeypad);
   ["input", "change"].forEach((eventName) => {
     inputs[0].addEventListener(eventName, () => {
       applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], () => calculateLong(true));
@@ -1656,6 +1749,7 @@ window.onload = () => {
   loadDraftInputs();
   loadTodoList();
   initializeQuickMemo();
+  initializeMobileNumericKeypad();
   draftReady = true;
 };
 // --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
