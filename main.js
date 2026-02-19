@@ -865,7 +865,7 @@ function updatePointSelect() {
   }
   ensureProjectPoints(project);
   const arr = project.points || [];
-  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr input:first-child'))
+  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr td:first-child input'))
     .map((input) => String(input.value || "").trim())
     .filter(Boolean);
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
