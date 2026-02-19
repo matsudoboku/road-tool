@@ -857,10 +857,12 @@ function loadPointSettings() {
 }
 function updatePointSelect() {
   const list = document.getElementById('pointList');
+  const pointSelect = document.getElementById('pointSel');
   if (!list) return;
   const project = getActiveProject();
   if (!project) {
     list.innerHTML = '';
+    if (pointSelect) pointSelect.innerHTML = '';
     return;
   }
   ensureProjectPoints(project);
@@ -868,22 +870,31 @@ function updatePointSelect() {
   const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr td:first-child input'))
     .map((input) => String(input.value || "").trim())
     .filter(Boolean);
-  const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
-  const projectLogs = getCrossLogProjectStore(allLogs, keyOfActive());
-  const crossPoints = Object.values(projectLogs)
-    .map(log => String(log?.point || "").trim())
-    .filter(Boolean);
   const options = [...new Set([
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
-    ...crossPoints,
   ])].filter((point) => point);
+  const currentValue = pointSelect ? String(pointSelect.value || "") : "";
+  
   list.innerHTML = '';
   options.forEach((point) => {
     const option = document.createElement('option');
     option.value = point;
     list.appendChild(option);
   });
+
+  if (pointSelect) {
+    pointSelect.innerHTML = '';
+    options.forEach((point) => {
+      const option = document.createElement('option');
+      option.value = point;
+      option.textContent = point;
+      pointSelect.appendChild(option);
+    });
+    if (options.length) {
+      pointSelect.value = options.includes(currentValue) ? currentValue : options[0];
+    }
+  }
 }
 function ensurePointRegistered(pointName) {
   const name = String(pointName || "").trim();
