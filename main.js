@@ -716,7 +716,7 @@ function clearCross() {
 function addPointRow() {
   const tbody = document.querySelector('#pointTable tbody');
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text" list="pointList" autocomplete="off">`;
+  row.insertCell().innerHTML = `<input type="text" autocomplete="off">`;
   const c1 = row.insertCell();
   c1.innerHTML = `<input type="text" class="mid-input">`;
   const c2 = row.insertCell();
