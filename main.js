@@ -857,12 +857,12 @@ function loadPointSettings() {
 }
 function updatePointSelect() {
   const list = document.getElementById('pointList');
-  const pointSelect = document.getElementById('pointSel');
+  const pointInput = document.getElementById('pointSel');
   if (!list) return;
   const project = getActiveProject();
   if (!project) {
     list.innerHTML = '';
-    if (pointSelect) pointSelect.innerHTML = '';
+    if (pointInput) pointInput.value = '';
     return;
   }
   ensureProjectPoints(project);
@@ -874,7 +874,7 @@ function updatePointSelect() {
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
   ])].filter((point) => point);
-  const currentValue = pointSelect ? String(pointSelect.value || "") : "";
+  const currentValue = pointInput ? String(pointInput.value || "") : "";  
   
   list.innerHTML = '';
   options.forEach((point) => {
@@ -883,17 +883,8 @@ function updatePointSelect() {
     list.appendChild(option);
   });
 
-  if (pointSelect) {
-    pointSelect.innerHTML = '';
-    options.forEach((point) => {
-      const option = document.createElement('option');
-      option.value = point;
-      option.textContent = point;
-      pointSelect.appendChild(option);
-    });
-    if (options.length) {
-      pointSelect.value = options.includes(currentValue) ? currentValue : options[0];
-    }
+  if (pointInput && options.length) {
+    pointInput.value = options.includes(currentValue) ? currentValue : options[0];
   }
 }
 function ensurePointRegistered(pointName) {
