@@ -748,6 +748,14 @@ function addPointRow() {
   markForMobileAlphabetKeypad(pointInput);
   markForMobileNumericKeypad(tankyoInput);
   markForMobileNumericKeypad(tsuikyoInput);
+  pointInput.addEventListener('input', () => {
+    updatePointSelect();
+    scheduleDraftSave();
+  });
+  pointInput.addEventListener('change', () => {
+    updatePointSelect();
+    scheduleDraftSave();
+  });
   tankyoInput.addEventListener('input', () => updatePointTable(tankyoInput));
   tsuikyoInput.addEventListener('input', () => updatePointTable(tsuikyoInput));
   scheduleDraftSave();
