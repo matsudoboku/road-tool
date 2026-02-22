@@ -652,10 +652,19 @@ function initCrossDirectionControls() {
   });
   const pointInput = document.getElementById("pointSel");
   if (pointInput) {
-    pointInput.addEventListener("change", handleCrossSelectionChange);
+    const syncClearButton = () => {
+      const wrapper = pointInput.closest(".clearable-input");
+      wrapper?.classList.toggle("has-value", pointInput.value.trim() !== "");
+    };
+    pointInput.addEventListener("input", syncClearButton);
+    pointInput.addEventListener("change", () => {
+      syncClearButton();
+      handleCrossSelectionChange();
+    });
     pointInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") handleCrossSelectionChange();
     });
+    syncClearButton();
   }
   if (quickTags) {
     quickTags.addEventListener("click", (event) => {
@@ -694,6 +703,16 @@ function initCrossDirectionControls() {
   if (dirInput?.value) setCrossDirection(dirInput.value);
   handleCrossSelectionChange();
 }
+function clearCrossPointInput() {
+  const pointInput = document.getElementById("pointSel");
+  if (!pointInput) return;
+  pointInput.value = "";
+  const wrapper = pointInput.closest(".clearable-input");
+  wrapper?.classList.remove("has-value");
+  pointInput.focus();
+  handleCrossSelectionChange();
+}
+
 function registerCross() {
   if (!activeProject) { alert("工事を選択してください"); return; }
   const point = document.getElementById("pointSel").value.trim();
