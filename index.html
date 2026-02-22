@@ -166,8 +166,10 @@
           <div class="form-inline-group">
             <div class="input-wrapper">
               <label>測点</label>
-              <input type="text" id="pointSel" list="pointList" autocomplete="off" placeholder="測点を選択または入力">
-              <datalist id="pointList"></datalist>
+              <div class="clearable-input">
+                <input type="text" id="pointSel" list="pointList" autocomplete="off" placeholder="測点を選択または入力">
+                <button type="button" class="clear-input-btn" aria-label="測点入力をクリア" onclick="clearCrossPointInput()">×</button>
+              </div>              <datalist id="pointList"></datalist>
             </div>
             <div class="input-wrapper">
               <label>方向</label>
@@ -651,6 +653,7 @@
 </body>
 
 </html>
+
 
 
 
