@@ -76,6 +76,8 @@ body {
   padding: 0 16px;
   z-index: 1000;
   box-shadow: var(--shadow-sm);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .project-selector {
@@ -93,6 +95,7 @@ body {
   align-items: center;
   gap: 8px;
   z-index: 1010;
+  transform: translateZ(0);
 }
 
 .project-selector label {
@@ -146,6 +149,7 @@ body {
   z-index: 950;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   animation: searchSlideDown 0.2s ease;
+  transform: translateZ(0);
 }
 
 .project-search-bar.is-hidden {
@@ -207,6 +211,7 @@ body {
   background: var(--card-bg);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   z-index: 900;
+  transform: translateZ(0);
 }
 
 .tabbar {
