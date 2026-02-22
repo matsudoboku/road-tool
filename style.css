@@ -420,10 +420,43 @@ input[readonly] {
   min-width: 180px;
 }
 
+.clearable-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 #cross #pointSel {
   min-height: 42px;
   font-size: 1.05rem;
   max-width: 16ch;
+  width: 100%;
+  padding-right: 38px;
+}
+
+.clear-input-btn {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #eceff1;
+  color: var(--text-sub);
+  font-size: 1rem;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.clearable-input.has-value .clear-input-btn {
+  display: inline-flex;
+}
+
+.clear-input-btn:active {
+  background: #cfd8dc;
 }
 
 .input-wrapper label {
