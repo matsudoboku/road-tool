@@ -420,43 +420,53 @@ input[readonly] {
   min-width: 180px;
 }
 
-.clearable-input {
-  position: relative;
+.point-select-row {
   display: flex;
   align-items: center;
+  gap: 6px;
 }
 
-#cross #pointSel {
+.point-select-row select {
+  flex: 1;
   min-height: 42px;
   font-size: 1.05rem;
-  max-width: 16ch;
-  width: 100%;
-  padding-right: 38px;
+  min-width: 0;
 }
 
-.clear-input-btn {
-  position: absolute;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  border: none;
+.clear-point-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
   border-radius: 50%;
   background: #eceff1;
   color: var(--text-sub);
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1;
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-.clearable-input.has-value .clear-input-btn {
-  display: inline-flex;
-}
-
-.clear-input-btn:active {
+.clear-point-btn:active {
   background: #cfd8dc;
+}
+
+.point-manual-input {
+  flex: 1;
+  min-height: 42px;
+  font-size: 1.05rem;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+}
+
+.point-manual-input.is-hidden {
+  display: none;
 }
 
 .input-wrapper label {
@@ -1342,6 +1352,7 @@ tfoot td {
   .btn-group-right button {
     flex: 1;
   }
+
   #curve .btn-group-center {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1370,7 +1381,7 @@ tfoot td {
   .curve-result-table td input[type="radio"] {
     transform: scale(1.1);
   }
-  
+
   /* 横断測量の表ヘッダー固定 */
   .sticky-controls {
     position: sticky;
