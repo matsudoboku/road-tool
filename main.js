@@ -152,7 +152,7 @@ function initializeMobileNumericKeypad() {
   setMobileKeypadMode("numeric", true);
 
   mobileKeypadRoot.addEventListener("click", (event) => {
-      const modeButton = event.target.closest("button[data-keypad-mode]");
+    const modeButton = event.target.closest("button[data-keypad-mode]");
     if (modeButton) {
       setMobileKeypadMode(modeButton.dataset.keypadMode);
       return;
@@ -177,7 +177,7 @@ function initializeMobileNumericKeypad() {
     }
     insertAtCursor(mobileKeypadTarget, action);
   });
-  
+
   mobileKeypadRoot.addEventListener("pointerdown", (event) => {
     const key = event.target.closest("button[data-key], button[data-keypad-mode]");
     if (!key) return;
@@ -193,7 +193,7 @@ function initializeMobileNumericKeypad() {
       event.preventDefault();
     }
   });
-  
+
   const releasePressedState = () => {
     mobileKeypadRoot.querySelectorAll("button.is-pressed").forEach((button) => {
       button.classList.remove("is-pressed");
@@ -202,7 +202,7 @@ function initializeMobileNumericKeypad() {
   mobileKeypadRoot.addEventListener("pointerup", releasePressedState);
   mobileKeypadRoot.addEventListener("pointercancel", releasePressedState);
   mobileKeypadRoot.addEventListener("pointerleave", releasePressedState);
-  
+
   document.addEventListener("focusin", (event) => {
     if (isMobileKeypadTarget(event.target)) {
       showMobileNumericKeypad(event.target);
@@ -210,7 +210,7 @@ function initializeMobileNumericKeypad() {
       hideMobileNumericKeypad();
     }
   });
-  
+
   document.addEventListener("click", (event) => {
     const isTarget = isMobileKeypadTarget(event.target);
     if (isTarget) {
@@ -296,6 +296,7 @@ function saveDraftInputs() {
     cross: {
       point: currentSelection.point,
       direction: currentSelection.dir,
+      isManual: document.getElementById("pointSel")?.value === "__manual__",
       rowsBySelection
     },
     long: { rows: longRows },
@@ -313,9 +314,17 @@ function loadDraftInputs() {
   const draft = store[key];
   if (!draft) return;
   if (draft.cross) {
-    const crossPoint = document.getElementById("pointSel");
+    const crossSel = document.getElementById("pointSel");
+    const crossManual = document.getElementById("pointSelManual");
     const crossDir = document.getElementById("direction");
-    if (crossPoint) crossPoint.value = draft.cross.point || "";
+    if (draft.cross.isManual && crossSel && crossManual) {
+      crossSel.value = "__manual__";
+      crossManual.value = draft.cross.point || "";
+      crossManual.classList.remove("is-hidden");
+    } else if (crossSel) {
+      crossSel.value = draft.cross.point || "";
+      if (crossManual) crossManual.classList.add("is-hidden");
+    }
     if (crossDir && draft.cross.direction) {
       crossDir.value = draft.cross.direction;
       setCrossDirection(crossDir.value);
@@ -523,7 +532,14 @@ function fillCrossTableFromRowData(rowData) {
   });
 }
 function getCrossSelection() {
-  const point = document.getElementById("pointSel")?.value.trim() || "";
+  const sel = document.getElementById("pointSel");
+  const manual = document.getElementById("pointSelManual");
+  let point = "";
+  if (sel && sel.value === "__manual__" && manual) {
+    point = manual.value.trim();
+  } else if (sel) {
+    point = sel.value.trim();
+  }
   const dir = document.getElementById("direction")?.value || "左";
   return { point, dir, key: makeCrossSelectionKey(point, dir) };
 }
@@ -650,21 +666,34 @@ function initCrossDirectionControls() {
       handleCrossSelectionChange();
     });
   });
-  const pointInput = document.getElementById("pointSel");
-  if (pointInput) {
-    const syncClearButton = () => {
-      const wrapper = pointInput.closest(".clearable-input");
-      wrapper?.classList.toggle("has-value", pointInput.value.trim() !== "");
-    };
-    pointInput.addEventListener("input", syncClearButton);
-    pointInput.addEventListener("change", () => {
-      syncClearButton();
+  const pointSel = document.getElementById("pointSel");
+  const pointManual = document.getElementById("pointSelManual");
+  if (pointSel) {
+    pointSel.addEventListener("change", () => {
+      if (pointSel.value === "__manual__") {
+        if (pointManual) {
+          pointManual.classList.remove("is-hidden");
+          pointManual.focus();
+        }
+      } else {
+        if (pointManual) {
+          pointManual.classList.add("is-hidden");
+          pointManual.value = "";
+        }
+        handleCrossSelectionChange();
+      }
+    });
+  }
+  if (pointManual) {
+    pointManual.addEventListener("change", () => {
       handleCrossSelectionChange();
     });
-    pointInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") handleCrossSelectionChange();
+    pointManual.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleCrossSelectionChange();
+      }
     });
-    syncClearButton();
   }
   if (quickTags) {
     quickTags.addEventListener("click", (event) => {
@@ -704,12 +733,13 @@ function initCrossDirectionControls() {
   handleCrossSelectionChange();
 }
 function clearCrossPointInput() {
-  const pointInput = document.getElementById("pointSel");
-  if (!pointInput) return;
-  pointInput.value = "";
-  const wrapper = pointInput.closest(".clearable-input");
-  wrapper?.classList.remove("has-value");
-  pointInput.focus();
+  const sel = document.getElementById("pointSel");
+  const manual = document.getElementById("pointSelManual");
+  if (sel) sel.value = "";
+  if (manual) {
+    manual.value = "";
+    manual.classList.add("is-hidden");
+  }
   handleCrossSelectionChange();
 }
 
@@ -883,13 +913,11 @@ function loadPointSettings() {
   updatePointTable();
 }
 function updatePointSelect() {
-  const list = document.getElementById('pointList');
-  const pointInput = document.getElementById('pointSel');
-  if (!list) return;
+  const sel = document.getElementById('pointSel');
+  if (!sel) return;
   const project = getActiveProject();
   if (!project) {
-    list.innerHTML = '';
-    if (pointInput) pointInput.value = '';
+    sel.innerHTML = '<option value="">-- 測点を選択 --</option><option value="__manual__">✏ 手動入力...</option>';
     return;
   }
   ensureProjectPoints(project);
@@ -901,18 +929,22 @@ function updatePointSelect() {
     ...arr.map((row) => String(row?.point || "").trim()),
     ...editingPoints,
   ])].filter((point) => point);
-  const currentValue = pointInput ? String(pointInput.value || "") : "";  
-  
-  list.innerHTML = '';
+  const currentValue = String(sel.value || "");
+
+  sel.innerHTML = '<option value="">-- 測点を選択 --</option>';
   options.forEach((point) => {
     const option = document.createElement('option');
     option.value = point;
-    list.appendChild(option);
+    option.textContent = point;
+    if (point === currentValue) option.selected = true;
+    sel.appendChild(option);
   });
-
-  if (pointInput && options.length) {
-    pointInput.value = options.includes(currentValue) ? currentValue : options[0];
-  }
+  // 手動入力オプションを末尾に追加
+  const manualOpt = document.createElement('option');
+  manualOpt.value = '__manual__';
+  manualOpt.textContent = '✏ 手動入力...';
+  if (currentValue === '__manual__') manualOpt.selected = true;
+  sel.appendChild(manualOpt);
 }
 function ensurePointRegistered(pointName) {
   const name = String(pointName || "").trim();
@@ -983,7 +1015,7 @@ function applyRegisteredPointToRow(pointInput, tankyoInput, tsuikyoInput, afterU
 function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
-  row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList" autocomplete="off">`; 
+  row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList" autocomplete="off">`;
   row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
   let c2 = row.insertCell();
   c2.classList.add('readonly-cell');
@@ -2372,7 +2404,7 @@ function calculateCurve() {
   const minusRow = buildCurveRow(r - 5, "R-5");
   const plusRow = buildCurveRow(r + 5, "R+5");
   const rowCandidates = [minusRow, baseRow, plusRow].filter((row) => row.tl !== "—");
-  
+
   const iaStr = decimalToDMS(iaDecimal);
 
   curveResultObj = {
