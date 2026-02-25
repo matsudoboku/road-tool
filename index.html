@@ -56,7 +56,7 @@
   <div id="projectSearchBar" class="project-search-bar is-hidden">
     <input type="search" id="projectSearchInput" placeholder="工事名で検索..." oninput="filterProjectSelects(this.value)">
   </div>
-  
+
   <!-- タブナビゲーション -->
   <nav class="tabbar-wrapper">
     <div class="tabbar">
@@ -166,10 +166,16 @@
           <div class="form-inline-group">
             <div class="input-wrapper">
               <label>測点</label>
-              <div class="clearable-input">
-                <input type="text" id="pointSel" list="pointList" autocomplete="off" placeholder="測点を選択または入力">
-                <button type="button" class="clear-input-btn" aria-label="測点入力をクリア" onclick="clearCrossPointInput()">×</button>
-              </div>              <datalist id="pointList"></datalist>
+              <div class="point-select-row">
+                <select id="pointSel">
+                  <option value="">-- 測点を選択 --</option>
+                  <option value="__manual__">✏ 手動入力...</option>
+                </select>
+                <input type="text" id="pointSelManual" class="point-manual-input is-hidden" placeholder="測点名を入力"
+                  autocomplete="off">
+                <button type="button" class="clear-point-btn" aria-label="測点入力をクリア"
+                  onclick="clearCrossPointInput()">×</button>
+              </div>
             </div>
             <div class="input-wrapper">
               <label>方向</label>
@@ -567,7 +573,8 @@
 
   <div id="calcOverlay" class="calc-overlay" onclick="closeCalcModal()"></div>
 
-  <button id="quickMemoFab" class="quick-memo-fab" onclick="toggleQuickMemo()" aria-label="クイックメモ" aria-expanded="false">
+  <button id="quickMemoFab" class="quick-memo-fab" onclick="toggleQuickMemo()" aria-label="クイックメモ"
+    aria-expanded="false">
     📝
   </button>
 
@@ -576,7 +583,7 @@
     <textarea id="quickMemoText" rows="6" placeholder="どのページからでもメモを入力できます..."></textarea>
     <div class="quick-memo-actions">
       <button class="btn btn-success" onclick="saveQuickMemo()">保存</button>
-    　<button class="btn btn-warning" onclick="clearQuickMemo()">クリア</button>
+      　<button class="btn btn-warning" onclick="clearQuickMemo()">クリア</button>
       <button class="btn btn-secondary" onclick="toggleQuickMemo(false)">閉じる</button>
     </div>
   </div>
@@ -653,13 +660,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
