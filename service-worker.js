@@ -1,3 +1,4 @@
+
 //キャッシュ名を変更して、アクティベーション時に古いキャッシュが破棄されるようにします。
 const CACHE_NAME = 'road-tool-cache-v5';
 const urlsToCache = [
