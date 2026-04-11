@@ -1517,6 +1517,10 @@ body.mobile-keypad-visible .quick-memo-panel {
   display: none !important;
 }
 
+body.mobile-keypad-visible .main-content {
+  padding-bottom: 400px;
+}
+
 @media (min-width: 769px) {
   .mobile-numeric-keypad {
     max-width: 520px;
