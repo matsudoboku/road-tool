@@ -1374,6 +1374,44 @@ function calculateVCurve() {
   out.innerHTML = html;
 }
 
+function calculateHeron() {
+  const a = parseFloat(document.getElementById('heronA').value);
+  const b = parseFloat(document.getElementById('heronB').value);
+  const c = parseFloat(document.getElementById('heronC').value);
+  const out = document.getElementById('heronResult');
+
+  out.classList.remove('is-hidden');
+
+  if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
+    out.innerHTML = '<div style="color:var(--danger-color)">3辺の長さを正しく入力してください</div>';
+    return;
+  }
+
+  if (a + b <= c || b + c <= a || c + a <= b) {
+    out.innerHTML = '<div style="color:var(--danger-color)">三角形が成立しません</div>';
+    return;
+  }
+
+  const s = (a + b + c) / 2;
+  const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+
+  let html = `<table class="survey-table">
+    <tr><th>辺 a</th><th>辺 b</th><th>辺 c</th><th>面積</th></tr>
+    <tr><td>${a.toFixed(3)}</td><td>${b.toFixed(3)}</td><td>${c.toFixed(3)}</td><td style="color:var(--primary-color); font-weight:bold; font-size:1.1rem;">${area.toFixed(3)}</td></tr>
+  </table>`;
+
+  out.innerHTML = html;
+}
+
+function clearHeron() {
+  document.getElementById('heronA').value = "";
+  document.getElementById('heronB').value = "";
+  document.getElementById('heronC').value = "";
+  const out = document.getElementById('heronResult');
+  out.innerHTML = "";
+  out.classList.add('is-hidden');
+}
+
 function crossRowText(rows) {
   return rows.map(r => {
     const h = r[0];
