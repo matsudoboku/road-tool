@@ -253,10 +253,10 @@ function saveDraftInputs() {
     const inputs = row.querySelectorAll("input");
     return {
       point: inputs[0]?.value || "",
-      tankyo: inputs[1]?.value || "",
-      tsuikyo: inputs[2]?.value || "",
-      bs: inputs[3]?.value || "",
-      fs: inputs[4]?.value || "",
+      bs: inputs[1]?.value || "",
+      fs: inputs[2]?.value || "",
+      tankyo: inputs[3]?.value || "",
+      tsuikyo: inputs[4]?.value || "",
       delta: inputs[5]?.value || "",
       gh: inputs[6]?.value || ""
     };
@@ -288,6 +288,15 @@ function saveDraftInputs() {
     vcl: document.getElementById("vcVCL")?.value || "",
     gh0: document.getElementById("vcGH0")?.value || ""
   };
+    const heronRows = Array.from(document.querySelectorAll("#heronTable tbody tr")).map(row => {
+      const inputs = row.querySelectorAll("input");
+      return {
+        a: inputs[0]?.value || "",
+        b: inputs[1]?.value || "",
+        c: inputs[2]?.value || "",
+        area: inputs[3]?.value || ""
+      };
+    });
   if (currentSelection.key) {
     rowsBySelection[currentSelection.key] = crossRows;
   }
@@ -301,6 +310,7 @@ function saveDraftInputs() {
     },
     long: { rows: longRows },
     pavement: { rows: pavementRows },
+    heron: { rows: heronRows },
     memo: memoText,
     todo: { input: todoDraft },
     curve: curveDraft,
@@ -366,10 +376,10 @@ function loadDraftInputs() {
         const inputs = longBody.rows[i]?.querySelectorAll("input");
         if (!inputs) return;
         inputs[0].value = row.point || "";
-        inputs[1].value = row.tankyo || "";
-        inputs[2].value = row.tsuikyo || "";
-        inputs[3].value = row.bs || "";
-        inputs[4].value = row.fs || "";
+        inputs[1].value = row.bs || "";
+        inputs[2].value = row.fs || "";
+        inputs[3].value = row.tankyo || "";
+        inputs[4].value = row.tsuikyo || "";
         inputs[5].value = row.delta || "";
         inputs[6].value = row.gh || "";
       });
@@ -397,6 +407,25 @@ function loadDraftInputs() {
         inputs[5].value = row.area || "";
       });
       updatePavementTable();
+    }
+  }
+  if (draft.heron) {
+    const rows = draft.heron.rows || [];
+    const heronBody = document.querySelector("#heronTable tbody");
+    if (heronBody) {
+      heronBody.innerHTML = "";
+      const rowCount = Math.max(5, rows.length);
+      for (let i = 0; i < rowCount; i++) addHeronRow();
+      rows.forEach((row, i) => {
+        const tr = heronBody.rows[i];
+        if (!tr) return;
+        const inputs = tr.querySelectorAll("input");
+        inputs[0].value = row.a || "";
+        inputs[1].value = row.b || "";
+        inputs[2].value = row.c || "";
+        inputs[3].value = row.area || "";
+      });
+      updateHeronTable();
     }
   }
   if (typeof draft.memo === "string") {
@@ -1017,44 +1046,44 @@ function addLongRow() {
   const tbody = document.querySelector("#longTable tbody");
   const row = tbody.insertRow();
   row.insertCell().innerHTML = `<input type="text" class="mid-input" list="pointList" autocomplete="off">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
   row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
-  let c2 = row.insertCell();
-  c2.classList.add('readonly-cell');
-  c2.innerHTML = `<input type="text" class="mid-input" readonly tabindex="-1">`;
-  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
-  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
+  let c4 = row.insertCell();
+  c4.classList.add('readonly-cell');
+  c4.innerHTML = `<input type="text" class="mid-input" readonly tabindex="-1">`;
   let c5 = row.insertCell();
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="text" class="narrow-input" readonly tabindex="-1">`;
   let c6 = row.insertCell();
   c6.innerHTML = `<input type="text" class="wide-input">`;
   const inputs = row.querySelectorAll("input");
-  [inputs[1], inputs[3], inputs[4], inputs[6]].forEach(markForMobileNumericKeypad);
+  [inputs[1], inputs[2], inputs[3], inputs[6]].forEach(markForMobileNumericKeypad);
   ["input", "change"].forEach((eventName) => {
     inputs[0].addEventListener(eventName, () => {
-      applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], () => calculateLong(true));
+      applyRegisteredPointToRow(inputs[0], inputs[3], inputs[4], () => calculateLong(true));
     });
   });
-  inputs[1].addEventListener("input", () => calculateLong());
-  inputs[3].addEventListener("input", () => {
-    if (inputs[3].value !== "") {
-      inputs[4].value = "";
-      inputs[4].setAttribute("readonly", true);
-      inputs[4].parentElement.classList.add('readonly-cell');
+  inputs[3].addEventListener("input", () => calculateLong());
+  inputs[1].addEventListener("input", () => {
+    if (inputs[1].value !== "") {
+      inputs[2].value = "";
+      inputs[2].setAttribute("readonly", true);
+      inputs[2].parentElement.classList.add('readonly-cell');
     } else {
-      inputs[4].removeAttribute("readonly");
-      inputs[4].parentElement.classList.remove('readonly-cell');
+      inputs[2].removeAttribute("readonly");
+      inputs[2].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
-  inputs[4].addEventListener("input", () => {
-    if (inputs[4].value !== "") {
-      inputs[3].value = "";
-      inputs[3].setAttribute("readonly", true);
-      inputs[3].parentElement.classList.add('readonly-cell');
+  inputs[2].addEventListener("input", () => {
+    if (inputs[2].value !== "") {
+      inputs[1].value = "";
+      inputs[1].setAttribute("readonly", true);
+      inputs[1].parentElement.classList.add('readonly-cell');
     } else {
-      inputs[3].removeAttribute("readonly");
-      inputs[3].parentElement.classList.remove('readonly-cell');
+      inputs[1].removeAttribute("readonly");
+      inputs[1].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
@@ -1065,27 +1094,27 @@ function calculateLong(skipPrompt = false) {
   let prevGH = null, prevDelta = null, prevTsui = 0;
   rows.forEach((row, i) => {
     const cells = row.querySelectorAll("input");
-    const tankyo = parseFloat(cells[1].value) || 0;
+    const tankyo = parseFloat(cells[3].value) || 0;
     let tsui = (i === 0) ? tankyo : (prevTsui + tankyo);
-    cells[2].value = tankyo === 0 ? "" : tsui;
+    cells[4].value = tankyo === 0 ? "" : tsui;
     prevTsui = tsui;
-    const bs = parseFloat(cells[3].value);
-    const fs = parseFloat(cells[4].value);
-    if (cells[3].value !== "") {
-      cells[4].value = "";
-      cells[4].setAttribute("readonly", true);
-      cells[4].parentElement.classList.add('readonly-cell');
+    const bs = parseFloat(cells[1].value);
+    const fs = parseFloat(cells[2].value);
+    if (cells[1].value !== "") {
+      cells[2].value = "";
+      cells[2].setAttribute("readonly", true);
+      cells[2].parentElement.classList.add('readonly-cell');
     } else {
-      cells[4].removeAttribute("readonly");
-      cells[4].parentElement.classList.remove('readonly-cell');
+      cells[2].removeAttribute("readonly");
+      cells[2].parentElement.classList.remove('readonly-cell');
     }
-    if (cells[4].value !== "") {
-      cells[3].value = "";
-      cells[3].setAttribute("readonly", true);
-      cells[3].parentElement.classList.add('readonly-cell');
+    if (cells[2].value !== "") {
+      cells[1].value = "";
+      cells[1].setAttribute("readonly", true);
+      cells[1].parentElement.classList.add('readonly-cell');
     } else {
-      cells[3].removeAttribute("readonly");
-      cells[3].parentElement.classList.remove('readonly-cell');
+      cells[1].removeAttribute("readonly");
+      cells[1].parentElement.classList.remove('readonly-cell');
     }
     if (i === 0) {
       if (!cells[6].value) {
@@ -1132,14 +1161,14 @@ function registerLong() {
   rows.forEach(row => {
     const inputs = row.querySelectorAll("input");
     const point = inputs[0].value;
-    const tankyo = inputs[1].value;
-    const tsuikyo = inputs[2].value;
-    const bs = inputs[3].value;
-    const fs = inputs[4].value;
+    const bs = inputs[1].value;
+    const fs = inputs[2].value;
+    const tankyo = inputs[3].value;
+    const tsuikyo = inputs[4].value;
     const delta = inputs[5].value;
     const gh = inputs[6].value;
     if (point || tankyo || tsuikyo || bs || fs || delta || gh) {
-      tableRows.push({ point, tankyo, tsuikyo, bs, fs, delta, gh });
+      tableRows.push({ point, bs, fs, tankyo, tsuikyo, delta, gh });
     }
   });
   if (tableRows.length > 0) {
@@ -1375,42 +1404,95 @@ function calculateVCurve() {
   out.innerHTML = html;
 }
 
-function calculateHeron() {
-  const a = parseFloat(document.getElementById('heronA').value);
-  const b = parseFloat(document.getElementById('heronB').value);
-  const c = parseFloat(document.getElementById('heronC').value);
-  const out = document.getElementById('heronResult');
+function addHeronRow() {
+  const tbody = document.querySelector('#heronTable tbody');
+  const row = tbody.insertRow();
+  let c0 = row.insertCell();
+  c0.classList.add('readonly-cell', 'text-center');
+  c0.innerHTML = `<span class="row-no"></span>`; 
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  let c4 = row.insertCell();
+  c4.classList.add('readonly-cell', 'result-cell');
+  c4.innerHTML = `<input type="text" readonly tabindex="-1">`;
 
-  out.classList.remove('is-hidden');
+  const inputs = row.querySelectorAll('input:not([readonly])');
+  inputs.forEach(input => {
+    input.addEventListener('input', updateHeronTable);
+  });
+  updateHeronTable();
+  scheduleDraftSave();
+}
 
-  if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
-    out.innerHTML = '<div style="color:var(--danger-color)">3辺の長さを正しく入力してください</div>';
-    return;
-  }
+function updateHeronTable() {
+  const tbody = document.querySelector('#heronTable tbody');
+  if (!tbody) return;
+  const rows = tbody.querySelectorAll('tr');
+  let totalArea = 0;
+  rows.forEach((row, idx) => {
+    const noSpan = row.querySelector('.row-no');
+    if (noSpan) noSpan.textContent = idx + 1;
+    const inputs = row.querySelectorAll('input');
+    const a = parseFloat(inputs[0].value);
+    const b = parseFloat(inputs[1].value);
+    const c = parseFloat(inputs[2].value);
+    let areaStr = "";
+    if (!isNaN(a) && !isNaN(b) && !isNaN(c) && a > 0 && b > 0 && c > 0) {
+      if (a + b > c && b + c > a && c + a > b) {
+        const s = (a + b + c) / 2;
+        const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+        areaStr = area.toFixed(3);
+        totalArea += area;
+      } else {
+        areaStr = "Error";
+      }
+    }
+    if (inputs[3]) inputs[3].value = areaStr;
+  });
+  const totalCell = document.getElementById('heronTotalCell');
+  if (totalCell) totalCell.textContent = totalArea > 0 ? totalArea.toFixed(3) : "";
+}
 
-  if (a + b <= c || b + c <= a || c + a <= b) {
-    out.innerHTML = '<div style="color:var(--danger-color)">三角形が成立しません</div>';
-    return;
-  }
-
-  const s = (a + b + c) / 2;
-  const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
-
-  let html = `<table class="survey-table">
-    <tr><th>辺 a</th><th>辺 b</th><th>辺 c</th><th>面積</th></tr>
-    <tr><td>${a.toFixed(3)}</td><td>${b.toFixed(3)}</td><td>${c.toFixed(3)}</td><td style="color:var(--primary-color); font-weight:bold; font-size:1.1rem;">${area.toFixed(3)}</td></tr>
-  </table>`;
-
-  out.innerHTML = html;
+function clearHeronTable() {
+  const tbody = document.querySelector('#heronTable tbody');
+  if(tbody) tbody.innerHTML = '';
+  for (let i = 0; i < 5; i++) addHeronRow();
+  updateHeronTable();
 }
 
 function clearHeron() {
-  document.getElementById('heronA').value = "";
-  document.getElementById('heronB').value = "";
-  document.getElementById('heronC').value = "";
-  const out = document.getElementById('heronResult');
-  out.innerHTML = "";
-  out.classList.add('is-hidden');
+  if (confirm("ヘロン計算のすべてのデータを削除します。よろしいですか？")) {
+    clearHeronTable();
+    saveDraftInputs();
+  }
+}
+
+function registerHeron() {
+  if (!activeProject) { alert("工事を選択してください"); return; }
+  const rows = document.querySelectorAll("#heronTable tbody tr");
+  let allLogs = safeParseJSON(localStorage.getItem("heronLogs3"), {});
+  let tableRows = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const a = inputs[0].value;
+    const b = inputs[1].value;
+    const c = inputs[2].value;
+    const area = inputs[3].value;
+    if (parseFloat(a) || parseFloat(b) || parseFloat(c) || area) {
+      tableRows.push({ a, b, c, area });
+    }
+  });
+  if (tableRows.length > 0) {
+    const k = keyOfActive();
+    if (!allLogs[k]) allLogs[k] = [];
+    let areaTotal = document.getElementById('heronTotalCell').textContent;
+    allLogs[k].push({ tableRows, areaTotal, time: new Date().toLocaleString() });
+    localStorage.setItem("heronLogs3", JSON.stringify(allLogs));
+  }
+  updateLogTab();
+  clearHeronTable();
+  saveDraftInputs();
 }
 
 function crossRowText(rows) {
@@ -1469,17 +1551,17 @@ function updateLogTab() {
     let htmlLong = ``;
     lArr.forEach(log => {
       htmlLong += `<div class="section"><div class="table-wrapper"><table class="survey-table"><tr>
-        <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
+        <th>測点</th><th>BS</th><th>FS</th><th>単距</th><th>追距</th><th>⊿</th><th>GH</th>
         </tr>`;
       log.tableRows.forEach(row => {
         htmlLong += `<tr>
-          <td>${row.point}</td>
-          <td>${row.tankyo}</td>
-          <td>${row.tsuikyo}</td>
-          <td>${row.bs}</td>
-          <td>${row.fs}</td>
-          <td>${row.delta}</td>
-          <td>${row.gh}</td>
+          <td>${row.point || ''}</td>
+          <td>${row.bs || ''}</td>
+          <td>${row.fs || ''}</td>
+          <td>${row.tankyo || ''}</td>
+          <td>${row.tsuikyo || ''}</td>
+          <td>${row.delta || ''}</td>
+          <td>${row.gh || ''}</td>
         </tr>`;
       });
       htmlLong += `</table></div></div>`;
@@ -1564,6 +1646,39 @@ function updateLogTab() {
     document.getElementById("logCurve").innerHTML = htmlCurve;
   }
 
+  const heronLogs = safeParseJSON(localStorage.getItem("heronLogs3"), {});
+  let hArr = heronLogs[k] || [];
+  const logHeronCard = document.getElementById("logHeron")?.closest(".card");
+  if (logHeronCard) {
+    if (hArr.length === 0) {
+      logHeronCard.style.display = "none";
+      document.getElementById("logHeron").innerHTML = "";
+    } else {
+      logHeronCard.style.display = "";
+      let htmlHeron = ``;
+      hArr.forEach(log => {
+        htmlHeron += `<div class="section"><div class="table-wrapper"><table class="survey-table"><tr>
+          <th>No</th><th>辺 a</th><th>辺 b</th><th>辺 c</th><th>面積</th>
+          </tr>`;
+        log.tableRows.forEach((row, i) => {
+          htmlHeron += `<tr>
+            <td class="text-center">${i + 1}</td>
+            <td>${row.a}</td>
+            <td>${row.b}</td>
+            <td>${row.c}</td>
+            <td>${row.area}</td>
+          </tr>`;
+        });
+        htmlHeron += `<tr>
+            <td colspan="4" style="text-align:right;">合計</td>
+            <td>${log.areaTotal}</td>
+          </tr>`;
+        htmlHeron += `</table></div>日時:${log.time}</div>`;
+      });
+      document.getElementById("logHeron").innerHTML = htmlHeron;
+    }
+  }
+
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
   const logMemoCard = document.getElementById("logMemo").closest(".card");
@@ -1580,9 +1695,9 @@ function clearCategory(cat) {
   const p = projects.find(x => x.id === prjId);
   if (!p) return;
   const k = projectKey(p);
-  let keyMap = { cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3" };
+  let keyMap = { cross: "crossLogs3", long: "longLogs3", pavement: "pavementLogs3", curve: "curveLogs3", memo: "memoLogs3", heron: "heronLogs3" };
   if (!keyMap[cat]) return;
-  if (!confirm("本当にこの工事の「" + { cross: "横断測量", long: "縦断測量", pavement: "舗装計算", curve: "道路曲線計算", memo: "メモ" }[cat] + "」記録を削除しますか？")) return;
+  if (!confirm("本当にこの工事の「" + { cross: "横断測量", long: "縦断測量", pavement: "舗装計算", curve: "道路曲線計算", memo: "メモ", heron: "ヘロン計算" }[cat] + "」記録を削除しますか？")) return;
   let all = safeParseJSON(localStorage.getItem(keyMap[cat]), {});
   if (all[k]) delete all[k];
   localStorage.setItem(keyMap[cat], JSON.stringify(all));
@@ -1693,7 +1808,7 @@ function deleteProject() {
   projects = projects.filter(x => x.id !== activeProject);
   save();
   const k = projectKey(p);
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3"].forEach(key => {
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "heronLogs3"].forEach(key => {
     let all = safeParseJSON(localStorage.getItem(key), {});
     if (all[k]) delete all[k];
     localStorage.setItem(key, JSON.stringify(all));
@@ -1710,7 +1825,7 @@ function clearAllProjects() {
   if (!confirm("すべての工事設定および記録を完全削除します。よろしいですか？")) return;
   localStorage.removeItem("projects3");
   localStorage.removeItem("activeProject3");
-  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "todoLogs3", "pointSettings3"].forEach(k => localStorage.removeItem(k));
+  ["crossLogs3", "longLogs3", "pavementLogs3", "curveLogs3", "memoLogs3", "todoLogs3", "pointSettings3", "heronLogs3"].forEach(k => localStorage.removeItem(k));
   localStorage.removeItem(DRAFT_STORAGE_KEY);
   projects = [];
   activeProject = null;
@@ -1748,6 +1863,7 @@ function exportBackup() {
       "memoLogs3",
       "todoLogs3",
       "drawingLogs3",
+      "heronLogs3",
       DRAFT_STORAGE_KEY
     ];
     const storage = {};
@@ -1803,6 +1919,7 @@ function importBackup() {
         "memoLogs3",
         "todoLogs3",
         "drawingLogs3",
+        "heronLogs3",
         DRAFT_STORAGE_KEY
       ];
       storageKeys.forEach((key) => localStorage.removeItem(key));
@@ -1998,10 +2115,12 @@ window.onload = () => {
   initializeCrossTable();
   clearLongTable();
   clearPavementTable();
+  clearHeronTable();
   setupAutoAppendRow("#pointTable", addPointRow);
   setupAutoAppendRow("#crossTable", addCrossRow);
   setupAutoAppendRow("#longTable", addLongRow);
   setupAutoAppendRow("#pavementTable", addPavementRow);
+  setupAutoAppendRow("#heronTable", addHeronRow);
   updateLogTab();
   initCrossDirectionControls();
   switchTab('project');
