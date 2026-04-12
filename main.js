@@ -1410,9 +1410,9 @@ function addHeronRow() {
   let c0 = row.insertCell();
   c0.classList.add('readonly-cell', 'text-center');
   c0.innerHTML = `<span class="row-no"></span>`; 
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
-  row.insertCell().innerHTML = `<input type="number" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
+  row.insertCell().innerHTML = `<input type="text" class="narrow-input">`;
   let c4 = row.insertCell();
   c4.classList.add('readonly-cell', 'result-cell');
   c4.innerHTML = `<input type="text" readonly tabindex="-1">`;
