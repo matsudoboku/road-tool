@@ -1563,7 +1563,11 @@ body.mobile-keypad-visible .main-content {
 }
 #heronTable tfoot td.text-right {
   text-align: right !important;
-  padding-right: 12px;
-  font-weight: bold;
+  padding-right: 8px !important;
+  font-weight: normal;
   vertical-align: middle;
+}
+#heronTable .result-cell {
+  text-align: center !important;
+  font-weight: bold;
 }
