@@ -1439,99 +1439,139 @@ function updateLogTab() {
   const prjId = document.getElementById("logProjectSel").value;
   const p = projects.find(x => x.id === prjId);
   const k = p ? projectKey(p) : "";
+
   const crossLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const crossEntry = crossLogs[k] || {};
   let logsArr = Array.isArray(crossEntry) ? crossEntry : Object.values(crossEntry);
-  let htmlCross = `<h3>横断測量</h3><hr>`;
-  logsArr.forEach(log => {
-    const text = crossRowText(log.rowData || []);
-    htmlCross += `<div class="section"><b>測点 ${log.point} ${log.dir}</b> ${text}</div>`;
-  });
-  document.getElementById("logCross").innerHTML = htmlCross;
+  const logCrossCard = document.getElementById("logCross").closest(".card");
+  if (logsArr.length === 0) {
+    logCrossCard.style.display = "none";
+    document.getElementById("logCross").innerHTML = "";
+  } else {
+    logCrossCard.style.display = "";
+    let htmlCross = ``;
+    logsArr.forEach(log => {
+      const text = crossRowText(log.rowData || []);
+      htmlCross += `<div class="section"><b>測点 ${log.point} ${log.dir}</b> ${text}</div>`;
+    });
+    document.getElementById("logCross").innerHTML = htmlCross;
+  }
+
   const longLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
   let lArr = longLogs[k] || [];
-  let htmlLong = `<h3>縦断測量</h3><hr>`;
-  lArr.forEach(log => {
-    htmlLong += `<div class="section"><table class="survey-table"><tr>
-      <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
-      </tr>`;
-    log.tableRows.forEach(row => {
-      htmlLong += `<tr>
-        <td>${row.point}</td>
-        <td>${row.tankyo}</td>
-        <td>${row.tsuikyo}</td>
-        <td>${row.bs}</td>
-        <td>${row.fs}</td>
-        <td>${row.delta}</td>
-        <td>${row.gh}</td>
-      </tr>`;
+  const logLongCard = document.getElementById("logLong").closest(".card");
+  if (lArr.length === 0) {
+    logLongCard.style.display = "none";
+    document.getElementById("logLong").innerHTML = "";
+  } else {
+    logLongCard.style.display = "";
+    let htmlLong = ``;
+    lArr.forEach(log => {
+      htmlLong += `<div class="section"><div class="table-wrapper"><table class="survey-table"><tr>
+        <th>測点</th><th>単距</th><th>追距</th><th>BS</th><th>FS</th><th>⊿</th><th>GH</th>
+        </tr>`;
+      log.tableRows.forEach(row => {
+        htmlLong += `<tr>
+          <td>${row.point}</td>
+          <td>${row.tankyo}</td>
+          <td>${row.tsuikyo}</td>
+          <td>${row.bs}</td>
+          <td>${row.fs}</td>
+          <td>${row.delta}</td>
+          <td>${row.gh}</td>
+        </tr>`;
+      });
+      htmlLong += `</table></div></div>`;
     });
-    htmlLong += `</table></div>`;
-  });
-  document.getElementById("logLong").innerHTML = htmlLong;
+    document.getElementById("logLong").innerHTML = htmlLong;
+  }
+
   const pavementLogs = safeParseJSON(localStorage.getItem("pavementLogs3"), {});
   let pArr = pavementLogs[k] || [];
-  let htmlPave = `<h3>舗装計算</h3><hr>`;
-  pArr.forEach(log => {
-    htmlPave += `<div class="section"><table class="survey-table"><tr>
-      <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
-      </tr>`;
-    log.tableRows.forEach(row => {
+  const logPavementCard = document.getElementById("logPavement").closest(".card");
+  if (pArr.length === 0) {
+    logPavementCard.style.display = "none";
+    document.getElementById("logPavement").innerHTML = "";
+  } else {
+    logPavementCard.style.display = "";
+    let htmlPave = ``;
+    pArr.forEach(log => {
+      htmlPave += `<div class="section"><div class="table-wrapper"><table class="survey-table"><tr>
+        <th>舗装種類</th><th>測点</th><th>幅員</th><th>単距</th><th>追距</th><th>平均幅員</th><th>面積</th>
+        </tr>`;
+      log.tableRows.forEach(row => {
+        htmlPave += `<tr>
+          <td>${row.type}</td>
+          <td>${row.point}</td>
+          <td>${row.hani}</td>
+          <td>${row.tankyo}</td>
+          <td>${row.tsuikyo}</td>
+          <td>${row.avgHani}</td>
+          <td>${row.area}</td>
+        </tr>`;
+      });
       htmlPave += `<tr>
-        <td>${row.type}</td>
-        <td>${row.point}</td>
-        <td>${row.hani}</td>
-        <td>${row.tankyo}</td>
-        <td>${row.tsuikyo}</td>
-        <td>${row.avgHani}</td>
-        <td>${row.area}</td>
-      </tr>`;
+              <td colspan="6" style="text-align:right;">As計</td>
+          <td>${(log.areaMap && log.areaMap['As'] ? parseFloat(log.areaMap['As']).toFixed(2) : '0.00')}</td>
+        </tr>`;
+      htmlPave += `<tr>
+          <td colspan="6" style="text-align:right;">Con計</td>
+          <td>${(log.areaMap && log.areaMap['Con'] ? parseFloat(log.areaMap['Con']).toFixed(2) : '0.00')}</td>
+        </tr>`;
+      htmlPave += `<tr>
+          <td colspan="6" style="text-align:right;">OL計</td>
+          <td>${(log.areaMap && log.areaMap['OL'] ? parseFloat(log.areaMap['OL']).toFixed(2) : '0.00')}</td>
+        </tr>`;
+      htmlPave += `<tr>
+          <td colspan="6" style="text-align:right;">As+Con計</td>
+          <td>${(log.areaMap && log.areaMap['As+Con'] ? parseFloat(log.areaMap['As+Con']).toFixed(2) : '0.00')}</td>
+        </tr>`;
+      htmlPave += `<tr>
+          <td colspan="6" style="text-align:right;">合計</td>
+          <td>${log.areaTotal}</td>
+        </tr>`;
+      htmlPave += `</table></div>日時:${log.time}</div>`;
     });
-    htmlPave += `<tr>
-            <td colspan="6" style="text-align:right;">As計</td>
-        <td>${(log.areaMap && log.areaMap['As'] ? parseFloat(log.areaMap['As']).toFixed(2) : '0.00')}</td>
-      </tr>`;
-    htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">Con計</td>
-        <td>${(log.areaMap && log.areaMap['Con'] ? parseFloat(log.areaMap['Con']).toFixed(2) : '0.00')}</td>
-      </tr>`;
-    htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">OL計</td>
-        <td>${(log.areaMap && log.areaMap['OL'] ? parseFloat(log.areaMap['OL']).toFixed(2) : '0.00')}</td>
-      </tr>`;
-    htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">As+Con計</td>
-        <td>${(log.areaMap && log.areaMap['As+Con'] ? parseFloat(log.areaMap['As+Con']).toFixed(2) : '0.00')}</td>
-      </tr>`;
-    htmlPave += `<tr>
-        <td colspan="6" style="text-align:right;">合計</td>
-        <td>${log.areaTotal}</td>
-      </tr>`;
-    htmlPave += `</table>日時:${log.time}</div>`;
-  });
-  document.getElementById("logPavement").innerHTML = htmlPave;
+    document.getElementById("logPavement").innerHTML = htmlPave;
+  }
+
   const curveLogs = safeParseJSON(localStorage.getItem("curveLogs3"), {});
   let cArr = curveLogs[k] || [];
-  let htmlCurve = `<h3>道路曲線計算</h3><hr>`;
-  cArr.forEach(log => {
-    htmlCurve += `<div class="section"><table class="survey-table">
-      <tr><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
-      <tr>
-        <td>${log.ipNo || ""}</td>
-        <td>${log.iaStr || ""}</td>
-        <td>${log.r || ""}</td>
-        <td>${log.tl || ""}</td>
-        <td>${log.sl || ""}</td>
-        <td>${log.cl || ""}</td>
-        <td>${log.cl2 || ""}</td>
-        <td>${log.mc || ""}</td>
-      </tr>
-    </table></div>`;
-  });
-  document.getElementById("logCurve").innerHTML = htmlCurve;
+  const logCurveCard = document.getElementById("logCurve").closest(".card");
+  if (cArr.length === 0) {
+    logCurveCard.style.display = "none";
+    document.getElementById("logCurve").innerHTML = "";
+  } else {
+    logCurveCard.style.display = "";
+    let htmlCurve = ``;
+    cArr.forEach(log => {
+      htmlCurve += `<div class="section"><div class="table-wrapper"><table class="survey-table log-curve-table">
+        <tr><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+        <tr>
+          <td>${log.ipNo || ""}</td>
+          <td>${log.iaStr || ""}</td>
+          <td>${log.r || ""}</td>
+          <td>${log.tl || ""}</td>
+          <td>${log.sl || ""}</td>
+          <td>${log.cl || ""}</td>
+          <td>${log.cl2 || ""}</td>
+          <td>${log.mc || ""}</td>
+        </tr>
+      </table></div></div>`;
+    });
+    document.getElementById("logCurve").innerHTML = htmlCurve;
+  }
+
   const allMemos = safeParseJSON(localStorage.getItem("memoLogs3"), {});
   let memo = allMemos[k] || "";
-  document.getElementById("logMemo").innerHTML = `<h3>現場メモ</h3><div class="section">${memo.replace(/\n/g, "<br>")}</div>`;
+  const logMemoCard = document.getElementById("logMemo").closest(".card");
+  if (!memo.trim()) {
+    logMemoCard.style.display = "none";
+    document.getElementById("logMemo").innerHTML = "";
+  } else {
+    logMemoCard.style.display = "";
+    document.getElementById("logMemo").innerHTML = `<div class="section">${memo.replace(/\n/g, "<br>")}</div>`;
+  }
 }
 function clearCategory(cat) {
   const prjId = document.getElementById("logProjectSel").value;
