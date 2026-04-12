@@ -1529,3 +1529,15 @@ body.mobile-keypad-visible .main-content {
     border-radius: 12px 12px 0 0;
   }
 }
+
+/* 記録タブのテーブル調整 */
+.log-content .survey-table th,
+.log-content .survey-table td {
+  padding: 4px 8px;
+}
+
+.log-content .log-curve-table th,
+.log-content .log-curve-table td {
+  text-align: center;
+  white-space: nowrap;
+}
