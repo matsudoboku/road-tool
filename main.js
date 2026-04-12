@@ -1419,6 +1419,7 @@ function addHeronRow() {
 
   const inputs = row.querySelectorAll('input:not([readonly])');
   inputs.forEach(input => {
+    markForMobileNumericKeypad(input);
     input.addEventListener('input', updateHeronTable);
   });
   updateHeronTable();
