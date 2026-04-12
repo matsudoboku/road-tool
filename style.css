@@ -1542,3 +1542,28 @@ body.mobile-keypad-visible .main-content {
   white-space: nowrap;
   padding: 4px 8px;
 }
+
+/* 汎用テキスト配置クラス */
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+
+/* ヘロンテーブルの構成 */
+#heronTable th:first-child,
+#heronTable td:first-child {
+  min-width: 50px !important;
+  width: 50px;
+  text-align: center !important;
+  padding: 0 !important; /* Noの数字が枠内の中央にきれいに収まるように余白調整 */
+}
+#heronTable td:first-child .row-no {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+#heronTable tfoot td.text-right {
+  text-align: right !important;
+  padding-right: 12px;
+  font-weight: bold;
+  vertical-align: middle;
+}
