@@ -64,8 +64,9 @@
       <button class="tab" data-tab="point-tab" onclick="switchTab('point-tab')">測点</button>
       <button class="tab" data-tab="cross" onclick="switchTab('cross')">横断測量</button>
       <button class="tab" data-tab="long" onclick="switchTab('long')">縦断測量</button>
-      <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
       <button class="tab" data-tab="curve" onclick="switchTab('curve')">道路曲線</button>
+      <button class="tab" data-tab="pavement" onclick="switchTab('pavement')">舗装計算</button>
+      <button class="tab" data-tab="heron" onclick="switchTab('heron')">ヘロン</button>
       <button class="tab" data-tab="vcurve" onclick="switchTab('vcurve')">縦断曲線</button>
       <button class="tab" data-tab="todo-tab" onclick="switchTab('todo-tab')">ToDo</button>
       <button class="tab" data-tab="drawing" onclick="switchTab('drawing')">図形</button>
@@ -235,10 +236,10 @@
               <thead>
                 <tr>
                   <th>測点</th>
-                  <th>単距</th>
-                  <th>追距</th>
                   <th>BS</th>
                   <th>FS</th>
+                  <th>単距</th>
+                  <th>追距</th>
                   <th>⊿</th>
                   <th>GH</th>
                 </tr>
@@ -257,6 +258,36 @@
       </div>
     </div>
 
+    <!-- 道路曲線計算 -->
+    <div id="curve" class="container text-center-container">
+      <div class="card">
+        <div class="card-header">
+          <h2>道路曲線</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-stack">
+            <div class="input-group">
+              <label>IP No</label>
+              <input type="text" id="ipno" placeholder="例: IP.1">
+            </div>
+            <div class="input-group">
+              <label>IA <small>(例:33°19'00" → 331900)</small></label>
+              <input type="number" id="ia" placeholder="331900">
+            </div>
+            <div class="input-group">
+              <label>R (半径)</label>
+              <input type="number" id="r" placeholder="半径 m">
+            </div>
+          </div>
+          <div class="btn-group-center">
+            <button class="btn btn-primary" onclick="calculateCurve()">計算する</button>
+            <button class="btn btn-success" onclick="registerCurve()">登録</button>
+          </div>
+          <div id="curveResult" class="result-area"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- 舗装計算 -->
     <div id="pavement" class="container">
       <div class="card">
@@ -264,7 +295,6 @@
           <div class="table-wrapper">
             <table id="pavementTable" class="survey-table dense-table">
               <thead>
-                <tr>
                 <tr>
                   <th>測点</th>
                   <th style="min-width:110px">舗装種類</th>
@@ -312,32 +342,40 @@
       </div>
     </div>
 
-    <!-- 道路曲線計算 -->
-    <div id="curve" class="container text-center-container">
+    </div>
+    </div>
+
+    <!-- ヘロン計算 -->
+    <div id="heron" class="container">
       <div class="card">
-        <div class="card-header">
-          <h2>道路曲線</h2>
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table id="heronTable" class="survey-table dense-table">
+              <thead>
+                <tr>
+                  <th style="min-width: 40px">No</th>
+                  <th>辺 a</th>
+                  <th>辺 b</th>
+                  <th>辺 c</th>
+                  <th>面積</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="4" class="text-right">合計面積</td>
+                  <td id="heronTotalCell" class="result-cell"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
-        <div class="card-body">
-          <div class="form-stack">
-            <div class="input-group">
-              <label>IP No</label>
-              <input type="text" id="ipno" placeholder="例: IP.1">
-            </div>
-            <div class="input-group">
-              <label>IA <small>(例:33°19'00" → 331900)</small></label>
-              <input type="number" id="ia" placeholder="331900">
-            </div>
-            <div class="input-group">
-              <label>R (半径)</label>
-              <input type="number" id="r" placeholder="半径 m">
-            </div>
+        <div class="card-footer">
+          <button class="btn btn-secondary" onclick="addHeronRow()">＋ 行を追加</button>
+          <div class="btn-group-right">
+            <button class="btn btn-warning" onclick="clearHeron()">クリア</button>
+            <button class="btn btn-success" onclick="registerHeron()">登録</button>
           </div>
-          <div class="btn-group-center">
-            <button class="btn btn-primary" onclick="calculateCurve()">計算する</button>
-            <button class="btn btn-success" onclick="registerCurve()">登録</button>
-          </div>
-          <div id="curveResult" class="result-area"></div>
         </div>
       </div>
     </div>
@@ -488,6 +526,15 @@
           <div id="logLong" class="card-body log-content"></div>
         </div>
 
+        <!-- 道路曲線 -->
+        <div class="card">
+          <div class="card-header flex-between">
+            <h3>道路曲線</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('curve')">削除</button>
+          </div>
+          <div id="logCurve" class="card-body log-content"></div>
+        </div>
+
         <!-- 舗装計算 -->
         <div class="card">
           <div class="card-header flex-between">
@@ -497,13 +544,13 @@
           <div id="logPavement" class="card-body log-content"></div>
         </div>
 
-        <!-- 道路曲線 -->
+        <!-- ヘロン計算 -->
         <div class="card">
           <div class="card-header flex-between">
-            <h3>道路曲線</h3>
-            <button class="btn btn-danger-text" onclick="clearCategory('curve')">削除</button>
+            <h3>ヘロン計算</h3>
+            <button class="btn btn-danger-text" onclick="clearCategory('heron')">削除</button>
           </div>
-          <div id="logCurve" class="card-body log-content"></div>
+          <div id="logHeron" class="card-body log-content"></div>
         </div>
 
         <!-- メモ -->
