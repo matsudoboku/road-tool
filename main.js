@@ -986,14 +986,15 @@ function showRegisteredCurvesFromPointTab() {
         <td>${log.r ?? "-"}</td>
         <td>${log.tl ?? "-"}</td>
         <td>${log.cl ?? "-"}</td>
-        <td>${log.mc || "-"}</td>
+        <td>${log.mc1 || log.mc || "-"}</td>
+        <td>${log.mc2 || "-"}</td>
       </tr>`).join("");
   area.innerHTML = `
     <h3>登録済み道路曲線情報（${logs.length}件）</h3>
     <div class="table-wrapper mt-2">
-      <table class="survey-table">
+      <table class="survey-table log-curve-table">
         <thead>
-          <tr><th>No</th><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>CL</th><th>MC</th></tr>
+          <tr><th>No</th><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>CL</th><th>MC1</th><th>MC2</th></tr>
         </thead>
         <tbody>${rows}
         </tbody>
@@ -1546,7 +1547,7 @@ function updateLogTab() {
     let htmlCurve = ``;
     cArr.forEach(log => {
       htmlCurve += `<div class="section"><div class="table-wrapper"><table class="survey-table log-curve-table">
-        <tr><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+        <tr><th>IP No</th><th>IA</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC1</th><th>MC2</th></tr>
         <tr>
           <td>${log.ipNo || ""}</td>
           <td>${log.iaStr || ""}</td>
@@ -1555,7 +1556,8 @@ function updateLogTab() {
           <td>${log.sl || ""}</td>
           <td>${log.cl || ""}</td>
           <td>${log.cl2 || ""}</td>
-          <td>${log.mc || ""}</td>
+          <td>${log.mc1 || log.mc || ""}</td>
+          <td>${log.mc2 || ""}</td>
         </tr>
       </table></div></div>`;
     });
@@ -2449,7 +2451,10 @@ function calculateCurve() {
   const iaDecimal = dmsToDecimal(parseInt(iaInput, 10));
   const iaRadHalf = (iaDecimal * Math.PI / 180) / 2;
 
-  const mcDMS = decimalToDMS((180 - iaDecimal) / 2);                       // MC（角度で返す）
+  const mc1Decimal = (180 - iaDecimal) / 2;
+  const mc2Decimal = 360 - mc1Decimal;
+  const mc1DMS = decimalToDMS(mc1Decimal);                       // MC1
+  const mc2DMS = decimalToDMS(mc2Decimal);                       // MC2
 
   const buildCurveRow = (radius, label) => {
     if (!radius || radius <= 0 || isNaN(radius)) {
@@ -2460,7 +2465,8 @@ function calculateCurve() {
         sl: "—",
         cl: "—",
         cl2: "—",
-        mc: mcDMS
+        mc1: mc1DMS,
+        mc2: mc2DMS
       };
     }
     const tl = radius * Math.tan(iaRadHalf);                                      // 接線長 TL
@@ -2474,7 +2480,8 @@ function calculateCurve() {
       sl: sl.toFixed(3),
       cl: cl.toFixed(3),
       cl2: clHalf.toFixed(3),
-      mc: mcDMS
+      mc1: mc1DMS,
+      mc2: mc2DMS
     };
   };
 
@@ -2499,8 +2506,8 @@ function calculateCurve() {
       </table>
     </div>
     <div class="table-wrapper curve-result-table-wrapper">
-      <table class="survey-table curve-result-table">
-        <tr><th>登録</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC</th></tr>
+      <table class="survey-table curve-result-table log-curve-table">
+        <tr><th>登録</th><th>R</th><th>TL</th><th>SL</th><th>CL</th><th>CL/2</th><th>MC1</th><th>MC2</th></tr>
         <tr>
             <td><input type="radio" name="curveRow" value="${minusRow.label}" ${minusRow.tl === "—" ? "disabled" : ""}></td>
           <td>${minusRow.label} (${minusRow.r})</td>
@@ -2508,7 +2515,8 @@ function calculateCurve() {
           <td>${minusRow.sl}</td>
           <td>${minusRow.cl}</td>
           <td>${minusRow.cl2}</td>
-          <td>${minusRow.mc}</td>
+          <td>${minusRow.mc1}</td>
+          <td>${minusRow.mc2}</td>
         </tr>
         <tr>
           <td><input type="radio" name="curveRow" value="${baseRow.label}" checked></td>
@@ -2517,7 +2525,8 @@ function calculateCurve() {
           <td>${baseRow.sl}</td>
           <td>${baseRow.cl}</td>
           <td>${baseRow.cl2}</td>
-          <td>${baseRow.mc}</td>
+          <td>${baseRow.mc1}</td>
+          <td>${baseRow.mc2}</td>
         </tr>
         <tr>
           <td><input type="radio" name="curveRow" value="${plusRow.label}" ${plusRow.tl === "—" ? "disabled" : ""}></td>
@@ -2526,7 +2535,8 @@ function calculateCurve() {
           <td>${plusRow.sl}</td>
           <td>${plusRow.cl}</td>
           <td>${plusRow.cl2}</td>
-          <td>${plusRow.mc}</td>
+          <td>${plusRow.mc1}</td>
+          <td>${plusRow.mc2}</td>
         </tr>
       </table>
     </div>`;
@@ -2548,7 +2558,8 @@ function registerCurve() {
     sl: selectedResult.sl,
     cl: selectedResult.cl,
     cl2: selectedResult.cl2,
-    mc: selectedResult.mc,
+    mc1: selectedResult.mc1 || selectedResult.mc,
+    mc2: selectedResult.mc2,
     time: new Date().toLocaleString()
   });
   localStorage.setItem("curveLogs3", JSON.stringify(allLogs));
