@@ -492,6 +492,16 @@ function switchTab(tabId) {
   if (tabId === "log") updateLogTab();
   if (tabId === "memo") loadMemo();
   if (tabId === "todo-tab") loadTodoList();
+
+  // ボイスメモ録音ボタンの表示制御
+  const vmFab = document.getElementById("vm_recordFab");
+  if (vmFab) {
+    if (tabId === "cross") {
+      vmFab.classList.remove("is-hidden");
+    } else {
+      vmFab.classList.add("is-hidden");
+    }
+  }
 }
 
 function addCrossRow() {
@@ -1066,73 +1076,89 @@ function addLongRow() {
   });
   inputs[3].addEventListener("input", () => calculateLong());
   inputs[1].addEventListener("input", () => {
-    if (inputs[1].value !== "") {
+    if (inputs[1].value !== "" && (inputs[2].value !== "" || !inputs[1].readOnly)) {
       inputs[2].value = "";
       inputs[2].setAttribute("readonly", true);
       inputs[2].parentElement.classList.add('readonly-cell');
-    } else {
+    } else if (inputs[1].value === "") {
       inputs[2].removeAttribute("readonly");
       inputs[2].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
   inputs[2].addEventListener("input", () => {
-    if (inputs[2].value !== "") {
+    if (inputs[2].value !== "" && (inputs[1].value !== "" || !inputs[2].readOnly)) {
       inputs[1].value = "";
       inputs[1].setAttribute("readonly", true);
       inputs[1].parentElement.classList.add('readonly-cell');
-    } else {
+    } else if (inputs[2].value === "") {
       inputs[1].removeAttribute("readonly");
       inputs[1].parentElement.classList.remove('readonly-cell');
     }
     calculateLong();
   });
+  inputs[6].addEventListener("input", () => calculateLong(true));
   scheduleDraftSave();
 }
 function calculateLong(skipPrompt = false) {
   const rows = document.querySelectorAll("#longTable tbody tr");
   let prevGH = null, prevDelta = null, prevTsui = 0;
+
+  function safeSet(input, value, readonly = null) {
+    if (input.value !== value) input.value = value;
+    if (readonly !== null) {
+      if (readonly) {
+        if (!input.hasAttribute("readonly")) {
+          input.setAttribute("readonly", true);
+          input.parentElement.classList.add('readonly-cell');
+        }
+      } else {
+        if (input.hasAttribute("readonly")) {
+          input.removeAttribute("readonly");
+          input.parentElement.classList.remove('readonly-cell');
+        }
+      }
+    }
+  }
+
   rows.forEach((row, i) => {
     const cells = row.querySelectorAll("input");
     const tankyo = parseFloat(cells[3].value) || 0;
     let tsui = (i === 0) ? tankyo : (prevTsui + tankyo);
-    cells[4].value = tankyo === 0 ? "" : tsui;
+    safeSet(cells[4], tankyo === 0 ? "" : tsui.toString());
     prevTsui = tsui;
-    const bs = parseFloat(cells[1].value);
-    const fs = parseFloat(cells[2].value);
-    if (cells[1].value !== "") {
-      cells[2].value = "";
-      cells[2].setAttribute("readonly", true);
-      cells[2].parentElement.classList.add('readonly-cell');
+
+    const bsVal = cells[1].value;
+    const fsVal = cells[2].value;
+
+    if (bsVal !== "") {
+      safeSet(cells[2], "", true);
+    } else if (fsVal !== "") {
+      safeSet(cells[1], "", true);
     } else {
-      cells[2].removeAttribute("readonly");
-      cells[2].parentElement.classList.remove('readonly-cell');
+      safeSet(cells[1], bsVal, false);
+      safeSet(cells[2], fsVal, false);
     }
-    if (cells[2].value !== "") {
-      cells[1].value = "";
-      cells[1].setAttribute("readonly", true);
-      cells[1].parentElement.classList.add('readonly-cell');
-    } else {
-      cells[1].removeAttribute("readonly");
-      cells[1].parentElement.classList.remove('readonly-cell');
-    }
+
+    const bs = parseFloat(bsVal);
+    const fs = parseFloat(fsVal);
+
     if (i === 0) {
-      if (!cells[6].value) {
-        if (skipPrompt) {
-          cells[5].value = "";
-          cells[6].value = "";
-          prevGH = null;
-          prevDelta = null;
-          return;
-        }
+      if (!cells[6].value && !skipPrompt && (bsVal !== "" || fsVal !== "")) {
         let gh = prompt("初期GHを入力してください", "");
-        if (gh === null || gh.trim() === "" || isNaN(parseFloat(gh))) return;
-        cells[6].value = parseFloat(gh).toFixed(2);
+        if (gh !== null && gh.trim() !== "" && !isNaN(parseFloat(gh))) {
+          safeSet(cells[6], parseFloat(gh).toFixed(2));
+        }
       }
       prevGH = parseFloat(cells[6].value);
-      let delta = prevGH;
-      if (!isNaN(bs)) { delta = prevGH + bs; }
-      cells[5].value = delta.toFixed(2);
+      let delta = null;
+      if (!isNaN(prevGH)) {
+        delta = prevGH;
+        if (!isNaN(bs)) { delta = prevGH + bs; }
+        safeSet(cells[5], delta.toFixed(2));
+      } else {
+        safeSet(cells[5], "");
+      }
       prevDelta = delta;
     } else {
       let prevRow = rows[i - 1];
@@ -1141,10 +1167,11 @@ function calculateLong(skipPrompt = false) {
       if (!isNaN(bs) && !isNaN(prevGHfromRow)) {
         delta = prevGHfromRow + bs;
       }
-      cells[5].value = delta !== null ? delta.toFixed(2) : "";
+      safeSet(cells[5], (!isNaN(delta) && delta !== null) ? delta.toFixed(2) : "");
+      
       if (!isNaN(fs) && delta !== null) {
         let gh = delta - fs;
-        cells[6].value = gh.toFixed(2);
+        safeSet(cells[6], gh.toFixed(2));
         prevGH = gh; prevDelta = delta;
       } else {
         cells[6].value = "";
@@ -1222,6 +1249,9 @@ function addPavementRow() {
   c5.classList.add('readonly-cell');
   c5.innerHTML = `<input type="number" readonly tabindex="-1">`;         // 面積
   const inputs = row.querySelectorAll('input');
+  markForMobileAlphabetKeypad(inputs[0]); // 測点
+  markForMobileNumericKeypad(inputs[1]);  // 単距
+  markForMobileNumericKeypad(inputs[3]);  // 幅員
   ['input', 'change'].forEach((eventName) => {
     inputs[0].addEventListener(eventName, () => {
       applyRegisteredPointToRow(inputs[0], inputs[1], inputs[2], updatePavementTable);
@@ -2129,6 +2159,10 @@ window.onload = () => {
   loadTodoList();
   initializeQuickMemo();
   initializeMobileNumericKeypad();
+  vm_initDB().then(() => {
+    vm_checkAndRenderIfPointChanged();
+    setInterval(vm_checkAndRenderIfPointChanged, 1000); // 測点切り替え検知用
+  }).catch(e => console.error("VoiceMemo DB init error:", e));
   draftReady = true;
 };
 // --- 図形タブ（簡易お絵描き＋数字/テキスト） --- //
@@ -2834,4 +2868,424 @@ function closeCalcModal() {
   calc.classList.remove('modal-mode');
   calc.onclick = null;
   if (calcParent) calcParent.appendChild(calc);
+}
+
+// --- ボイスメモ機能 (IndexedDB & MediaRecorder) --- //
+let vm_db = null;
+let vm_mediaRecorder = null;
+let vm_audioChunks = [];
+let vm_isRecording = false;
+let vm_stream = null;
+let vm_lastUpdatePointKey = null;
+
+async function vm_initDB() {
+  return new Promise((resolve, reject) => {
+    // 既存のDB仕様と構造が異なるためバージョンを2にアップ
+    const request = indexedDB.open("VoiceMemoDB", 2);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (db.objectStoreNames.contains("audios")) {
+        db.deleteObjectStore("audios");
+      }
+      const store = db.createObjectStore("audios", { keyPath: "id", autoIncrement: true });
+      store.createIndex("pointId", "pointId", { unique: false });
+      store.createIndex("date", "date", { unique: false });
+    };
+    request.onsuccess = (e) => {
+      vm_db = e.target.result;
+      vm_updateCapacityDisplay();
+      resolve(vm_db);
+    };
+    request.onerror = (e) => reject(e);
+  });
+}
+
+async function vm_getAllAudios() {
+  if (!vm_db) await vm_initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = vm_db.transaction(["audios"], "readonly");
+    const store = transaction.objectStore("audios");
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e);
+  });
+}
+
+async function vm_enforceLimits() {
+  const audios = await vm_getAllAudios();
+  let totalBytes = 0;
+  audios.forEach(a => totalBytes += (a.size || 0));
+  
+  const MAX_ITEMS = 100;
+  const MAX_BYTES = 100 * 1024 * 1024; // 100MB
+  
+  if (audios.length <= MAX_ITEMS && totalBytes <= MAX_BYTES) {
+    return; // 制限内
+  }
+
+  // 古い順にソート (dateが古いものが最初)
+  audios.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  let itemsToDelete = [];
+  let currentCount = audios.length;
+  let currentBytes = totalBytes;
+
+  for (const audio of audios) {
+    if (currentCount <= MAX_ITEMS && currentBytes <= MAX_BYTES) {
+      break;
+    }
+    itemsToDelete.push(audio);
+    currentCount--;
+    currentBytes -= (audio.size || 0);
+  }
+
+  if (itemsToDelete.length > 0) {
+    for (const item of itemsToDelete) {
+      await vm_deleteAudio(item.id, false); // 表示更新は後でまとめて
+    }
+    alert(`保存件数または容量の上限に達したため、古いボイスメモ ${itemsToDelete.length} 件を自動削除しました。`);
+  }
+}
+
+async function vm_updateCapacityDisplay() {
+  const statusEl = document.getElementById("vm_capacityStatus");
+  if (!statusEl) return;
+  try {
+    const audios = await vm_getAllAudios();
+    let totalBytes = 0;
+    audios.forEach(a => totalBytes += (a.size || 0));
+    const mb = (totalBytes / (1024 * 1024)).toFixed(1);
+    
+    statusEl.textContent = `総容量: ${mb}MB / 100MB`;
+    if (totalBytes > 90 * 1024 * 1024) { // 90MB超過で警告色
+      statusEl.classList.remove("text-muted");
+      statusEl.classList.add("text-danger");
+    } else {
+      statusEl.classList.remove("text-danger");
+      statusEl.classList.add("text-muted");
+    }
+  } catch(e) {
+    statusEl.textContent = "容量計算エラー";
+  }
+}
+
+function vm_checkAndRenderIfPointChanged() {
+  const selection = getCrossSelection();
+  if (selection.key !== vm_lastUpdatePointKey) {
+    vm_lastUpdatePointKey = selection.key;
+    vm_renderCurrentPointAudios();
+  }
+}
+
+async function vm_toggleRecording() {
+  if (vm_isRecording) {
+    vm_stopRecording();
+  } else {
+    await vm_startRecording();
+  }
+}
+
+async function vm_startRecording() {
+  const errMsg = document.getElementById("vm_errorMessage");
+  const btn = document.getElementById("vm_recordFab");
+  if (errMsg) {
+    errMsg.classList.add("is-hidden");
+    errMsg.textContent = "";
+  }
+  
+  if (!activeProject) {
+    if (errMsg) {
+      errMsg.textContent = "工事を選択してください";
+      errMsg.classList.remove("is-hidden");
+    }
+    return;
+  }
+  
+  const selection = getCrossSelection();
+  if (!selection.key) {
+    if (errMsg) {
+      errMsg.textContent = "測点を選択してください";
+      errMsg.classList.remove("is-hidden");
+    }
+    return;
+  }
+
+  try {
+    vm_stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // iOS (Safari) 対応の MIMEタイプ設定
+    let mimeType = "audio/webm";
+    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/mp4")) {
+      mimeType = "audio/mp4";
+    } else if (MediaRecorder.isTypeSupported && !MediaRecorder.isTypeSupported("audio/webm")) {
+      mimeType = ""; // ブラウザのデフォルトに任せる
+    }
+    
+    const options = mimeType ? { mimeType } : {};
+    vm_mediaRecorder = new MediaRecorder(vm_stream, options);
+    vm_audioChunks = [];
+    const startTime = Date.now();
+
+    vm_mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) vm_audioChunks.push(e.data);
+    };
+
+    vm_mediaRecorder.onstop = async () => {
+      const durationSec = Math.round((Date.now() - startTime) / 1000);
+      const actualMime = vm_mediaRecorder.mimeType || mimeType || "audio/webm";
+      const blob = new Blob(vm_audioChunks, { type: actualMime });
+      await vm_saveAudio(blob, selection.key, durationSec);
+      
+      vm_renderCurrentPointAudios();
+      vm_updateCapacityDisplay();
+      
+      if (vm_stream) {
+        vm_stream.getTracks().forEach(track => track.stop());
+        vm_stream = null;
+      }
+    };
+
+    vm_mediaRecorder.start();
+    vm_isRecording = true;
+    
+    if (btn) {
+      btn.classList.add("vm-recording");
+    }
+  } catch (error) {
+    console.error("Microphone access denied:", error);
+    if (errMsg) {
+      errMsg.textContent = "マイクへのアクセスが許可されていません（" + error.message + "）";
+      errMsg.classList.remove("is-hidden");
+    }
+  }
+}
+
+function vm_stopRecording() {
+  if (vm_mediaRecorder && vm_mediaRecorder.state !== "inactive") {
+    vm_mediaRecorder.stop();
+  }
+  vm_isRecording = false;
+  const btn = document.getElementById("vm_recordFab");
+  if (btn) {
+    btn.classList.remove("vm-recording");
+  }
+}
+
+function vm_toggleListCollapse() {
+  const container = document.getElementById("vm_listContainer");
+  const icon = document.getElementById("vm_collapseIcon");
+  if (!container || !icon) return;
+  
+  const isHidden = container.classList.toggle("is-collapsed");
+  icon.textContent = isHidden ? "▲" : "▼";
+}
+
+async function vm_saveAudio(blob, pointId, durationSec) {
+  if (!vm_db) await vm_initDB();
+  
+  // 保存前に容量・件数制限をチェック＆古いものを削除
+  await vm_enforceLimits();
+
+  return new Promise((resolve, reject) => {
+    const transaction = vm_db.transaction(["audios"], "readwrite");
+    const store = transaction.objectStore("audios");
+    
+    const record = {
+      pointId: pointId,
+      audio: blob,
+      size: blob.size,
+      date: new Date().toISOString(),
+      duration: durationSec || 0
+    };
+    
+    const req = store.add(record);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e);
+  });
+}
+
+async function vm_getAudiosByPoint(pointId) {
+  if (!vm_db) await vm_initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = vm_db.transaction(["audios"], "readonly");
+    const store = transaction.objectStore("audios");
+    const index = store.index("pointId");
+    const req = index.getAll(pointId);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e);
+  });
+}
+
+async function vm_deleteAudio(id, updateUI = true) {
+  if (!vm_db) await vm_initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = vm_db.transaction(["audios"], "readwrite");
+    const store = transaction.objectStore("audios");
+    const req = store.delete(id);
+    req.onsuccess = () => {
+      if (updateUI) vm_updateCapacityDisplay();
+      resolve();
+    };
+    req.onerror = (e) => reject(e);
+  });
+}
+
+async function vm_renderCurrentPointAudios() {
+  const listDiv = document.getElementById("vm_audioList");
+  if (!listDiv) return;
+  const selection = getCrossSelection();
+  if (!selection.key) {
+    listDiv.innerHTML = "<div class='text-muted text-sm'>測点を選択するとボイスメモが表示されます</div>";
+    return;
+  }
+  
+  try {
+    const audios = await vm_getAudiosByPoint(selection.key);
+    if (audios.length === 0) {
+      listDiv.innerHTML = "<div class='text-muted text-sm' style='padding: 10px 0; text-align: center;'>録音データはありません</div>";
+      return;
+    }
+    
+    // Sort descending by date
+    audios.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    listDiv.innerHTML = "";
+    audios.forEach((audioData) => {
+      const url = URL.createObjectURL(audioData.audio);
+      const dt = new Date(audioData.date);
+      const dateStr = dt.toLocaleString();
+      const mb = ((audioData.size || 0) / (1024 * 1024)).toFixed(2);
+      const sec = audioData.duration || 0;
+      
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "vm-audio-item";
+      
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "vm-audio-info";
+      infoDiv.innerHTML = `🎤 ${dateStr} <span class="text-muted text-sm ml-2">(${mb}MB / ${sec}秒)</span>`;
+      
+      const audioWrap = document.createElement("div");
+      audioWrap.className = "vm-audio-controls";
+      
+      const audioEl = document.createElement("audio");
+      audioEl.controls = true;
+      audioEl.src = url;
+      audioEl.className = "vm-audio-player";
+      
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-danger-text btn-sm vm-audio-del";
+      delBtn.textContent = "削除";
+      delBtn.onclick = async () => {
+        if(confirm("この音声を削除しますか？")) {
+          await vm_deleteAudio(audioData.id);
+          vm_renderCurrentPointAudios();
+        }
+      };
+      
+      audioWrap.appendChild(audioEl);
+      audioWrap.appendChild(delBtn);
+      
+      itemDiv.appendChild(infoDiv);
+      itemDiv.appendChild(audioWrap);
+      listDiv.appendChild(itemDiv);
+    });
+  } catch (err) {
+    console.error("Failed to load audios", err);
+  }
+}
+
+// === 一括バックアップ・インポート機能 === //
+function vm_blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function vm_base64ToBlob(dataURL) {
+  return fetch(dataURL).then(res => res.blob());
+}
+
+async function vm_exportBackup() {
+  try {
+    const audios = await vm_getAllAudios();
+    if (audios.length === 0) {
+      alert("バックアップするデータがありません。");
+      return;
+    }
+    
+    // BlobをBase64に変換してJSON化
+    const exportData = [];
+    for (const a of audios) {
+      const b64 = await vm_blobToBase64(a.audio);
+      exportData.push({
+        id: a.id,
+        audioBase64: b64,
+        mimeType: a.audio.type,
+        size: a.size,
+        date: a.date,
+        duration: a.duration,
+        pointId: a.pointId
+      });
+    }
+    
+    const payload = JSON.stringify({ version: 1, audios: exportData });
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `voicememo-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error(e);
+    alert("バックアップの作成に失敗しました。");
+  }
+}
+
+async function vm_importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!confirm("既存の音声データにインポート内容を追加しますか？ (既存のデータは上書きされませんが、容量制限に達する可能性があります)")) {
+    event.target.value = "";
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.audios) throw new Error("不正なフォーマットです");
+      
+      let importedCount = 0;
+      for (const item of data.audios) {
+        let blob;
+        if (item.audioBase64) {
+          blob = await vm_base64ToBlob(item.audioBase64);
+        } else {
+          continue; // 不正データスキップ
+        }
+        
+        await vm_saveAudio(blob, item.pointId, item.duration || 0);
+        importedCount++;
+      }
+      
+      alert(`${importedCount} 件の音声データを復元しました。`);
+      vm_renderCurrentPointAudios();
+      vm_updateCapacityDisplay();
+      
+    } catch (err) {
+      console.error(err);
+      alert("インポートに失敗しました。ファイル形式が正しいか確認してください。");
+    } finally {
+      event.target.value = ""; // フォームリセット
+    }
+  };
+  reader.readAsText(file);
 }
