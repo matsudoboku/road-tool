@@ -187,6 +187,7 @@
               </div>
             </div>
           </div>
+
         </div>
         <div class="card-body no-padding">
           <div id="crossQuickTags" class="cross-quick-tags is-hidden">
@@ -223,6 +224,24 @@
             <button class="btn btn-warning" onclick="clearCross()">クリア</button>
             <button class="btn btn-success" onclick="registerCross()">登録</button>
           </div>
+        </div>
+      </div>
+      
+      <div class="card vm-card mt-2">
+        <div class="card-header flex-between" onclick="vm_toggleListCollapse()" style="cursor: pointer;">
+          <h3>🎙️ 音声メモ一覧</h3>
+          <div class="flex-center gap-2">
+            <span id="vm_capacityStatus" class="vm-capacity-status text-xs text-muted">...</span>
+            <span id="vm_collapseIcon">▼</span>
+          </div>
+        </div>
+        <div id="vm_listContainer" class="card-body">
+          <div id="vm_audioList" class="vm-audio-list mt-2"></div>
+        </div>
+        <div class="card-footer" style="display:flex; justify-content:space-between; align-items:center;">
+          <input type="file" id="vm_importFile" style="display:none;" accept=".json" onchange="vm_importBackup(event)">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('vm_importFile').click()">📥 復元</button>
+          <button class="btn btn-outline btn-sm" onclick="vm_exportBackup()">📤 バックアップ</button>
         </div>
       </div>
     </div>
@@ -619,6 +638,11 @@
   </div>
 
   <div id="calcOverlay" class="calc-overlay" onclick="closeCalcModal()"></div>
+
+  <button id="vm_recordFab" class="vm-record-fab is-hidden" onclick="vm_toggleRecording()" aria-label="ボイス録音">
+    <span class="record-icon"></span>
+    <div id="vm_errorMessage" class="text-danger is-hidden vm-error-popup"></div>
+  </button>
 
   <button id="quickMemoFab" class="quick-memo-fab" onclick="toggleQuickMemo()" aria-label="クイックメモ"
     aria-expanded="false">
