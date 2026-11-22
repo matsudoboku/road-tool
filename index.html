@@ -10,7 +10,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>道路ツール</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=cross-entry">
   <!-- 視認性向上のためGoogle Fonts (Noto Sans JP) を利用（任意） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -164,28 +164,28 @@
     <div id="cross" class="container">
       <div class="card">
         <div class="card-header sticky-controls">
-          <div class="form-inline-group">
-            <div class="input-wrapper">
-              <label>測点</label>
-              <div class="point-select-row">
-                <select id="pointSel">
-                  <option value="">-- 測点を選択 --</option>
-                  <option value="__manual__">✏ 手動入力...</option>
-                </select>
-                <input type="text" id="pointSelManual" class="point-manual-input is-hidden" placeholder="測点名を入力"
-                  autocomplete="off">
-                <button type="button" class="clear-point-btn" aria-label="測点入力をクリア"
-                  onclick="clearCrossPointInput()">×</button>
+          <div class="cross-entry-controls">
+            <label for="pointSelManual">測点</label>
+            <div class="point-select-row">
+              <input type="text" id="pointSelManual" class="point-manual-input" placeholder="例 ＋10.0" autocomplete="off">
+              <button type="button" class="clear-point-btn" aria-label="測点入力をクリア"
+                onclick="clearCrossPointInput()">×</button>
+              <select id="pointSel" aria-label="登録済みの測点">
+                <option value="">一覧から</option>
+              </select>
+            </div>
+            <div class="cross-entry-options">
+              <div class="direction-toggle cross-direction-toggle" role="group" aria-label="方向">
+                <input type="hidden" id="direction" value="">
+                <button type="button" class="btn btn-secondary btn-toggle" data-direction="左" aria-pressed="false">◀ 左</button>
+                <button type="button" class="btn btn-secondary btn-toggle" data-direction="右" aria-pressed="false">右 ▶</button>
+              </div>
+              <div class="direction-toggle" role="group" aria-label="断面">
+                <button type="button" class="btn btn-secondary btn-toggle active" data-cross-double="false" aria-pressed="true">通常</button>
+                <button type="button" class="btn btn-secondary btn-toggle" data-cross-double="true" aria-pressed="false">ダブル</button>
               </div>
             </div>
-            <div class="input-wrapper">
-              <label>方向</label>
-              <input type="hidden" id="direction" value="左">
-              <div class="direction-toggle cross-direction-toggle">
-                <button id="crossLeftBtn" class="btn btn-secondary btn-toggle active" data-direction="左">左へ ◀</button>
-                <button id="crossRightBtn" class="btn btn-secondary btn-toggle" data-direction="右">▶ 右へ</button>
-              </div>
-            </div>
+            <p id="crossEntryError" class="cross-entry-error is-hidden" role="alert"></p>
           </div>
 
         </div>
@@ -193,7 +193,10 @@
           <div id="crossQuickTags" class="cross-quick-tags is-hidden">
             <button class="btn btn-outline" data-tag="As舗">As舗</button>
             <button class="btn btn-outline" data-tag="Con舗">Con舗</button>
-            <button class="btn btn-outline" data-tag="ブロック">ブロック</button>
+            <button type="button" class="btn btn-outline" data-tag="ブロック">ブロック</button>
+            <button type="button" class="btn btn-outline" data-tag="3分ブロック">3分ブロック</button>
+            <button type="button" class="btn btn-outline" data-tag="伸ばし">伸ばし</button>
+            <button type="button" class="btn btn-outline" data-tag="SL">SL</button>
             <button class="btn btn-outline" data-tag="3分">3分</button>
             <button class="btn btn-outline" data-tag="擁壁">擁壁</button>
             <button class="btn btn-outline" data-tag="練石">練石</button>
@@ -727,7 +730,7 @@
     </div>
   </div>
 
-  <script src="main.js"></script>
+  <script src="main.js?v=cross-entry"></script>
 </body>
 
 </html>
