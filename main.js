@@ -55,7 +55,8 @@ function setDraftStore(store) {
   localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(store));
 }
 let draftSaveTimer = null;
-let activeCrossRecordKey = "";
+let activeCrossSelection = null;
+let crossIsDouble = false;
 let activeCrossRemarkInput = null;
 let crossQuickTagsHome = null;
 let mobileKeypadTarget = null;
@@ -229,7 +230,7 @@ function scheduleDraftSave() {
 function saveDraftInputs() {
   const store = getDraftStore();
   const key = draftKey();
-  const currentSelection = getCrossSelection();
+  const currentSelection = activeCrossSelection || getCrossSelection();
   const existingCrossDraft = store[key]?.cross || {};
   const rowsBySelection = { ...(existingCrossDraft.rowsBySelection || {}) };
   const crossRows = Array.from(document.querySelectorAll("#crossTable tbody tr.cross-data-row")).map(row => {
@@ -297,15 +298,13 @@ function saveDraftInputs() {
         area: inputs[3]?.value || ""
       };
     });
-  if (currentSelection.key) {
-    rowsBySelection[currentSelection.key] = crossRows;
-  }
+  rowsBySelection[currentSelection.key] = crossRows;
   store[key] = {
     project: { rows: pointRows },
     cross: {
       point: currentSelection.point,
       direction: currentSelection.dir,
-      isManual: document.getElementById("pointSel")?.value === "__manual__",
+      isDouble: currentSelection.isDouble,
       rowsBySelection
     },
     long: { rows: longRows },
@@ -322,31 +321,8 @@ function loadDraftInputs() {
   const store = getDraftStore();
   const key = draftKey();
   const draft = store[key];
+  restoreCrossDraft(draft?.cross);
   if (!draft) return;
-  if (draft.cross) {
-    const crossSel = document.getElementById("pointSel");
-    const crossManual = document.getElementById("pointSelManual");
-    const crossDir = document.getElementById("direction");
-    if (draft.cross.isManual && crossSel && crossManual) {
-      crossSel.value = "__manual__";
-      crossManual.value = draft.cross.point || "";
-      crossManual.classList.remove("is-hidden");
-    } else if (crossSel) {
-      crossSel.value = draft.cross.point || "";
-      if (crossManual) crossManual.classList.add("is-hidden");
-    }
-    if (crossDir && draft.cross.direction) {
-      crossDir.value = draft.cross.direction;
-      setCrossDirection(crossDir.value);
-    }
-    const selection = getCrossSelection();
-    const hasSavedRecord = loadCrossRecordBySelection(selection);
-    if (!hasSavedRecord && draft.cross.rowsBySelection && selection.key) {
-      const draftRows = draft.cross.rowsBySelection[selection.key] || [];
-      fillCrossTableFromRowData(draftRows.map((row) => [row.h || "", row.v || "", row.note || ""]));
-    }
-    activeCrossRecordKey = selection.key;
-  }
   if (draft.project) {
     const rows = draft.project.rows || [];
     const pointBody = document.querySelector("#pointTable tbody");
@@ -510,16 +486,12 @@ function addCrossRow() {
   row.classList.add("cross-data-row");
   row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
   row.insertCell().innerHTML = `<input type="text" class="mid-input">`;
-  row.insertCell().innerHTML = `<input type="text" class="remark-input">`;
+  row.insertCell().innerHTML = `<div class="cross-remark-cell"><input type="text" class="remark-input" aria-label="備考"><button type="button" class="btn btn-outline cross-remark-tags" aria-label="この行の備考候補">候補</button></div>`;
   row.querySelectorAll("input.mid-input").forEach(markForMobileNumericKeypad);
   scheduleDraftSave();
 }
 function initializeCrossTable() {
-  const tbody = document.querySelector("#crossTable tbody");
-  tbody.innerHTML = "";
-  for (let i = 0; i < 10; i++) {
-    addCrossRow();
-  }
+  fillCrossTableFromRowData([]);
 }
 function getCrossRowDataFromTable() {
   return Array.from(document.querySelectorAll("#crossTable tbody tr.cross-data-row")).map(row => {
@@ -550,14 +522,15 @@ function getCrossLogProjectStore(allLogs, projectKeyName) {
   }
   return raw;
 }
-function makeCrossSelectionKey(point, dir) {
-  if (!point) return "";
-  return `${point}__${dir || "左"}`;
+function makeCrossSelectionKey(point, dir, isDouble) {
+  if (!point || !dir) return "";
+  return isDouble ? JSON.stringify([point, dir, "double"]) : `${point}__${dir}`;
 }
 function fillCrossTableFromRowData(rowData) {
   const tbody = document.querySelector("#crossTable tbody");
   if (!tbody) return;
   const safeRows = Array.isArray(rowData) ? rowData : [];
+  hideCrossQuickTags();
   tbody.innerHTML = "";
   const rowCount = Math.max(10, safeRows.length);
   for (let i = 0; i < rowCount; i++) addCrossRow();
@@ -571,16 +544,25 @@ function fillCrossTableFromRowData(rowData) {
   });
 }
 function getCrossSelection() {
-  const sel = document.getElementById("pointSel");
-  const manual = document.getElementById("pointSelManual");
-  let point = "";
-  if (sel && sel.value === "__manual__" && manual) {
-    point = manual.value.trim();
-  } else if (sel) {
-    point = sel.value.trim();
+  const point = document.getElementById("pointSelManual")?.value.trim() || "";
+  const dir = document.getElementById("direction")?.value || "";
+  return { point, dir, isDouble: crossIsDouble, key: makeCrossSelectionKey(point, dir, crossIsDouble) };
+}
+function restoreCrossDraft(draft) {
+  document.getElementById("pointSelManual").value = draft?.point || "";
+  syncCrossPointPicker();
+  const hasRememberedDirection = draft && ("isDouble" in draft || draft.point);
+  setCrossDirection(hasRememberedDirection ? draft.direction || "" : "");
+  setCrossDouble(Boolean(draft?.isDouble));
+  showCrossEntryError("");
+  const selection = getCrossSelection();
+  const draftRows = draft?.rowsBySelection?.[selection.key];
+  if (Array.isArray(draftRows)) {
+    fillCrossTableFromRowData(draftRows.map(row => [row.h, row.v, row.note]));
+  } else {
+    loadCrossRecordBySelection(selection);
   }
-  const dir = document.getElementById("direction")?.value || "左";
-  return { point, dir, key: makeCrossSelectionKey(point, dir) };
+  activeCrossSelection = selection;
 }
 function hideCrossQuickTags() {
   const quickTags = document.getElementById("crossQuickTags");
@@ -605,6 +587,7 @@ function showCrossQuickTagsForInput(input) {
   if (!tbody) return;
 
   const currentInlineRow = document.querySelector("#crossTable tbody tr.cross-quick-tags-row");
+  if (currentInlineRow?.nextElementSibling === targetRow) return;
   if (currentInlineRow) currentInlineRow.remove();
 
   const quickTagsRow = document.createElement("tr");
@@ -620,11 +603,9 @@ function showCrossQuickTagsForInput(input) {
   quickTags.classList.add("is-inline");
 }
 function syncCrossQuickTagsByTarget(target) {
-  if (target?.closest?.("#crossQuickTags") && activeCrossRemarkInput) {
-    showCrossQuickTagsForInput(activeCrossRemarkInput);
-    return;
-  }
-  const remarkInput = target?.closest?.("#crossTable .remark-input");
+  if (target?.closest?.("#crossQuickTags")) return;
+  const remarkInput = target?.closest?.("#crossTable .remark-input") ||
+    target?.closest?.("#crossTable .cross-remark-tags")?.previousElementSibling;
   if (!remarkInput) {
     hideCrossQuickTags();
     return;
@@ -632,20 +613,14 @@ function syncCrossQuickTagsByTarget(target) {
   activeCrossRemarkInput = remarkInput;
   showCrossQuickTagsForInput(remarkInput);
 }
-function parseCrossSelectionKey(key) {
-  if (!key) return { point: "", dir: "左", key: "" };
-  const [point, dir = "左"] = key.split("__");
-  return { point, dir, key };
-}
 function saveCurrentCrossRecord(selection = getCrossSelection()) {
   if (!activeProject) return;
-  const { point, dir } = selection;
-  if (!point) return;
+  const { point, dir, isDouble, key: selectionKey } = selection;
+  if (!selectionKey) return;
   const rowData = getCrossRowDataFromTable();
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
   const k = keyOfActive();
   const projectLogs = getCrossLogProjectStore(allLogs, k);
-  const selectionKey = makeCrossSelectionKey(point, dir);
   if (!rowData.length) {
     if (projectLogs[selectionKey]) {
       delete projectLogs[selectionKey];
@@ -654,43 +629,61 @@ function saveCurrentCrossRecord(selection = getCrossSelection()) {
     }
     return;
   }
-  const payload = { point, dir, rowData, time: new Date().toLocaleString() };
+  const payload = { point, dir, isDouble, rowData, time: new Date().toLocaleString() };
   projectLogs[selectionKey] = payload;
   localStorage.setItem("crossLogs3", JSON.stringify(allLogs));
   updateLogTab();
 }
-function loadCrossRecordBySelection(selection = getCrossSelection()) {
-  const { point, dir } = selection;
-  initializeCrossTable();
-  if (!point || !activeProject) {
-    return false;
-  }
+function loadCrossRecordBySelection(selection, extraRows = []) {
   const allLogs = safeParseJSON(localStorage.getItem("crossLogs3"), {});
-  const k = keyOfActive();
-  const logs = getCrossLogProjectStore(allLogs, k);
-  const saved = logs[makeCrossSelectionKey(point, dir)];
-  if (!saved) return false;
-  fillCrossTableFromRowData(saved.rowData || []);
-  return true;
+  const logs = getCrossLogProjectStore(allLogs, keyOfActive());
+  const savedRows = selection.key && activeProject ? logs[selection.key]?.rowData : null;
+  fillCrossTableFromRowData([...(savedRows || []), ...extraRows]);
 }
 function handleCrossSelectionChange() {
-  const prevKey = activeCrossRecordKey;
-  const next = getCrossSelection();
-  if (prevKey && prevKey !== next.key) {
-    saveCurrentCrossRecord(parseCrossSelectionKey(prevKey));
+  const previous = activeCrossSelection;
+  let next = getCrossSelection();
+  if (previous && previous.point !== next.point) {
+    setCrossDouble(false);
+    next = getCrossSelection();
   }
-  loadCrossRecordBySelection(next);
-  activeCrossRecordKey = next.key;
-  saveDraftInputs();
+  if (previous?.key !== next.key) {
+    const extraRows = previous?.key ? [] : getCrossRowDataFromTable();
+    if (previous?.key) saveCurrentCrossRecord(previous);
+    loadCrossRecordBySelection(next, extraRows);
+  }
+  activeCrossSelection = next;
+  syncCrossPointPicker();
+  showCrossEntryError("");
+  if (draftReady) saveDraftInputs();
 }
 function setCrossDirection(direction) {
-  const dirInput = document.getElementById("direction");
-  if (dirInput) dirInput.value = direction;
-  const buttons = document.querySelectorAll("#cross [data-direction]");
-  buttons.forEach(button => {
-    button.classList.toggle("active", button.dataset.direction === direction);
+  document.getElementById("direction").value = direction;
+  document.querySelectorAll("#cross [data-direction]").forEach(button => {
+    const selected = button.dataset.direction === direction;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", selected);
   });
-  scheduleDraftSave();
+}
+function setCrossDouble(isDouble) {
+  crossIsDouble = isDouble;
+  document.querySelectorAll("#cross [data-cross-double]").forEach(button => {
+    const selected = (button.dataset.crossDouble === "true") === isDouble;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", selected);
+  });
+}
+function syncCrossPointPicker() {
+  const selection = getCrossSelection();
+  const picker = document.getElementById("pointSel");
+  picker.value = selection.point;
+  if (picker.selectedIndex === -1) picker.value = "";
+}
+function showCrossEntryError(message, target) {
+  const error = document.getElementById("crossEntryError");
+  error.textContent = message;
+  error.classList.toggle("is-hidden", !message);
+  if (target) target.focus();
 }
 function initCrossDirectionControls() {
   const container = document.getElementById("cross");
@@ -705,36 +698,27 @@ function initCrossDirectionControls() {
       handleCrossSelectionChange();
     });
   });
-  const pointSel = document.getElementById("pointSel");
-  const pointManual = document.getElementById("pointSelManual");
-  if (pointSel) {
-    pointSel.addEventListener("change", () => {
-      if (pointSel.value === "__manual__") {
-        if (pointManual) {
-          pointManual.classList.remove("is-hidden");
-          pointManual.focus();
-        }
-      } else {
-        if (pointManual) {
-          pointManual.classList.add("is-hidden");
-          pointManual.value = "";
-        }
-        handleCrossSelectionChange();
-      }
-    });
-  }
-  if (pointManual) {
-    pointManual.addEventListener("change", () => {
+  container.querySelectorAll("[data-cross-double]").forEach(button => {
+    button.addEventListener("click", () => {
+      setCrossDouble(button.dataset.crossDouble === "true");
       handleCrossSelectionChange();
     });
-    pointManual.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        handleCrossSelectionChange();
-      }
-    });
-  }
+  });
+  const pointSel = document.getElementById("pointSel");
+  const pointManual = document.getElementById("pointSelManual");
+  pointSel.addEventListener("change", () => {
+    if (pointSel.value) pointManual.value = pointSel.value;
+    handleCrossSelectionChange();
+  });
+  pointManual.addEventListener("change", handleCrossSelectionChange);
+  pointManual.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.isComposing) {
+      event.preventDefault();
+      pointManual.blur();
+    }
+  });
   if (quickTags) {
+    quickTags.addEventListener("mousedown", event => event.preventDefault());
     quickTags.addEventListener("click", (event) => {
       const tagButton = event.target.closest("[data-tag]");
       if (!tagButton || !activeCrossRemarkInput) return;
@@ -745,8 +729,7 @@ function initCrossDirectionControls() {
       input.value = `${input.value.slice(0, start)}${tag}${input.value.slice(end)}`;
       const caret = start + tag.length;
       input.setSelectionRange(caret, caret);
-      input.focus();
-      scheduleDraftSave();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     });
   }
   container.addEventListener("focusin", (event) => {
@@ -755,45 +738,41 @@ function initCrossDirectionControls() {
   container.addEventListener("click", (event) => {
     syncCrossQuickTagsByTarget(event.target);
   });
-  container.addEventListener("focusout", (event) => {
-    if (!event.target.matches("#crossTable .remark-input")) return;
-    setTimeout(() => {
-      const focused = document.activeElement;
-      if (!focused || !focused.closest("#crossQuickTags")) {
-        hideCrossQuickTags();
-      }
-    }, 0);
-  });
   document.addEventListener("focusin", (event) => {
     if (!event.target.closest("#cross")) hideCrossQuickTags();
   });
-  const dirInput = document.getElementById("direction");
-  if (dirInput?.value) setCrossDirection(dirInput.value);
-  handleCrossSelectionChange();
 }
 function clearCrossPointInput() {
-  const sel = document.getElementById("pointSel");
   const manual = document.getElementById("pointSelManual");
-  if (sel) sel.value = "";
-  if (manual) {
-    manual.value = "";
-    manual.classList.add("is-hidden");
-  }
+  manual.value = "";
   handleCrossSelectionChange();
+  manual.focus();
 }
 
 function registerCross() {
   if (!activeProject) { alert("工事を選択してください"); return; }
-  const point = document.getElementById("pointSel").value.trim();
-  if (!point) return alert("測点を入力してください");
-  ensurePointRegistered(point);
+  handleCrossSelectionChange();
+  const selection = getCrossSelection();
+  if (!selection.point) {
+    showCrossEntryError("測点を入力してください", document.getElementById("pointSelManual"));
+    return;
+  }
+  if (!selection.dir) {
+    showCrossEntryError("方向（左・右）を選んでください", document.querySelector("#cross [data-direction]"));
+    return;
+  }
+  if (!getCrossRowDataFromTable().length) {
+    showCrossEntryError("測量値または備考を入力してください");
+    return;
+  }
+  ensurePointRegistered(selection.point);
   updatePointSelect();
-  saveCurrentCrossRecord();
+  saveCurrentCrossRecord(selection);
   alert("入力内容を保存しました");
   saveDraftInputs();
 }
 function clearCross() {
-  if (confirm("現在選択中の測点・方向の入力内容を削除します。よろしいですか？")) {
+  if (confirm("現在選択中の測点・方向・断面の入力内容を削除します。よろしいですか？")) {
     fillCrossTableFromRowData([]);
     saveCurrentCrossRecord();
     saveDraftInputs();
@@ -952,38 +931,19 @@ function loadPointSettings() {
   updatePointTable();
 }
 function updatePointSelect() {
-  const sel = document.getElementById('pointSel');
+  const sel = document.getElementById("pointSel");
   if (!sel) return;
   const project = getActiveProject();
-  if (!project) {
-    sel.innerHTML = '<option value="">-- 測点を選択 --</option><option value="__manual__">✏ 手動入力...</option>';
-    return;
-  }
+  sel.replaceChildren(new Option("一覧から", ""));
+  if (!project) return;
   ensureProjectPoints(project);
-  const arr = project.points || [];
-  const editingPoints = Array.from(document.querySelectorAll('#pointTable tbody tr td:first-child input'))
-    .map((input) => String(input.value || "").trim())
-    .filter(Boolean);
-  const options = [...new Set([
-    ...arr.map((row) => String(row?.point || "").trim()),
-    ...editingPoints,
-  ])].filter((point) => point);
-  const currentValue = String(sel.value || "");
-
-  sel.innerHTML = '<option value="">-- 測点を選択 --</option>';
-  options.forEach((point) => {
-    const option = document.createElement('option');
-    option.value = point;
-    option.textContent = point;
-    if (point === currentValue) option.selected = true;
-    sel.appendChild(option);
-  });
-  // 手動入力オプションを末尾に追加
-  const manualOpt = document.createElement('option');
-  manualOpt.value = '__manual__';
-  manualOpt.textContent = '✏ 手動入力...';
-  if (currentValue === '__manual__') manualOpt.selected = true;
-  sel.appendChild(manualOpt);
+  const editingPoints = Array.from(document.querySelectorAll("#pointTable tbody tr td:first-child input"))
+    .map(input => input.value.trim());
+  const options = new Set([...project.points.map(row => String(row?.point || "").trim()), ...editingPoints]);
+  for (const point of options) {
+    if (point) sel.add(new Option(point, point));
+  }
+  syncCrossPointPicker();
 }
 function ensurePointRegistered(pointName) {
   const name = String(pointName || "").trim();
@@ -1563,12 +1523,16 @@ function updateLogTab() {
     document.getElementById("logCross").innerHTML = "";
   } else {
     logCrossCard.style.display = "";
-    let htmlCross = ``;
+    const logCross = document.getElementById("logCross");
+    logCross.replaceChildren();
     logsArr.forEach(log => {
-      const text = crossRowText(log.rowData || []);
-      htmlCross += `<div class="section"><b>測点 ${log.point} ${log.dir}</b> ${text}</div>`;
+      const section = document.createElement("div");
+      section.className = "section";
+      const heading = document.createElement("b");
+      heading.textContent = `測点 ${log.point} ${log.dir}${log.isDouble ? " ダブル" : ""}`;
+      section.append(heading, " " + crossRowText(log.rowData || []));
+      logCross.append(section);
     });
-    document.getElementById("logCross").innerHTML = htmlCross;
   }
 
   const longLogs = safeParseJSON(localStorage.getItem("longLogs3"), {});
