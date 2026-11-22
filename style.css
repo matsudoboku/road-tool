@@ -411,13 +411,29 @@ input[readonly] {
   flex: 1;
 }
 
-#cross .form-inline-group {
-  align-items: flex-end;
+.cross-entry-controls {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
-#cross .input-wrapper:first-child {
-  flex: 1.7;
-  min-width: 180px;
+.cross-entry-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cross-entry-options .btn,
+#cross .clear-point-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.cross-entry-error {
+  margin: 0;
+  color: #b71c1c;
 }
 
 .point-select-row {
@@ -427,9 +443,9 @@ input[readonly] {
 }
 
 .point-select-row select {
-  flex: 1;
-  min-height: 42px;
-  font-size: 1.05rem;
+  flex: 0 1 36%;
+  min-height: 44px;
+  font-size: 1rem;
   min-width: 0;
 }
 
@@ -664,7 +680,7 @@ input[readonly] {
 }
 
 .cross-quick-tags .btn {
-  min-height: 36px;
+  min-height: 44px;
   padding: 6px 10px;
 }
 
@@ -678,6 +694,26 @@ input[readonly] {
   border-radius: 8px;
   margin: 4px 0;
   box-shadow: none;
+}
+
+.cross-remark-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cross-remark-cell .remark-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 4px;
+}
+
+#crossTable .cross-remark-tags {
+  flex: 0 0 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 0.8rem;
 }
 
 #crossTable .cross-quick-tags-row td {
@@ -794,10 +830,6 @@ tfoot td {
 .direction-toggle {
   display: inline-flex;
   gap: 6px;
-}
-
-#cross .input-wrapper:last-child {
-  flex: 0 0 auto;
 }
 
 .cross-direction-toggle .btn-toggle {
